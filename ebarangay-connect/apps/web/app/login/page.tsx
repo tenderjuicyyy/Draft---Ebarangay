@@ -2,18 +2,36 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  function handleLogin(event: React.FormEvent) {
+  async function handleLogin(event: React.FormEvent) {
     event.preventDefault();
 
-    alert(
-      "Login UI is working. Firebase authentication will be connected in the next phase."
-    );
+    setLoading(true);
+    setErrorMessage("");
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
   }
 
   return (
@@ -41,6 +59,12 @@ export default function LoginPage() {
               Log in to manage your barangay document requests.
             </p>
           </div>
+
+          {errorMessage && (
+            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
@@ -75,9 +99,17 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Log in
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Log in"
+              )}
             </button>
           </form>
 

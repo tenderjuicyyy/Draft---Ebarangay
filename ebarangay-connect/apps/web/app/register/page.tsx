@@ -2,25 +2,80 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  function handleRegister(event: React.FormEvent) {
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  async function handleRegister(event: React.FormEvent) {
     event.preventDefault();
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const cleanedName = fullName.trim();
+    const cleanedEmail = email.trim();
+
+    if (!cleanedName) {
+      setErrorMessage("Please enter your full name.");
       return;
     }
 
-    alert(
-      "Registration UI is working. Firebase Authentication will be connected in the next phase."
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanedEmail,
+      password,
+      options: {
+        data: {
+          full_name: cleanedName,
+        },
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!data.user) {
+      setErrorMessage("Registration failed. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    if (data.session) {
+      router.push("/dashboard");
+      return;
+    }
+
+    setSuccessMessage(
+      "Account created successfully! Please check your email to verify your account, then log in."
     );
+
+    setLoading(false);
   }
 
   return (
@@ -49,6 +104,25 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {errorMessage && (
+            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-5 rounded-lg border border-green-200 bg-green-50 p-3">
+              <p className="text-sm text-green-700">{successMessage}</p>
+
+              <Link
+                href="/login"
+                className="mt-2 inline-block text-sm font-semibold text-green-700 hover:underline"
+              >
+                Go to Login
+              </Link>
+            </div>
+          )}
+
           <form onSubmit={handleRegister} className="space-y-5">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -61,7 +135,8 @@ export default function RegisterPage() {
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
                 placeholder="Juan Dela Cruz"
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
               />
             </div>
 
@@ -76,7 +151,8 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
               />
             </div>
 
@@ -92,7 +168,8 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
               />
             </div>
 
@@ -108,15 +185,24 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 placeholder="Re-enter your password"
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                disabled={loading}
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Create account
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create account"
+              )}
             </button>
           </form>
 
@@ -134,3 +220,4 @@ export default function RegisterPage() {
     </main>
   );
 }
+
