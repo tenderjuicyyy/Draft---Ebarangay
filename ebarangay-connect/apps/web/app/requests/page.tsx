@@ -3,7 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Clock, Loader2, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Clock,
+  FilePlus2,
+  FileText,
+  Home,
+  Loader2,
+  X,
+  XCircle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type RequestItem = {
@@ -37,117 +49,158 @@ export default function RequestsPage() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function loadRequests() {
-    setLoading(true);
-    setErrorMessage("");
-
-    // Check current login session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      setErrorMessage(`AUTH ERROR: ${sessionError.message}`);
-      setLoading(false);
-      return;
-    }
-
-    // Redirect logged-out users to Login
-    if (!session) {
-      router.replace("/login");
-      return;
-    }
-
-    const userId = session.user.id;
-
-    console.log("MY REQUESTS USER:", userId);
-
-    // Load ONLY this user's requests
-    const { data, error } = await supabase
-      .from("document_requests")
-      .select(`
-        id,
-        profile_id,
-        status,
-        purpose,
-        document_types (
-          name
-        )
-      `)
-      .eq("profile_id", userId)
-      .order("id", { ascending: false });
-
-    if (error) {
-      setErrorMessage(`REQUEST ERROR: ${error.message}`);
-      setLoading(false);
-      return;
-    }
-
-    setRequests(data || []);
-    setLoading(false);
-  }
-
-  async function loadHistory() {
-    setHistoryLoading(true);
-
-    // Check login session before loading history
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      router.replace("/login");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("request_status_history")
-      .select(`
-        id,
-        request_id,
-        status,
-        remarks
-      `)
-      .order("id", { ascending: true });
-
-    if (error) {
-      setErrorMessage(`HISTORY ERROR: ${error.message}`);
-      setHistoryLoading(false);
-      return;
-    }
-
-    setHistory(data || []);
-    setHistoryLoading(false);
-  }
-
   useEffect(() => {
-    loadRequests();
-    loadHistory();
-  }, []);
+    let cancelled = false;
+
+    async function loadPage() {
+      setLoading(true);
+      setHistoryLoading(true);
+      setErrorMessage("");
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (sessionError || !session) {
+        if (sessionError) {
+          console.error("AUTH ERROR:", sessionError);
+        }
+
+        router.replace("/login");
+        return;
+      }
+
+      const userId = session.user.id;
+
+      const { data: requestData, error: requestError } =
+        await supabase
+          .from("document_requests")
+          .select(`
+            id,
+            profile_id,
+            status,
+            purpose,
+            document_types (
+              name
+            )
+          `)
+          .eq("profile_id", userId)
+          .order("id", { ascending: false });
+
+      if (cancelled) {
+        return;
+      }
+
+      if (requestError) {
+        setErrorMessage(
+          `REQUEST ERROR: ${requestError.message}`
+        );
+        setLoading(false);
+        setHistoryLoading(false);
+        return;
+      }
+
+      const loadedRequests =
+        (requestData as RequestItem[]) || [];
+
+      setRequests(loadedRequests);
+      setLoading(false);
+
+      if (loadedRequests.length === 0) {
+        setHistory([]);
+        setHistoryLoading(false);
+        return;
+      }
+
+      const requestIds = loadedRequests.map(
+        (request) => request.id
+      );
+
+      const { data: historyData, error: historyError } =
+        await supabase
+          .from("request_status_history")
+          .select(`
+            id,
+            request_id,
+            status,
+            remarks
+          `)
+          .in("request_id", requestIds)
+          .order("id", { ascending: true });
+
+      if (cancelled) {
+        return;
+      }
+
+      if (historyError) {
+        setErrorMessage(
+          `HISTORY ERROR: ${historyError.message}`
+        );
+        setHistoryLoading(false);
+        return;
+      }
+
+      setHistory((historyData as HistoryItem[]) || []);
+      setHistoryLoading(false);
+    }
+
+    loadPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   function getDocumentName(request: RequestItem) {
     if (Array.isArray(request.document_types)) {
-      return request.document_types[0]?.name || "Unknown Document";
+      return (
+        request.document_types[0]?.name ||
+        "Unknown Document"
+      );
     }
 
-    return request.document_types?.name || "Unknown Document";
+    return (
+      request.document_types?.name ||
+      "Unknown Document"
+    );
   }
 
   function getStatusStyle(status: string | null) {
     switch (status?.toLowerCase()) {
       case "completed":
-        return "bg-green-100 text-green-700";
+        return "bg-[#dfe9d5] text-[#435332]";
 
       case "processing":
-        return "bg-blue-100 text-blue-700";
+        return "bg-[#e9e3cd] text-[#6b6037]";
 
       case "rejected":
-        return "bg-red-100 text-red-700";
+        return "bg-[#f3ddd5] text-[#9a4f3c]";
 
       case "pending":
       default:
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-[#f4e7cf] text-[#9a672e]";
+    }
+  }
+
+  function getStatusIcon(status: string | null) {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return <CheckCircle2 size={15} />;
+
+      case "processing":
+        return <Loader2 size={15} />;
+
+      case "rejected":
+        return <XCircle size={15} />;
+
+      case "pending":
+      default:
+        return <Clock size={15} />;
     }
   }
 
@@ -171,17 +224,17 @@ export default function RequestsPage() {
   function getHistoryIconStyle(status: string) {
     switch (status.toLowerCase()) {
       case "completed":
-        return "bg-green-100 text-green-700";
+        return "bg-[#dfe9d5] text-[#435332]";
 
       case "processing":
-        return "bg-blue-100 text-blue-700";
+        return "bg-[#e9e3cd] text-[#6b6037]";
 
       case "rejected":
-        return "bg-red-100 text-red-700";
+        return "bg-[#f3ddd5] text-[#9a4f3c]";
 
       case "pending":
       default:
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-[#f4e7cf] text-[#9a672e]";
     }
   }
 
@@ -192,23 +245,26 @@ export default function RequestsPage() {
   }
 
   function renderStatusTracker(status: string | null) {
-    const currentStatus = status?.toLowerCase();
+    const currentStatus =
+      status?.toLowerCase() || "pending";
 
     if (currentStatus === "rejected") {
       return (
-        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700">
+        <div className="mt-6 rounded-2xl border border-[#dfb9aa] bg-[#f7e5de] p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f3d4ca] text-[#9a4f3c]">
               <X size={18} />
             </div>
 
             <div>
-              <p className="font-semibold text-red-700">
+              <p className="font-black text-[#8d4938]">
                 Request Rejected
               </p>
 
-              <p className="text-sm text-red-600">
-                This request has been rejected by the barangay.
+              <p className="mt-1 text-sm leading-6 text-[#9b5a49]">
+                This request has been rejected by the
+                barangay. Check the status history below
+                for additional remarks.
               </p>
             </div>
           </div>
@@ -239,59 +295,67 @@ export default function RequestsPage() {
     );
 
     return (
-      <div className="mt-6">
-        <p className="mb-4 text-sm font-semibold text-slate-800">
-          Request Status
-        </p>
+      <div className="mt-7">
+        <div className="mb-5 flex items-center justify-between">
+          <p className="text-sm font-black text-[#34372b]">
+            Request Status
+          </p>
 
-        <div className="flex items-center">
+          <span className="text-xs font-semibold text-[#858273]">
+            {status || "Pending"}
+          </span>
+        </div>
+
+        <div className="flex items-start">
           {steps.map((step, index) => {
             const isCompleted =
-              currentIndex >= 0 && index <= currentIndex;
+              currentIndex >= 0 &&
+              index <= currentIndex;
 
-            const isCurrent = currentIndex === index;
+            const isCurrent =
+              currentIndex === index;
 
             return (
               <div
                 key={step.value}
-                className="flex flex-1 items-center"
+                className="flex flex-1 items-start"
               >
-                <div className="flex flex-col items-center">
+                <div className="flex min-w-16 flex-col items-center text-center">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
                       isCompleted
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-400"
+                        ? "bg-[#59613f] text-white"
+                        : "bg-[#e8e2d5] text-[#aaa697]"
                     }`}
                   >
                     {step.icon}
                   </div>
 
                   <p
-                    className={`mt-2 text-xs font-semibold ${
+                    className={`mt-2 text-xs font-bold ${
                       isCurrent
-                        ? "text-blue-700"
+                        ? "text-[#505738]"
                         : isCompleted
-                        ? "text-slate-700"
-                        : "text-slate-400"
+                          ? "text-[#666858]"
+                          : "text-[#aaa697]"
                     }`}
                   >
                     {step.name}
                   </p>
 
                   {isCurrent && (
-                    <p className="mt-1 text-[10px] font-medium text-blue-600">
+                    <span className="mt-1 text-[10px] font-black uppercase tracking-wide text-[#c96f46]">
                       Current
-                    </p>
+                    </span>
                   )}
                 </div>
 
                 {index < steps.length - 1 && (
                   <div
-                    className={`mx-2 h-1 flex-1 rounded ${
+                    className={`mx-2 mt-5 h-1 flex-1 rounded-full ${
                       currentIndex > index
-                        ? "bg-blue-600"
-                        : "bg-slate-100"
+                        ? "bg-[#59613f]"
+                        : "bg-[#e4ded0]"
                     }`}
                   />
                 )}
@@ -303,166 +367,336 @@ export default function RequestsPage() {
     );
   }
 
-  return (
-    <main className="min-h-screen bg-slate-50">
+  const pendingCount = requests.filter(
+    (request) =>
+      request.status?.toLowerCase() === "pending"
+  ).length;
 
-      {/* HEADER */}
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+  const processingCount = requests.filter(
+    (request) =>
+      request.status?.toLowerCase() ===
+      "processing"
+  ).length;
 
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 font-bold text-slate-900"
-          >
-            <ArrowLeft size={17} />
-            eBarangay Connect
-          </Link>
+  const completedCount = requests.filter(
+    (request) =>
+      request.status?.toLowerCase() ===
+      "completed"
+  ).length;
 
-          <span className="text-sm font-semibold text-slate-600">
-            My Requests
-          </span>
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f4f0e4] px-6">
+        <div className="text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4d5435] text-[#f7f2e7]">
+            <Loader2
+              size={27}
+              className="animate-spin"
+            />
+          </div>
 
-        </div>
-      </header>
+          <p className="mt-5 text-lg font-black text-[#25281e]">
+            Loading your requests
+          </p>
 
-      {/* CONTENT */}
-      <section className="mx-auto max-w-5xl px-6 py-10">
-
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            My Requests
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-600">
-            Track the status and history of your barangay document requests.
+          <p className="mt-1 text-sm text-[#777465]">
+            Getting your document request activity
+            ready.
           </p>
         </div>
+      </main>
+    );
+  }
 
-        {/* ERROR */}
-        {errorMessage && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+  return (
+    <main className="min-h-screen bg-[#77794f] px-3 py-3 text-[#25281e] sm:px-5 sm:py-5">
+      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl overflow-hidden rounded-4xl bg-[#f4f0e4] shadow-2xl sm:min-h-[calc(100vh-40px)]">
+        {/* HEADER */}
+        <header className="border-b border-[#dcd5c4] bg-[#f7f3e9]">
+          <div className="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
+                <Home size={20} />
+              </div>
 
-            <p className="font-semibold text-red-700">
-              Error
-            </p>
+              <div>
+                <p className="text-lg font-black leading-none tracking-tight text-[#24271d]">
+                  eBarangay
+                </p>
 
-            <p className="mt-1 text-sm text-red-600">
-              {errorMessage}
-            </p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7b8058]">
+                  Connect
+                </p>
+              </div>
+            </Link>
 
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="hidden items-center gap-2 rounded-full border border-[#d3ccba] px-5 py-2.5 text-sm font-bold text-[#555548] transition hover:bg-[#ebe5d7] sm:inline-flex"
+              >
+                <ArrowLeft size={16} />
+                Dashboard
+              </Link>
+
+              <Link
+                href="/requests/new"
+                className="inline-flex items-center gap-2 rounded-full bg-[#c96f46] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#b8613d] sm:px-5"
+              >
+                <FilePlus2 size={16} />
+
+                <span className="hidden sm:inline">
+                  New Request
+                </span>
+
+                <span className="sm:hidden">
+                  New
+                </span>
+              </Link>
+            </div>
           </div>
-        )}
+        </header>
 
-        {/* REQUESTS */}
-        <div className="mt-8">
+        {/* CONTENT */}
+        <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-12 lg:py-10">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#696958] transition hover:text-[#b55f3b]"
+          >
+            <ArrowLeft size={16} />
+            Back to Dashboard
+          </Link>
 
-          {loading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
-              <p className="text-slate-500">
-                Loading requests...
+          {/* HERO */}
+          <section className="mt-6 overflow-hidden rounded-4xl bg-[#4d5435] text-[#f7f2e7]">
+            <div className="grid gap-8 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:items-end lg:p-10">
+              <div>
+                <div className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2">
+                  <FileText size={14} />
+
+                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#d7d8c5]">
+                    Resident Portal
+                  </span>
+                </div>
+
+                <h1 className="mt-5 text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+                  My Requests
+                </h1>
+
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-[#d4d5c5] sm:text-base">
+                  Track your barangay document
+                  requests, follow their processing
+                  status, and review updates from the
+                  barangay.
+                </p>
+              </div>
+
+              <Link
+                href="/requests/new"
+                className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3 text-sm font-black text-white transition hover:bg-[#b8613d]"
+              >
+                Create New Request
+                <ArrowRight size={17} />
+              </Link>
+            </div>
+          </section>
+
+          {/* STATS */}
+          <section className="grid grid-cols-2 gap-3 py-6 lg:grid-cols-4">
+            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
+              <p className="text-3xl font-black">
+                {requests.length}
+              </p>
+
+              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
+                Total Requests
               </p>
             </div>
-          ) : requests.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
 
-              <p className="font-semibold text-slate-700">
-                No document requests found.
+            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
+              <p className="text-3xl font-black text-[#9a672e]">
+                {pendingCount}
               </p>
 
-              <p className="mt-2 text-sm text-slate-500">
-                You have not submitted any document requests yet.
+              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
+                Pending
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
+              <p className="text-3xl font-black text-[#6b6037]">
+                {processingCount}
+              </p>
+
+              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
+                Processing
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
+              <p className="text-3xl font-black text-[#435332]">
+                {completedCount}
+              </p>
+
+              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
+                Completed
+              </p>
+            </div>
+          </section>
+
+          {/* ERROR */}
+          {errorMessage && (
+            <div className="mb-6 rounded-3xl border border-[#dfb9aa] bg-[#f7e5de] p-5">
+              <p className="font-black text-[#8d4938]">
+                Something went wrong
+              </p>
+
+              <p className="mt-1 wrap-break-word text-sm leading-6 text-[#9b5a49]">
+                {errorMessage}
+              </p>
+            </div>
+          )}
+
+          {/* REQUESTS */}
+          {requests.length === 0 ? (
+            <section className="rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] px-6 py-14 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
+                <FileText size={25} />
+              </div>
+
+              <h2 className="mt-5 text-xl font-black">
+                No document requests yet
+              </h2>
+
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#777465]">
+                Once you submit a barangay document
+                request, you will be able to track its
+                progress and status history here.
               </p>
 
               <Link
                 href="/requests/new"
-                className="mt-5 inline-block rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3 text-sm font-black text-white transition hover:bg-[#b8613d]"
               >
                 Create New Request
+                <ArrowRight size={16} />
               </Link>
-
-            </div>
+            </section>
           ) : (
-            <div className="space-y-6">
-
+            <section className="space-y-5">
               {requests.map((request) => {
                 const requestHistory =
                   getRequestHistory(request.id);
 
                 return (
-                  <div
+                  <article
                     key={request.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                    className="overflow-hidden rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea]"
                   >
+                    {/* REQUEST TOP */}
+                    <div className="p-6 sm:p-8">
+                      <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+                        <div className="flex gap-4">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8e3d5] text-[#616849]">
+                            <FileText size={21} />
+                          </div>
 
-                    {/* REQUEST INFO */}
-                    <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8a8778]">
+                              Request #{request.id}
+                            </p>
 
-                      <div>
+                            <h2 className="mt-1 text-xl font-black text-[#292c21] sm:text-2xl">
+                              {getDocumentName(
+                                request
+                              )}
+                            </h2>
 
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                          Request #{request.id}
-                        </p>
-
-                        <h2 className="mt-1 text-xl font-bold text-slate-900">
-                          {getDocumentName(request)}
-                        </h2>
-
-                        <p className="mt-2 text-sm text-slate-600">
-                          <span className="font-semibold">
-                            Purpose:
-                          </span>{" "}
-                          {request.purpose || "No purpose provided."}
-                        </p>
-
-                      </div>
-
-                      <div>
+                            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#706f62]">
+                              <span className="font-black text-[#4f5143]">
+                                Purpose:
+                              </span>{" "}
+                              {request.purpose ||
+                                "No purpose provided."}
+                            </p>
+                          </div>
+                        </div>
 
                         <span
-                          className={`rounded-full px-3 py-1 text-sm font-semibold ${getStatusStyle(
+                          className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black ${getStatusStyle(
                             request.status
                           )}`}
                         >
-                          {request.status || "Pending"}
+                          {getStatusIcon(
+                            request.status
+                          )}
+                          {request.status ||
+                            "Pending"}
                         </span>
-
                       </div>
 
+                      {/* TRACKER */}
+                      {renderStatusTracker(
+                        request.status
+                      )}
+
+                      {/* NEW VIEW DETAILS BUTTON */}
+                      <div className="mt-7 border-t border-[#ded7c6] pt-5">
+                        <Link
+                          href={`/requests/${request.id}`}
+                          className="inline-flex items-center gap-2 rounded-xl bg-[#4d5435] px-5 py-3 text-sm font-black text-white transition hover:bg-[#41482d]"
+                        >
+                          View Request Details
+                          <ArrowRight size={16} />
+                        </Link>
+                      </div>
                     </div>
 
-                    {/* STATUS TRACKER */}
-                    {renderStatusTracker(request.status)}
-
                     {/* HISTORY */}
-                    <div className="mt-8 border-t border-slate-100 pt-6">
+                    <div className="border-t border-[#ded7c6] bg-[#f4f0e6] p-6 sm:p-8">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b8058]">
+                          Activity
+                        </p>
 
-                      <h3 className="text-lg font-bold text-slate-900">
-                        Status History
-                      </h3>
+                        <h3 className="mt-1 text-lg font-black text-[#303328]">
+                          Status History
+                        </h3>
+                      </div>
 
                       {historyLoading ? (
-                        <p className="mt-4 text-sm text-slate-500">
+                        <div className="mt-5 flex items-center gap-2 text-sm text-[#777465]">
+                          <Loader2
+                            size={16}
+                            className="animate-spin"
+                          />
                           Loading history...
-                        </p>
-                      ) : requestHistory.length === 0 ? (
-                        <p className="mt-4 text-sm text-slate-500">
-                          No status history available.
+                        </div>
+                      ) : requestHistory.length ===
+                        0 ? (
+                        <p className="mt-5 text-sm text-[#777465]">
+                          No status history
+                          available.
                         </p>
                       ) : (
-                        <div className="mt-5 space-y-4">
-
+                        <div className="mt-6">
                           {requestHistory.map(
-                            (historyItem, index) => (
+                            (
+                              historyItem,
+                              index
+                            ) => (
                               <div
-                                key={historyItem.id}
+                                key={
+                                  historyItem.id
+                                }
                                 className="flex gap-4"
                               >
-
-                                {/* ICON */}
                                 <div className="flex flex-col items-center">
-
                                   <div
-                                    className={`flex h-9 w-9 items-center justify-center rounded-full ${getHistoryIconStyle(
+                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${getHistoryIconStyle(
                                       historyItem.status
                                     )}`}
                                   >
@@ -472,46 +706,57 @@ export default function RequestsPage() {
                                   </div>
 
                                   {index <
-                                    requestHistory.length - 1 && (
-                                    <div className="mt-2 h-full w-px bg-slate-200" />
+                                    requestHistory.length -
+                                      1 && (
+                                    <div className="my-2 min-h-8 w-px flex-1 bg-[#d7d0bf]" />
                                   )}
-
                                 </div>
 
-                                {/* DETAILS */}
-                                <div className="pb-4">
+                                <div className="pb-6">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-black text-[#303328]">
+                                      {
+                                        historyItem.status
+                                      }
+                                    </p>
 
-                                  <p className="font-semibold text-slate-900">
-                                    {historyItem.status}
-                                  </p>
+                                    {index ===
+                                      requestHistory.length -
+                                        1 && (
+                                      <span className="rounded-full bg-[#e3e6d6] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-[#5b6442]">
+                                        Latest
+                                      </span>
+                                    )}
+                                  </div>
 
-                                  <p className="mt-1 text-sm text-slate-600">
+                                  <p className="mt-1 max-w-2xl text-sm leading-6 text-[#706f62]">
                                     {historyItem.remarks ||
                                       "No remarks provided."}
                                   </p>
-
                                 </div>
-
                               </div>
                             )
                           )}
-
                         </div>
                       )}
-
                     </div>
-
-                  </div>
+                  </article>
                 );
               })}
-
-            </div>
+            </section>
           )}
-
         </div>
 
-      </section>
-
+        {/* FOOTER */}
+        <footer className="border-t border-[#d9d2c1] bg-[#f7f3e9] px-5 py-5 sm:px-8 lg:px-12">
+          <div className="flex flex-col gap-2 text-xs text-[#858273] sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 eBarangay Connect</p>
+            <p>
+              Digital barangay services for residents.
+            </p>
+          </div>
+        </footer>
+      </div>
     </main>
   );
 }

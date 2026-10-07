@@ -5,8 +5,12 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock3,
+  FileCheck2,
   FileText,
+  Home,
+  MapPin,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 
 const services = [
@@ -17,6 +21,7 @@ const services = [
     description:
       "A document commonly used for employment, applications, transactions, and other official purposes.",
     processing: "1 day",
+    icon: FileCheck2,
   },
   {
     category: "CERTIFICATION",
@@ -25,6 +30,7 @@ const services = [
     description:
       "A certification for qualified residents who need proof of financial or economic status.",
     processing: "1 day",
+    icon: FileText,
   },
   {
     category: "CERTIFICATION",
@@ -33,499 +39,526 @@ const services = [
     description:
       "Certifies that an individual is a resident of the barangay for official or personal transactions.",
     processing: "3 days",
+    icon: Home,
   },
 ];
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      {/* GOVERNMENT BAR */}
-      <div className="bg-[#0b1226] px-4 py-2 text-xs text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-[#f5c542]">
-              REPUBLIC OF THE PHILIPPINES
-            </span>
+    <main className="min-h-screen bg-[#77794f] p-3 text-[#292c21] sm:p-5">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-[#f4f0e4] shadow-2xl sm:rounded-[36px]">
 
-            <span className="hidden text-slate-500 sm:inline">
-              •
-            </span>
-
-            <span className="hidden sm:inline">
-              Barangay San Dok
-            </span>
-          </div>
-
-          <span className="hidden text-slate-300 md:block">
-            Digital Citizen Services Portal
-          </span>
-        </div>
-      </div>
-
-      {/* NAVBAR */}
-      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6">
-          {/* LOGO */}
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b1226] text-white">
-              <span className="text-lg">🏛️</span>
-            </div>
-
-            <div>
-              <div className="text-lg font-extrabold tracking-tight sm:text-xl">
-                eBarangay
-                <span className="text-[#1264ff]">
-                  Connect
-                </span>
+        {/* NAVIGATION */}
+        <header className="border-b border-[#dcd5c4] bg-[#f7f3e9]">
+          <div className="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
+            <Link
+              href="/"
+              className="flex items-center gap-3"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
+                <Home size={20} />
               </div>
 
-              <p className="hidden text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:block">
-                Digital Citizen Portal
-              </p>
-            </div>
-          </Link>
+              <div>
+                <p className="text-lg font-black leading-none tracking-tight">
+                  eBarangay
+                </p>
 
-          {/* DESKTOP NAVIGATION */}
-          <div className="hidden items-center gap-7 md:flex">
-            <a
-              href="#services"
-              className="text-sm font-medium text-slate-600 transition hover:text-[#1264ff]"
-            >
-              Services
-            </a>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7b8058]">
+                  Connect
+                </p>
+              </div>
+            </Link>
 
-            <a
-              href="#how-it-works"
-              className="text-sm font-medium text-slate-600 transition hover:text-[#1264ff]"
-            >
-              How It Works
-            </a>
+            <nav className="hidden items-center gap-8 md:flex">
+              <a
+                href="#services"
+                className="text-sm font-semibold text-[#555548] transition hover:text-[#4c5335]"
+              >
+                Services
+              </a>
+
+              <a
+                href="#how-it-works"
+                className="text-sm font-semibold text-[#555548] transition hover:text-[#4c5335]"
+              >
+                How It Works
+              </a>
+
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-[#555548] transition hover:text-[#4c5335]"
+              >
+                Login
+              </Link>
+
+              <Link
+                href="/register"
+                className="rounded-full bg-[#c96f46] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#b8613d]"
+              >
+                Create Account
+              </Link>
+            </nav>
 
             <Link
               href="/login"
-              className="text-sm font-semibold text-slate-700 transition hover:text-[#1264ff]"
+              className="rounded-full bg-[#c96f46] px-4 py-2 text-xs font-bold text-white md:hidden"
             >
               Login
             </Link>
-
-            <Link
-              href="/register"
-              className="rounded-xl bg-[#1264ff] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0d54dc]"
-            >
-              Create Account
-            </Link>
           </div>
+        </header>
 
-          {/* MOBILE LOGIN */}
-          <Link
-            href="/login"
-            className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 md:hidden"
-          >
-            Login
-          </Link>
-        </div>
-      </nav>
+        {/* HERO */}
+        <section className="px-5 pt-5 sm:px-8 lg:px-12 lg:pt-8">
+          <div className="overflow-hidden rounded-[32px] bg-[#ebe5d5]">
+            <div className="grid min-h-[500px] lg:grid-cols-[1.05fr_0.95fr]">
 
-      {/* HERO */}
-      <section className="px-4 pt-6 sm:px-6">
-        <div
-          className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#101a31] bg-cover bg-center shadow-xl"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, rgba(5,13,31,.98) 0%, rgba(7,16,36,.92) 45%, rgba(7,16,36,.58) 75%, rgba(7,16,36,.35) 100%), url('/barangay-hall.jpg')",
-          }}
-        >
-          <div className="px-6 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
-            <div className="max-w-3xl text-white">
-              {/* BADGE */}
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-200 backdrop-blur">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                Official Digital Citizen Portal
+              {/* HERO LEFT */}
+              <div className="flex flex-col justify-center px-7 py-12 sm:px-10 lg:px-12">
+                <div className="mb-6 flex w-fit items-center gap-2 rounded-full border border-[#cec5ae] bg-[#f6f1e6] px-4 py-2">
+                  <span className="h-2 w-2 rounded-full bg-[#788052]" />
+
+                  <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#65664e]">
+                    Digital Citizen Portal
+                  </span>
+                </div>
+
+                <h1 className="max-w-xl text-4xl font-black leading-[0.98] tracking-[-0.04em] text-[#25271e] sm:text-5xl lg:text-6xl">
+                  Barangay services,
+                  <br />
+                  made simpler.
+                </h1>
+
+                <p className="mt-6 max-w-xl text-sm leading-6 text-[#68675b] sm:text-base">
+                  eBarangay Connect lets residents submit barangay
+                  document requests online, monitor their request
+                  status, and manage their transactions in one
+                  convenient portal.
+                </p>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#b8613d]"
+                  >
+                    Get Started
+                    <ArrowRight size={17} />
+                  </Link>
+
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c1ae] bg-[#f7f2e7] px-6 py-3.5 text-sm font-bold text-[#4e513d] transition hover:bg-white"
+                  >
+                    Resident Login
+                  </Link>
+                </div>
+
+                <div className="mt-10 grid gap-4 sm:grid-cols-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d0c8b5] text-[#68704a]">
+                      <FileText size={17} />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-black">
+                        Online Requests
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] text-[#858273]">
+                        Submit digitally
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d0c8b5] text-[#68704a]">
+                      <Clock3 size={17} />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-black">
+                        Status Updates
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] text-[#858273]">
+                        Track progress
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#d0c8b5] text-[#68704a]">
+                      <ShieldCheck size={17} />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-black">
+                        Secure Access
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] text-[#858273]">
+                        Resident portal
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* HEADING */}
-              <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                Barangay services,
-                <br />
-                made simpler.
-              </h1>
+              {/* HERO RIGHT */}
+              <div className="relative min-h-[380px] overflow-hidden lg:min-h-[500px]">
+                <div
+                  className="absolute inset-5 overflow-hidden rounded-[70px_22px_22px_70px] bg-cover bg-center lg:inset-7"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(180deg, rgba(58,63,39,0.05), rgba(58,63,39,0.25)), url('/barangay-hall.jpg')",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#3f452d]/70 via-transparent to-transparent" />
 
-              {/* DESCRIPTION */}
-              <p className="mt-6 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                eBarangayConnect lets residents submit barangay
-                document requests online, monitor their request
-                status, and manage their transactions in one
-                convenient portal.
+                  <div className="absolute bottom-6 left-6 right-6 rounded-[20px] border border-white/20 bg-[#f5f0e5]/90 p-5 backdrop-blur-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#73775a]">
+                      Official Portal
+                    </p>
+
+                    <p className="mt-2 text-lg font-black text-[#2d3024]">
+                      Barangay San Dok
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-[#747265]">
+                      <MapPin size={14} />
+                      Malolos City, Philippines
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* QUICK ACTIONS */}
+        <section className="px-5 py-7 sm:px-8 lg:px-12">
+          <div className="grid gap-3 md:grid-cols-3">
+            <Link
+              href="/requests/new"
+              className="group rounded-[22px] border border-[#ddd6c5] bg-[#f8f4ea] p-5 transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e5dfcf] text-[#62694a]">
+                  <FileText size={20} />
+                </div>
+
+                <ArrowRight
+                  size={18}
+                  className="text-[#a9a492] transition group-hover:translate-x-1 group-hover:text-[#c96f46]"
+                />
+              </div>
+
+              <h2 className="mt-5 font-black">
+                Request a Document
+              </h2>
+
+              <p className="mt-2 text-xs leading-5 text-[#777465]">
+                Submit a new barangay document request online.
               </p>
+            </Link>
 
-              {/* BUTTONS */}
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/requests"
+              className="group rounded-[22px] border border-[#ddd6c5] bg-[#f8f4ea] p-5 transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e5dfcf] text-[#62694a]">
+                  <Clock3 size={20} />
+                </div>
+
+                <ArrowRight
+                  size={18}
+                  className="text-[#a9a492] transition group-hover:translate-x-1 group-hover:text-[#c96f46]"
+                />
+              </div>
+
+              <h2 className="mt-5 font-black">
+                My Requests
+              </h2>
+
+              <p className="mt-2 text-xs leading-5 text-[#777465]">
+                View your submitted requests and their current status.
+              </p>
+            </Link>
+
+            <Link
+              href="/login"
+              className="group rounded-[22px] border border-[#ddd6c5] bg-[#f8f4ea] p-5 transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e5dfcf] text-[#62694a]">
+                  <UserRound size={20} />
+                </div>
+
+                <ArrowRight
+                  size={18}
+                  className="text-[#a9a492] transition group-hover:translate-x-1 group-hover:text-[#c96f46]"
+                />
+              </div>
+
+              <h2 className="mt-5 font-black">
+                Resident Account
+              </h2>
+
+              <p className="mt-2 text-xs leading-5 text-[#777465]">
+                Sign in to access your personalized dashboard.
+              </p>
+            </Link>
+          </div>
+        </section>
+
+        {/* SERVICES */}
+        <section
+          id="services"
+          className="mx-5 overflow-hidden rounded-[30px] bg-[#4d5435] text-[#f7f2e7] sm:mx-8 lg:mx-12"
+        >
+          <div className="px-6 py-9 sm:px-8 lg:px-10">
+            <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+              <div className="flex flex-col justify-center">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#d2d4bb]">
+                  Document Services
+                </p>
+
+                <h2 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">
+                  Available barangay documents
+                </h2>
+
+                <p className="mt-4 max-w-md text-sm leading-6 text-[#d2d4c4]">
+                  Choose the document you need and submit your request
+                  through your resident account.
+                </p>
+
+                <Link
+                  href="/requests/new"
+                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-xl bg-[#c96f46] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#b8613d]"
+                >
+                  Start a Request
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                {services.map((service) => {
+                  const Icon = service.icon;
+
+                  return (
+                    <div
+                      key={service.title}
+                      className="flex flex-col rounded-[24px] bg-[#f4efe3] p-5 text-[#292c21]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e4dcc7] text-[#58603e]">
+                          <Icon size={20} />
+                        </div>
+
+                        <span className="rounded-full bg-[#e8dfca] px-3 py-1 text-xs font-black text-[#626448]">
+                          {service.price}
+                        </span>
+                      </div>
+
+                      <p className="mt-5 text-[9px] font-black uppercase tracking-[0.16em] text-[#888572]">
+                        {service.category}
+                      </p>
+
+                      <h3 className="mt-1 text-lg font-black">
+                        {service.title}
+                      </h3>
+
+                      <p className="mt-3 flex-1 text-xs leading-5 text-[#777465]">
+                        {service.description}
+                      </p>
+
+                      <div className="mt-5 border-t border-[#ddd5c2] pt-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[10px] font-semibold text-[#858273]">
+                            Processing
+                          </span>
+
+                          <span className="text-xs font-black">
+                            {service.processing}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/requests/new"
+                        className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-[#505738] py-3 text-xs font-bold text-white transition hover:bg-[#626a45]"
+                      >
+                        Request Document
+                        <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section
+          id="how-it-works"
+          className="px-5 py-12 sm:px-8 lg:px-12 lg:py-16"
+        >
+          <div className="text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7b8058]">
+              Simple Process
+            </p>
+
+            <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+              How eBarangay Connect works
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#777465]">
+              Requesting a barangay document only takes a few simple
+              steps.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-5xl gap-4 md:grid-cols-3">
+            <div className="rounded-[24px] border border-[#ddd6c5] bg-[#f8f4ea] p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#505738] text-sm font-black text-white">
+                01
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                Create an Account
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-[#777465]">
+                Register as a resident and access your personal
+                dashboard.
+              </p>
+            </div>
+
+            <div className="rounded-[24px] border border-[#ddd6c5] bg-[#f8f4ea] p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#505738] text-sm font-black text-white">
+                02
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                Submit Your Request
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-[#777465]">
+                Select the document you need and provide its purpose.
+              </p>
+            </div>
+
+            <div className="rounded-[24px] border border-[#ddd6c5] bg-[#f8f4ea] p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#c96f46] text-sm font-black text-white">
+                03
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                Track the Status
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-[#777465]">
+                Monitor whether your request is pending, processing,
+                completed, or rejected.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="px-5 pb-8 sm:px-8 lg:px-12">
+          <div className="overflow-hidden rounded-[30px] bg-[#4d5435] px-7 py-10 text-[#f7f2e7] sm:px-10">
+            <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
+              <div className="max-w-xl">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#626a45]">
+                  <CheckCircle2 size={22} />
+                </div>
+
+                <h2 className="mt-5 text-3xl font-black">
+                  Ready to request a document?
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-[#d6d6c7]">
+                  Create your resident account and manage your barangay
+                  document requests online.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1264ff] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#0d54dc]"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#b8613d]"
                 >
-                  Get Started
-                  <ArrowRight size={17} />
+                  Create Account
+                  <ArrowRight size={16} />
                 </Link>
 
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/20 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10"
                 >
                   Sign In
                 </Link>
               </div>
-
-              {/* TRUST POINTS */}
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                    <FileText size={17} />
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-bold">
-                      Online Requests
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Submit digitally
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                    <Clock3 size={17} />
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-bold">
-                      Status Updates
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Track your request
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                    <ShieldCheck size={17} />
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-bold">
-                      Secure Access
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Account-based portal
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* QUICK ACTIONS */}
-      <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Link
-            href="/requests/new"
-            className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[#1264ff]">
-                <FileText size={21} />
-              </div>
+        {/* FOOTER */}
+        <footer className="px-5 pb-7 sm:px-8 lg:px-12">
+          <div className="border-t border-[#d8d1bf] pt-7">
+            <div className="flex flex-col justify-between gap-7 md:flex-row">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
+                    <Home size={18} />
+                  </div>
 
-              <ArrowRight
-                size={18}
-                className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#1264ff]"
-              />
-            </div>
+                  <div>
+                    <p className="font-black">
+                      eBarangay Connect
+                    </p>
 
-            <h2 className="mt-4 text-base font-bold">
-              Request a Document
-            </h2>
-
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              Submit a new barangay document request online.
-            </p>
-          </Link>
-
-          <Link
-            href="/requests"
-            className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Clock3 size={21} />
-              </div>
-
-              <ArrowRight
-                size={18}
-                className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#1264ff]"
-              />
-            </div>
-
-            <h2 className="mt-4 text-base font-bold">
-              My Requests
-            </h2>
-
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              View your submitted requests and their current status.
-            </p>
-          </Link>
-
-          <Link
-            href="/login"
-            className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-                <ShieldCheck size={21} />
-              </div>
-
-              <ArrowRight
-                size={18}
-                className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#1264ff]"
-              />
-            </div>
-
-            <h2 className="mt-4 text-base font-bold">
-              Resident Account
-            </h2>
-
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              Sign in to access your personalized dashboard.
-            </p>
-          </Link>
-        </div>
-      </section>
-
-      {/* SERVICES */}
-      <section
-        id="services"
-        className="border-y border-slate-200 bg-white"
-      >
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1264ff]">
-                Document Services
-              </p>
-
-              <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
-                Available Barangay Documents
-              </h2>
-
-              <p className="mt-2 max-w-xl text-sm text-slate-500">
-                Choose a document and submit your request through
-                your resident account.
-              </p>
-            </div>
-
-            <Link
-              href="/requests/new"
-              className="inline-flex items-center gap-2 text-sm font-bold text-[#1264ff] hover:underline"
-            >
-              Start a request
-              <ArrowRight size={15} />
-            </Link>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-1 hover:bg-white hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-[10px] font-bold tracking-widest text-[#1264ff]">
-                    {service.category}
-                  </span>
-
-                  <span className="rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-slate-800 shadow-sm">
-                    {service.price}
-                  </span>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7b8058]">
+                      Digital Citizen Portal
+                    </p>
+                  </div>
                 </div>
 
-                <h3 className="mt-4 text-lg font-bold">
-                  {service.title}
-                </h3>
+                <p className="mt-4 max-w-md text-xs leading-5 text-[#777465]">
+                  A digital citizen portal designed to make barangay
+                  document services more accessible, organized, and
+                  convenient.
+                </p>
+              </div>
 
-                <p className="mt-2 min-h-16 text-xs leading-5 text-slate-500">
-                  {service.description}
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-[#565947]">
+                  Barangay San Dok
                 </p>
 
-                <div className="mt-5 border-t border-slate-200 pt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500">
-                      Processing time
-                    </span>
-
-                    <span className="text-xs font-bold text-slate-800">
-                      {service.processing}
-                    </span>
-                  </div>
-                </div>
-
-                <Link
-                  href="/requests/new"
-                  className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#0b1226] py-3 text-xs font-bold text-white transition hover:bg-[#1264ff]"
-                >
-                  Request Document
-                  <ArrowRight size={14} />
-                </Link>
+                <p className="mt-2 flex items-center gap-2 text-xs text-[#777465]">
+                  <MapPin size={14} />
+                  Malolos City, Philippines
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section
-        id="how-it-works"
-        className="mx-auto max-w-5xl px-4 py-16 sm:px-6"
-      >
-        <div className="text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#1264ff]">
-            Simple Process
-          </p>
-
-          <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
-            How eBarangayConnect works
-          </h2>
-
-          <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500">
-            Requesting a barangay document only takes a few simple
-            steps.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-sm font-extrabold text-[#1264ff]">
-              01
             </div>
 
-            <h3 className="mt-4 font-bold">
-              Create an Account
-            </h3>
+            <div className="mt-7 flex flex-col justify-between gap-2 border-t border-[#ddd6c5] pt-5 text-[10px] text-[#8a8778] sm:flex-row">
+              <p>
+                © 2026 eBarangay Connect. All rights reserved.
+              </p>
 
-            <p className="mt-2 text-xs leading-5 text-slate-500">
-              Register as a resident and access your personal
-              dashboard.
-            </p>
-          </div>
-
-          <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-sm font-extrabold text-[#1264ff]">
-              02
-            </div>
-
-            <h3 className="mt-4 font-bold">
-              Submit Your Request
-            </h3>
-
-            <p className="mt-2 text-xs leading-5 text-slate-500">
-              Select the document you need and provide its purpose.
-            </p>
-          </div>
-
-          <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-sm font-extrabold text-[#1264ff]">
-              03
-            </div>
-
-            <h3 className="mt-4 font-bold">
-              Track the Status
-            </h3>
-
-            <p className="mt-2 text-xs leading-5 text-slate-500">
-              Monitor whether your request is pending, processing,
-              completed, or rejected.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="px-4 pb-16 sm:px-6">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-[#0b1226] px-6 py-12 text-center text-white sm:px-10">
-          <div className="mx-auto max-w-2xl">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
-              <CheckCircle2 size={23} />
-            </div>
-
-            <h2 className="mt-5 text-2xl font-extrabold sm:text-3xl">
-              Ready to request a document?
-            </h2>
-
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Create your resident account and manage your barangay
-              document requests online.
-            </p>
-
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1264ff] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#0d54dc]"
-              >
-                Create Resident Account
-                <ArrowRight size={17} />
-              </Link>
-
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Sign In
-              </Link>
+              <p>
+                Digital barangay services for residents.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-[#080d1b] px-4 py-10 text-white sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 md:flex-row">
-          <div>
-            <div className="text-lg font-extrabold">
-              eBarangay
-              <span className="text-[#1264ff]">
-                Connect
-              </span>
-            </div>
-
-            <p className="mt-2 max-w-md text-xs leading-5 text-slate-400">
-              A digital citizen portal designed to make barangay
-              document services more accessible, organized, and
-              convenient.
-            </p>
-          </div>
-
-          <div className="text-xs text-slate-400">
-            <p className="font-semibold text-slate-300">
-              Barangay San Dok
-            </p>
-
-            <p className="mt-1">
-              Malolos City, Philippines
-            </p>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-8 max-w-6xl border-t border-white/10 pt-5 text-[10px] text-slate-500">
-          © 2026 eBarangayConnect. All rights reserved.
-        </div>
-      </footer>
+        </footer>
+      </div>
     </main>
   );
 }
-
