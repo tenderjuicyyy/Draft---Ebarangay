@@ -1,3 +1,4 @@
+﻿
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,9 +10,8 @@ import {
   Check,
   CheckCircle2,
   Clock,
-  FilePlus2,
   FileText,
-  Home,
+  Landmark,
   Loader2,
   X,
   XCircle,
@@ -24,12 +24,8 @@ type RequestItem = {
   status: string | null;
   purpose: string | null;
   document_types:
-    | {
-        name: string;
-      }
-    | {
-        name: string;
-      }[]
+    | { name: string }
+    | { name: string }[]
     | null;
 };
 
@@ -49,6 +45,7 @@ export default function RequestsPage() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // AUTHENTICATION AND REQUEST FETCHING
   useEffect(() => {
     let cancelled = false;
 
@@ -62,9 +59,7 @@ export default function RequestsPage() {
         error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (sessionError || !session) {
         if (sessionError) {
@@ -92,9 +87,7 @@ export default function RequestsPage() {
           .eq("profile_id", userId)
           .order("id", { ascending: false });
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (requestError) {
         setErrorMessage(
@@ -133,9 +126,7 @@ export default function RequestsPage() {
           .in("request_id", requestIds)
           .order("id", { ascending: true });
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (historyError) {
         setErrorMessage(
@@ -173,17 +164,17 @@ export default function RequestsPage() {
   function getStatusStyle(status: string | null) {
     switch (status?.toLowerCase()) {
       case "completed":
-        return "bg-[#dfe9d5] text-[#435332]";
+        return "bg-[#e6f2eb] text-[#28724e]";
 
       case "processing":
-        return "bg-[#e9e3cd] text-[#6b6037]";
+        return "bg-[#e5eff9] text-[#255e91]";
 
       case "rejected":
-        return "bg-[#f3ddd5] text-[#9a4f3c]";
+        return "bg-[#fae9e6] text-[#a9473c]";
 
       case "pending":
       default:
-        return "bg-[#f4e7cf] text-[#9a672e]";
+        return "bg-[#fbf1d9] text-[#8e6b25]";
     }
   }
 
@@ -224,17 +215,17 @@ export default function RequestsPage() {
   function getHistoryIconStyle(status: string) {
     switch (status.toLowerCase()) {
       case "completed":
-        return "bg-[#dfe9d5] text-[#435332]";
+        return "bg-[#e6f2eb] text-[#28724e]";
 
       case "processing":
-        return "bg-[#e9e3cd] text-[#6b6037]";
+        return "bg-[#e5eff9] text-[#255e91]";
 
       case "rejected":
-        return "bg-[#f3ddd5] text-[#9a4f3c]";
+        return "bg-[#fae9e6] text-[#a9473c]";
 
       case "pending":
       default:
-        return "bg-[#f4e7cf] text-[#9a672e]";
+        return "bg-[#fbf1d9] text-[#8e6b25]";
     }
   }
 
@@ -250,18 +241,18 @@ export default function RequestsPage() {
 
     if (currentStatus === "rejected") {
       return (
-        <div className="mt-6 rounded-2xl border border-[#dfb9aa] bg-[#f7e5de] p-5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f3d4ca] text-[#9a4f3c]">
-              <X size={18} />
+        <div className="mt-7 border-l-4 border-[#b74d3d] bg-[#fdf0ed] p-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#fae0da] text-[#a9473c]">
+              <X size={20} />
             </div>
 
             <div>
-              <p className="font-black text-[#8d4938]">
+              <p className="font-black text-[#943d31]">
                 Request Rejected
               </p>
 
-              <p className="mt-1 text-sm leading-6 text-[#9b5a49]">
+              <p className="mt-2 text-sm leading-7 text-[#943d31]">
                 This request has been rejected by the
                 barangay. Check the status history below
                 for additional remarks.
@@ -276,17 +267,17 @@ export default function RequestsPage() {
       {
         name: "Pending",
         value: "pending",
-        icon: <Clock size={16} />,
+        icon: <Clock size={17} />,
       },
       {
         name: "Processing",
         value: "processing",
-        icon: <Loader2 size={16} />,
+        icon: <Loader2 size={17} />,
       },
       {
         name: "Completed",
         value: "completed",
-        icon: <Check size={16} />,
+        icon: <Check size={17} />,
       },
     ];
 
@@ -295,13 +286,13 @@ export default function RequestsPage() {
     );
 
     return (
-      <div className="mt-7">
-        <div className="mb-5 flex items-center justify-between">
-          <p className="text-sm font-black text-[#34372b]">
+      <div className="mt-8">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <p className="text-sm font-black text-[#0b304b]">
             Request Status
           </p>
 
-          <span className="text-xs font-semibold text-[#858273]">
+          <span className="text-xs font-bold text-[#718391]">
             {status || "Pending"}
           </span>
         </div>
@@ -312,8 +303,7 @@ export default function RequestsPage() {
               currentIndex >= 0 &&
               index <= currentIndex;
 
-            const isCurrent =
-              currentIndex === index;
+            const isCurrent = currentIndex === index;
 
             return (
               <div
@@ -322,29 +312,29 @@ export default function RequestsPage() {
               >
                 <div className="flex min-w-16 flex-col items-center text-center">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+                    className={`flex h-11 w-11 items-center justify-center border transition ${
                       isCompleted
-                        ? "bg-[#59613f] text-white"
-                        : "bg-[#e8e2d5] text-[#aaa697]"
+                        ? "border-[#0b304b] bg-[#0b304b] text-white"
+                        : "border-[#dce3e8] bg-[#edf2f5] text-[#a0afba]"
                     }`}
                   >
                     {step.icon}
                   </div>
 
                   <p
-                    className={`mt-2 text-xs font-bold ${
+                    className={`mt-3 text-xs font-bold ${
                       isCurrent
-                        ? "text-[#505738]"
+                        ? "text-[#0b304b]"
                         : isCompleted
-                          ? "text-[#666858]"
-                          : "text-[#aaa697]"
+                        ? "text-[#47667c]"
+                        : "text-[#9babb6]"
                     }`}
                   >
                     {step.name}
                   </p>
 
                   {isCurrent && (
-                    <span className="mt-1 text-[10px] font-black uppercase tracking-wide text-[#c96f46]">
+                    <span className="mt-2 text-[10px] font-black uppercase tracking-wide text-[#9b7b40]">
                       Current
                     </span>
                   )}
@@ -352,10 +342,10 @@ export default function RequestsPage() {
 
                 {index < steps.length - 1 && (
                   <div
-                    className={`mx-2 mt-5 h-1 flex-1 rounded-full ${
+                    className={`mx-2 mt-5 h-1 flex-1 ${
                       currentIndex > index
-                        ? "bg-[#59613f]"
-                        : "bg-[#e4ded0]"
+                        ? "bg-[#d5bd81]"
+                        : "bg-[#e3e9ee]"
                     }`}
                   />
                 )}
@@ -374,34 +364,31 @@ export default function RequestsPage() {
 
   const processingCount = requests.filter(
     (request) =>
-      request.status?.toLowerCase() ===
-      "processing"
+      request.status?.toLowerCase() === "processing"
   ).length;
 
   const completedCount = requests.filter(
     (request) =>
-      request.status?.toLowerCase() ===
-      "completed"
+      request.status?.toLowerCase() === "completed"
   ).length;
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f0e4] px-6">
+      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-6 font-sans">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4d5435] text-[#f7f2e7]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#0b304b] text-white">
             <Loader2
-              size={27}
+              size={28}
               className="animate-spin"
             />
           </div>
 
-          <p className="mt-5 text-lg font-black text-[#25281e]">
+          <p className="mt-5 text-lg font-black text-[#0b304b]">
             Loading your requests
           </p>
 
-          <p className="mt-1 text-sm text-[#777465]">
-            Getting your document request activity
-            ready.
+          <p className="mt-2 text-sm text-[#697d8c]">
+            Getting your document request activity ready.
           </p>
         </div>
       </main>
@@ -409,354 +396,359 @@ export default function RequestsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#77794f] px-3 py-3 text-[#25281e] sm:px-5 sm:py-5">
-      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl overflow-hidden rounded-4xl bg-[#f4f0e4] shadow-2xl sm:min-h-[calc(100vh-40px)]">
-        {/* HEADER */}
-        <header className="border-b border-[#dcd5c4] bg-[#f7f3e9]">
-          <div className="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
-                <Home size={20} />
-              </div>
+    <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
+      {/* TOP GOVERNMENT BAR */}
+      <div className="bg-[#061b2b] text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
+            Digital Citizen Services Portal
+          </span>
 
-              <div>
-                <p className="text-lg font-black leading-none tracking-tight text-[#24271d]">
-                  eBarangay
-                </p>
+          <span className="hidden text-xs text-[#c7d7e3] sm:block">
+            eBarangay Connect
+          </span>
+        </div>
+      </div>
 
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7b8058]">
-                  Connect
-                </p>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="hidden items-center gap-2 rounded-full border border-[#d3ccba] px-5 py-2.5 text-sm font-bold text-[#555548] transition hover:bg-[#ebe5d7] sm:inline-flex"
-              >
-                <ArrowLeft size={16} />
-                Dashboard
-              </Link>
-
-              <Link
-                href="/requests/new"
-                className="inline-flex items-center gap-2 rounded-full bg-[#c96f46] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#b8613d] sm:px-5"
-              >
-                <FilePlus2 size={16} />
-
-                <span className="hidden sm:inline">
-                  New Request
-                </span>
-
-                <span className="sm:hidden">
-                  New
-                </span>
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        {/* CONTENT */}
-        <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-12 lg:py-10">
+      {/* HEADER */}
+      <header className="bg-[#0b304b] text-white shadow-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-sm font-bold text-[#696958] transition hover:text-[#b55f3b]"
+            className="flex items-center gap-4"
           >
-            <ArrowLeft size={16} />
-            Back to Dashboard
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
+              <Landmark
+                size={23}
+                strokeWidth={1.7}
+              />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5bd81]">
+                Digital Barangay Portal
+              </p>
+
+              <p className="mt-1 text-lg font-black tracking-tight sm:text-xl">
+                eBarangay Connect
+              </p>
+            </div>
           </Link>
 
-          {/* HERO */}
-          <section className="mt-6 overflow-hidden rounded-4xl bg-[#4d5435] text-[#f7f2e7]">
-            <div className="grid gap-8 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:items-end lg:p-10">
-              <div>
-                <div className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2">
-                  <FileText size={14} />
+          {/* DASHBOARD BUTTON ONLY */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 border border-white/30 px-5 py-3 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b]"
+            >
+              <ArrowLeft size={16} />
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      </header>
 
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#d7d8c5]">
-                    Resident Portal
-                  </span>
-                </div>
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-[#102f48] text-white">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-75"
+          style={{
+            backgroundImage:
+              "url('/barangay-hall.jpg')",
+          }}
+        />
 
-                <h1 className="mt-5 text-4xl font-black tracking-[-0.04em] sm:text-5xl">
-                  My Requests
-                </h1>
+        <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/95 via-[#0b304b]/90 to-[#0b304b]/75" />
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-[#d4d5c5] sm:text-base">
-                  Track your barangay document
-                  requests, follow their processing
-                  status, and review updates from the
-                  barangay.
-                </p>
-              </div>
+        <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-10 bg-[#d5bd81]" />
 
-              <Link
-                href="/requests/new"
-                className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3 text-sm font-black text-white transition hover:bg-[#b8613d]"
-              >
-                Create New Request
-                <ArrowRight size={17} />
-              </Link>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2c991]">
+              Resident Portal
+            </p>
+          </div>
+
+          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+            My Requests
+          </h1>
+
+          <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9] sm:text-base">
+            Track your barangay document requests, follow
+            their processing status, and review updates
+            from the barangay.
+          </p>
+        </div>
+      </section>
+
+      {/* MAIN CONTENT */}
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
+        <Link
+          href="/dashboard"
+          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] transition hover:text-[#9b7b40]"
+        >
+          
+        </Link>
+
+        {/* STATISTICS */}
+        <section className="mb-9 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+              <FileText size={19} />
             </div>
+
+            <p className="mt-5 text-3xl font-black text-[#0b304b]">
+              {requests.length}
+            </p>
+
+            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
+              Total Requests
+            </p>
+          </div>
+
+          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center bg-[#fbf1d9] text-[#8e6b25]">
+              <Clock size={19} />
+            </div>
+
+            <p className="mt-5 text-3xl font-black text-[#0b304b]">
+              {pendingCount}
+            </p>
+
+            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
+              Pending
+            </p>
+          </div>
+
+          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center bg-[#e5eff9] text-[#255e91]">
+              <Loader2 size={19} />
+            </div>
+
+            <p className="mt-5 text-3xl font-black text-[#0b304b]">
+              {processingCount}
+            </p>
+
+            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
+              Processing
+            </p>
+          </div>
+
+          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center bg-[#e6f2eb] text-[#28724e]">
+              <CheckCircle2 size={19} />
+            </div>
+
+            <p className="mt-5 text-3xl font-black text-[#0b304b]">
+              {completedCount}
+            </p>
+
+            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
+              Completed
+            </p>
+          </div>
+        </section>
+
+        {/* ERROR */}
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mb-8 border-l-4 border-[#b74d3d] bg-[#fdf0ed] px-6 py-5"
+          >
+            <p className="font-black text-[#943d31]">
+              Something went wrong
+            </p>
+
+            <p className="mt-2 wrap-break-word text-sm leading-7 text-[#943d31]">
+              {errorMessage}
+            </p>
+          </div>
+        )}
+
+        {/* REQUEST LIST */}
+        {requests.length === 0 ? (
+          <section className="border border-[#dce3e8] bg-white px-6 py-16 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+              <FileText size={27} />
+            </div>
+
+            <h2 className="mt-6 text-xl font-black text-[#0b304b]">
+              No document requests yet
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[#697d8c]">
+              Once you submit a barangay document request,
+              you will be able to track its progress and
+              status history here.
+            </p>
+
+            <Link
+              href="/requests/new"
+              className="mt-7 inline-flex items-center gap-2 bg-[#0b304b] px-6 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70]"
+            >
+              Create New Request
+              <ArrowRight size={16} />
+            </Link>
           </section>
-
-          {/* STATS */}
-          <section className="grid grid-cols-2 gap-3 py-6 lg:grid-cols-4">
-            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
-              <p className="text-3xl font-black">
-                {requests.length}
+        ) : (
+          <section className="space-y-6">
+            <div className="mb-6">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                Request Activity
               </p>
 
-              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
-                Total Requests
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
-              <p className="text-3xl font-black text-[#9a672e]">
-                {pendingCount}
-              </p>
-
-              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
-                Pending
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
-              <p className="text-3xl font-black text-[#6b6037]">
-                {processingCount}
-              </p>
-
-              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
-                Processing
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-[#ddd6c5] bg-[#f8f4ea] p-5">
-              <p className="text-3xl font-black text-[#435332]">
-                {completedCount}
-              </p>
-
-              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-[#777465]">
-                Completed
-              </p>
-            </div>
-          </section>
-
-          {/* ERROR */}
-          {errorMessage && (
-            <div className="mb-6 rounded-3xl border border-[#dfb9aa] bg-[#f7e5de] p-5">
-              <p className="font-black text-[#8d4938]">
-                Something went wrong
-              </p>
-
-              <p className="mt-1 wrap-break-word text-sm leading-6 text-[#9b5a49]">
-                {errorMessage}
-              </p>
-            </div>
-          )}
-
-          {/* REQUESTS */}
-          {requests.length === 0 ? (
-            <section className="rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] px-6 py-14 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                <FileText size={25} />
-              </div>
-
-              <h2 className="mt-5 text-xl font-black">
-                No document requests yet
+              <h2 className="mt-2 text-2xl font-black text-[#0b304b]">
+                Your Document Requests
               </h2>
+            </div>
 
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#777465]">
-                Once you submit a barangay document
-                request, you will be able to track its
-                progress and status history here.
-              </p>
+            {requests.map((request) => {
+              const requestHistory =
+                getRequestHistory(request.id);
 
-              <Link
-                href="/requests/new"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3 text-sm font-black text-white transition hover:bg-[#b8613d]"
-              >
-                Create New Request
-                <ArrowRight size={16} />
-              </Link>
-            </section>
-          ) : (
-            <section className="space-y-5">
-              {requests.map((request) => {
-                const requestHistory =
-                  getRequestHistory(request.id);
-
-                return (
-                  <article
-                    key={request.id}
-                    className="overflow-hidden rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea]"
-                  >
-                    {/* REQUEST TOP */}
-                    <div className="p-6 sm:p-8">
-                      <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
-                        <div className="flex gap-4">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8e3d5] text-[#616849]">
-                            <FileText size={21} />
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8a8778]">
-                              Request #{request.id}
-                            </p>
-
-                            <h2 className="mt-1 text-xl font-black text-[#292c21] sm:text-2xl">
-                              {getDocumentName(
-                                request
-                              )}
-                            </h2>
-
-                            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#706f62]">
-                              <span className="font-black text-[#4f5143]">
-                                Purpose:
-                              </span>{" "}
-                              {request.purpose ||
-                                "No purpose provided."}
-                            </p>
-                          </div>
+              return (
+                <article
+                  key={request.id}
+                  className="overflow-hidden border border-[#dce3e8] bg-white shadow-sm"
+                >
+                  {/* REQUEST INFORMATION */}
+                  <div className="p-6 sm:p-8">
+                    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+                      <div className="flex gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                          <FileText size={22} />
                         </div>
 
-                        <span
-                          className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black ${getStatusStyle(
-                            request.status
-                          )}`}
-                        >
-                          {getStatusIcon(
-                            request.status
-                          )}
-                          {request.status ||
-                            "Pending"}
-                        </span>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9b7b40]">
+                            Request #{request.id}
+                          </p>
+
+                          <h3 className="mt-2 text-xl font-black text-[#0b304b] sm:text-2xl">
+                            {getDocumentName(request)}
+                          </h3>
+
+                          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#697d8c]">
+                            <span className="font-black text-[#0b304b]">
+                              Purpose:
+                            </span>{" "}
+                            {request.purpose ||
+                              "No purpose provided."}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* TRACKER */}
-                      {renderStatusTracker(
-                        request.status
-                      )}
-
-                      {/* NEW VIEW DETAILS BUTTON */}
-                      <div className="mt-7 border-t border-[#ded7c6] pt-5">
-                        <Link
-                          href={`/requests/${request.id}`}
-                          className="inline-flex items-center gap-2 rounded-xl bg-[#4d5435] px-5 py-3 text-sm font-black text-white transition hover:bg-[#41482d]"
-                        >
-                          View Request Details
-                          <ArrowRight size={16} />
-                        </Link>
-                      </div>
+                      <span
+                        className={`inline-flex w-fit items-center gap-2 px-4 py-2 text-xs font-black ${getStatusStyle(
+                          request.status
+                        )}`}
+                      >
+                        {getStatusIcon(request.status)}
+                        {request.status || "Pending"}
+                      </span>
                     </div>
 
-                    {/* HISTORY */}
-                    <div className="border-t border-[#ded7c6] bg-[#f4f0e6] p-6 sm:p-8">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b8058]">
-                          Activity
-                        </p>
+                    {/* STATUS TRACKER */}
+                    {renderStatusTracker(request.status)}
 
-                        <h3 className="mt-1 text-lg font-black text-[#303328]">
-                          Status History
-                        </h3>
+                    {/* REQUEST DETAILS LINK */}
+                    <div className="mt-8 border-t border-[#e3e9ee] pt-6">
+                      <Link
+                        href={`/requests/${request.id}`}
+                        className="inline-flex items-center gap-2 bg-[#0b304b] px-6 py-3 text-sm font-black text-white transition hover:bg-[#174b70]"
+                      >
+                        View Request Details
+                        <ArrowRight size={16} />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* STATUS HISTORY */}
+                  <div className="border-t border-[#e3e9ee] bg-[#f8fafc] p-6 sm:p-8">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9b7b40]">
+                      Activity
+                    </p>
+
+                    <h4 className="mt-2 text-lg font-black text-[#0b304b]">
+                      Status History
+                    </h4>
+
+                    {historyLoading ? (
+                      <div className="mt-6 flex items-center gap-2 text-sm text-[#718391]">
+                        <Loader2
+                          size={16}
+                          className="animate-spin"
+                        />
+                        Loading history...
                       </div>
-
-                      {historyLoading ? (
-                        <div className="mt-5 flex items-center gap-2 text-sm text-[#777465]">
-                          <Loader2
-                            size={16}
-                            className="animate-spin"
-                          />
-                          Loading history...
-                        </div>
-                      ) : requestHistory.length ===
-                        0 ? (
-                        <p className="mt-5 text-sm text-[#777465]">
-                          No status history
-                          available.
-                        </p>
-                      ) : (
-                        <div className="mt-6">
-                          {requestHistory.map(
-                            (
-                              historyItem,
-                              index
-                            ) => (
-                              <div
-                                key={
-                                  historyItem.id
-                                }
-                                className="flex gap-4"
-                              >
-                                <div className="flex flex-col items-center">
-                                  <div
-                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${getHistoryIconStyle(
-                                      historyItem.status
-                                    )}`}
-                                  >
-                                    {getHistoryIcon(
-                                      historyItem.status
-                                    )}
-                                  </div>
-
-                                  {index <
-                                    requestHistory.length -
-                                      1 && (
-                                    <div className="my-2 min-h-8 w-px flex-1 bg-[#d7d0bf]" />
+                    ) : requestHistory.length === 0 ? (
+                      <p className="mt-6 text-sm text-[#718391]">
+                        No status history available.
+                      </p>
+                    ) : (
+                      <div className="mt-7">
+                        {requestHistory.map(
+                          (historyItem, index) => (
+                            <div
+                              key={historyItem.id}
+                              className="flex gap-4"
+                            >
+                              <div className="flex flex-col items-center">
+                                <div
+                                  className={`flex h-10 w-10 shrink-0 items-center justify-center ${getHistoryIconStyle(
+                                    historyItem.status
+                                  )}`}
+                                >
+                                  {getHistoryIcon(
+                                    historyItem.status
                                   )}
                                 </div>
 
-                                <div className="pb-6">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <p className="font-black text-[#303328]">
-                                      {
-                                        historyItem.status
-                                      }
-                                    </p>
-
-                                    {index ===
-                                      requestHistory.length -
-                                        1 && (
-                                      <span className="rounded-full bg-[#e3e6d6] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-[#5b6442]">
-                                        Latest
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  <p className="mt-1 max-w-2xl text-sm leading-6 text-[#706f62]">
-                                    {historyItem.remarks ||
-                                      "No remarks provided."}
-                                  </p>
-                                </div>
+                                {index <
+                                  requestHistory.length - 1 && (
+                                  <div className="my-2 min-h-8 w-px flex-1 bg-[#d5dfe7]" />
+                                )}
                               </div>
-                            )
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </section>
-          )}
-        </div>
 
-        {/* FOOTER */}
-        <footer className="border-t border-[#d9d2c1] bg-[#f7f3e9] px-5 py-5 sm:px-8 lg:px-12">
-          <div className="flex flex-col gap-2 text-xs text-[#858273] sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 eBarangay Connect</p>
-            <p>
-              Digital barangay services for residents.
-            </p>
-          </div>
-        </footer>
+                              <div className="pb-7">
+                                <div className="flex flex-wrap items-center gap-3">
+                                  <p className="font-black text-[#0b304b]">
+                                    {historyItem.status}
+                                  </p>
+
+                                  {index ===
+                                    requestHistory.length - 1 && (
+                                    <span className="bg-[#e8eef3] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-[#0b304b]">
+                                      Latest
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="mt-2 max-w-2xl text-sm leading-7 text-[#697d8c]">
+                                  {historyItem.remarks ||
+                                    "No remarks provided."}
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
       </div>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#dce3e8] bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <p>© 2026 eBarangay Connect</p>
+          <p>Digital barangay services for residents.</p>
+        </div>
+      </footer>
     </main>
   );
 }

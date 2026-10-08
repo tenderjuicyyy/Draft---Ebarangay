@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,11 +6,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Ban,
   Check,
   CheckCircle2,
   Clock,
   FileText,
-  Home,
+  Landmark,
   Loader2,
   LogOut,
   Mail,
@@ -81,7 +83,6 @@ export default function AdminRequestDetailsPage() {
     useState("Pending");
 
   const [remarks, setRemarks] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -101,16 +102,13 @@ export default function AdminRequestDetailsPage() {
         error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (sessionError || !session) {
         router.replace("/login");
         return;
       }
 
-      // CHECK ADMIN ROLE
       const {
         data: profile,
         error: profileError,
@@ -120,9 +118,7 @@ export default function AdminRequestDetailsPage() {
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (profileError) {
         console.error(
@@ -133,7 +129,6 @@ export default function AdminRequestDetailsPage() {
         setErrorMessage(
           "Unable to verify your admin access."
         );
-
         setLoading(false);
         return;
       }
@@ -142,7 +137,6 @@ export default function AdminRequestDetailsPage() {
         setErrorMessage(
           "Your profile was not found. Please make sure your profile exists in the profiles table."
         );
-
         setLoading(false);
         return;
       }
@@ -176,20 +170,13 @@ export default function AdminRequestDetailsPage() {
         .eq("id", requestId)
         .maybeSingle();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (error) {
-        console.error(
-          "Request loading error:",
-          error
-        );
-
+        console.error("Request loading error:", error);
         setErrorMessage(
           "Failed to load request details."
         );
-
         setLoading(false);
         return;
       }
@@ -200,11 +187,9 @@ export default function AdminRequestDetailsPage() {
         return;
       }
 
-      const requestData =
-        data as RequestDetails;
+      const requestData = data as RequestDetails;
 
       setRequest(requestData);
-
       setSelectedStatus(
         requestData.status || "Pending"
       );
@@ -221,9 +206,7 @@ export default function AdminRequestDetailsPage() {
         .eq("id", requestData.profile_id)
         .maybeSingle();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (residentError) {
         console.error(
@@ -234,7 +217,6 @@ export default function AdminRequestDetailsPage() {
         setErrorMessage(
           "Request loaded, but the resident information could not be loaded."
         );
-
         setLoading(false);
         return;
       }
@@ -261,9 +243,7 @@ export default function AdminRequestDetailsPage() {
         );
       }
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       setHistory(historyData ?? []);
       setLoading(false);
@@ -286,15 +266,12 @@ export default function AdminRequestDetailsPage() {
   ) {
     event.preventDefault();
 
-    if (!request) {
-      return;
-    }
+    if (!request) return;
 
     setUpdating(true);
     setUpdateError("");
     setSuccessMessage("");
 
-    // VERIFY CURRENT USER
     const {
       data: { session },
       error: sessionError,
@@ -306,7 +283,7 @@ export default function AdminRequestDetailsPage() {
       return;
     }
 
-    // VERIFY ADMIN ROLE AGAIN
+    // VERIFY ADMIN ROLE
     const {
       data: adminProfile,
       error: adminError,
@@ -325,7 +302,6 @@ export default function AdminRequestDetailsPage() {
       setUpdateError(
         "Unable to verify your admin account."
       );
-
       setUpdating(false);
       return;
     }
@@ -334,7 +310,15 @@ export default function AdminRequestDetailsPage() {
       setUpdateError(
         "You do not have permission to update requests."
       );
+      setUpdating(false);
+      return;
+    }
 
+    // PREVENT CHANGES TO CANCELLED REQUESTS
+    if (request.status?.toLowerCase() === "cancelled") {
+      setUpdateError(
+        "Cancelled requests cannot be updated."
+      );
       setUpdating(false);
       return;
     }
@@ -356,12 +340,11 @@ export default function AdminRequestDetailsPage() {
       setUpdateError(
         `Failed to update request: ${statusError.message}`
       );
-
       setUpdating(false);
       return;
     }
 
-    // VERIFY STATUS WAS ACTUALLY UPDATED
+    // VERIFY STATUS UPDATE
     const {
       data: verifiedRequest,
       error: verifyError,
@@ -380,7 +363,6 @@ export default function AdminRequestDetailsPage() {
       setUpdateError(
         "The request may have been updated, but the new status could not be verified."
       );
-
       setUpdating(false);
       return;
     }
@@ -392,12 +374,11 @@ export default function AdminRequestDetailsPage() {
       setUpdateError(
         "The request status did not save correctly. Please try again."
       );
-
       setUpdating(false);
       return;
     }
 
-    // ADD STATUS HISTORY
+    // SAVE STATUS HISTORY
     const {
       data: newHistory,
       error: historyError,
@@ -417,8 +398,6 @@ export default function AdminRequestDetailsPage() {
         historyError
       );
 
-      // Status was already updated, so show a specific
-      // message instead of pretending the whole operation failed.
       setRequest((currentRequest) =>
         currentRequest
           ? {
@@ -436,7 +415,6 @@ export default function AdminRequestDetailsPage() {
       return;
     }
 
-    // UPDATE UI IMMEDIATELY
     setRequest((currentRequest) =>
       currentRequest
         ? {
@@ -452,8 +430,6 @@ export default function AdminRequestDetailsPage() {
         newHistory as StatusHistory,
       ]);
     } else {
-      // Fallback: reload history if INSERT succeeded
-      // but Supabase did not return the inserted row.
       const { data: refreshedHistory } =
         await supabase
           .from("request_status_history")
@@ -474,9 +450,7 @@ export default function AdminRequestDetailsPage() {
   }
 
   function getDocumentType() {
-    if (!request?.document_types) {
-      return null;
-    }
+    if (!request?.document_types) return null;
 
     if (Array.isArray(request.document_types)) {
       return request.document_types[0] ?? null;
@@ -486,82 +460,76 @@ export default function AdminRequestDetailsPage() {
   }
 
   function getStatusIcon(status: string) {
-    const normalizedStatus =
-      status.toLowerCase();
+    const normalized = status.toLowerCase();
 
-    if (normalizedStatus === "completed") {
-      return <Check size={17} />;
-    }
+    if (normalized === "completed")
+      return <Check size={16} />;
 
-    if (normalizedStatus === "rejected") {
-      return <X size={17} />;
-    }
+    if (normalized === "rejected")
+      return <X size={16} />;
 
-    if (normalizedStatus === "processing") {
-      return <Loader2 size={17} />;
-    }
+    if (normalized === "cancelled")
+      return <Ban size={16} />;
 
-    return <Clock size={17} />;
+    if (normalized === "processing")
+      return <Loader2 size={16} />;
+
+    return <Clock size={16} />;
   }
 
   function getStatusClass(status: string) {
-    const normalizedStatus =
-      status.toLowerCase();
+    const normalized = status.toLowerCase();
 
-    if (normalizedStatus === "completed") {
-      return "bg-[#dfe9d5] text-[#435332]";
-    }
+    if (normalized === "completed")
+      return "bg-[#e6f2eb] text-[#28724e]";
 
-    if (normalizedStatus === "rejected") {
-      return "bg-[#f3ddd5] text-[#9a4f3c]";
-    }
+    if (normalized === "rejected")
+      return "bg-[#fae9e6] text-[#a9473c]";
 
-    if (normalizedStatus === "processing") {
-      return "bg-[#e9e3cd] text-[#6b6037]";
-    }
+    if (normalized === "cancelled")
+      return "bg-[#eceff1] text-[#566775]";
 
-    return "bg-[#f4e7cf] text-[#9a672e]";
+    if (normalized === "processing")
+      return "bg-[#e5eff9] text-[#255e91]";
+
+    return "bg-[#fbf1d9] text-[#8e6b25]";
   }
 
-  function getTimelineCircleClass(
-    status: string
-  ) {
-    const normalizedStatus =
-      status.toLowerCase();
+  function getTimelineCircleClass(status: string) {
+    const normalized = status.toLowerCase();
 
-    if (normalizedStatus === "completed") {
-      return "bg-[#596847] text-white";
-    }
+    if (normalized === "completed")
+      return "bg-[#28724e] text-white";
 
-    if (normalizedStatus === "rejected") {
-      return "bg-[#b35f48] text-white";
-    }
+    if (normalized === "rejected")
+      return "bg-[#a9473c] text-white";
 
-    if (normalizedStatus === "processing") {
-      return "bg-[#82764b] text-white";
-    }
+    if (normalized === "cancelled")
+      return "bg-[#566775] text-white";
 
-    return "bg-[#c28a45] text-white";
+    if (normalized === "processing")
+      return "bg-[#255e91] text-white";
+
+    return "bg-[#b18b43] text-white";
   }
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f0e4] px-6">
+      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-6 font-sans">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4d5435] text-[#f7f2e7]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#0b304b] text-white">
             <Loader2
-              size={27}
+              size={28}
               className="animate-spin"
             />
           </div>
 
-          <p className="mt-5 text-lg font-black text-[#25281e]">
+          <p className="mt-5 text-lg font-black text-[#0b304b]">
             Loading request
           </p>
 
-          <p className="mt-1 text-sm text-[#777465]">
-            Checking admin access and request
-            details...
+          <p className="mt-2 text-sm text-[#697d8c]">
+            Checking admin access and request details...
           </p>
         </div>
       </main>
@@ -570,23 +538,23 @@ export default function AdminRequestDetailsPage() {
 
   if (errorMessage) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#77794f] px-4 py-6">
-        <div className="w-full max-w-lg rounded-4xl bg-[#f4f0e4] p-7 text-center shadow-2xl sm:p-9">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f3ddd5] text-[#9a4f3c]">
-            <XCircle size={27} />
+      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-5 py-10 font-sans">
+        <div className="w-full max-w-lg border border-[#dce3e8] bg-white p-8 text-center shadow-sm sm:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#fae9e6] text-[#a9473c]">
+            <XCircle size={28} />
           </div>
 
-          <h1 className="mt-5 text-2xl font-black text-[#292c21]">
+          <h1 className="mt-6 text-2xl font-black text-[#0b304b]">
             Unable to Load Request
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-[#777465]">
+          <p className="mt-4 text-sm leading-7 text-[#697d8c]">
             {errorMessage}
           </p>
 
           <Link
             href="/admin"
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#4d5435] px-5 py-3 text-sm font-black text-white transition hover:bg-[#41482d]"
+            className="mt-8 inline-flex items-center gap-2 bg-[#0b304b] px-6 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70]"
           >
             <ArrowLeft size={16} />
             Back to Admin Dashboard
@@ -598,268 +566,297 @@ export default function AdminRequestDetailsPage() {
 
   const documentType = getDocumentType();
 
+  const isCancelled =
+    request?.status?.toLowerCase() === "cancelled";
+
   return (
-    <main className="min-h-screen bg-[#77794f] px-3 py-3 text-[#25281e] sm:px-5 sm:py-5">
-      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl overflow-hidden rounded-4xl bg-[#f4f0e4] shadow-2xl sm:min-h-[calc(100vh-40px)]">
-        {/* HEADER */}
-        <header className="border-b border-[#dcd5c4] bg-[#f7f3e9]">
-          <div className="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
-            <Link
-              href="/admin"
-              className="flex items-center gap-3"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
-                <Home size={20} />
-              </div>
+    <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
+      {/* TOP BAR */}
+      <div className="bg-[#061b2b] text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
+            Digital Citizen Services Portal
+          </span>
 
-              <div>
-                <p className="text-lg font-black leading-none tracking-tight text-[#24271d]">
-                  eBarangay
-                </p>
+          <span className="hidden text-xs text-[#c7d7e3] sm:block">
+            Administrator Access
+          </span>
+        </div>
+      </div>
 
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7b8058]">
-                  Connect
-                </p>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="hidden items-center gap-2 rounded-full bg-[#e4e6d6] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#59613f] sm:inline-flex">
-                <ShieldCheck size={14} />
-                Administrator
-              </span>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 rounded-full border border-[#d6cbbb] px-4 py-2.5 text-sm font-bold text-[#665c50] transition hover:border-[#d7b2a2] hover:bg-[#f1ded7] hover:text-[#9a4f3c]"
-              >
-                <LogOut size={16} />
-
-                <span className="hidden sm:inline">
-                  Logout
-                </span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* PAGE CONTENT */}
-        <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-12 lg:py-10">
+      {/* HEADER */}
+      <header className="bg-[#0b304b] text-white shadow-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-2 text-sm font-bold text-[#696958] transition hover:text-[#b55f3b]"
+            className="flex items-center gap-4"
           >
-            <ArrowLeft size={16} />
-            Back to Admin Dashboard
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
+              <Landmark size={23} strokeWidth={1.7} />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5bd81]">
+                Digital Barangay Portal
+              </p>
+
+              <p className="mt-1 text-lg font-black tracking-tight sm:text-xl">
+                eBarangay Connect
+              </p>
+            </div>
           </Link>
 
-          {/* HERO */}
-          <section className="mt-6 overflow-hidden rounded-4xl bg-[#4d5435] text-[#f7f2e7]">
-            <div className="p-7 sm:p-9 lg:p-10">
-              <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="flex items-center gap-3">
+            <span className="hidden items-center gap-2 border border-[#d5bd81]/50 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-[#e2c991] md:inline-flex">
+              <ShieldCheck size={15} />
+              Administrator
+            </span>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Logout"
+              className="inline-flex items-center gap-2 border border-white/30 px-4 py-3 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b]"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">
+                Logout
+              </span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-[#102f48] text-white">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{
+            backgroundImage: "url('/barangay-hall.jpg')",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/95 via-[#0b304b]/90 to-[#0b304b]/75" />
+
+        <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-10 bg-[#d5bd81]" />
+
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2c991]">
+              Request Management
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#d5bd81]">
+                Request #{request?.id}
+              </p>
+
+              <h1 className="mt-3 max-w-3xl wrap-wrap-break-word text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+                {documentType?.name ?? "Unknown Document"}
+              </h1>
+
+              <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9] sm:text-base">
+                Review resident information, manage the
+                request status, and view the processing
+                history.
+              </p>
+            </div>
+
+            {request?.status && (
+              <span
+                className={`inline-flex w-fit shrink-0 items-center gap-2 px-5 py-3 text-sm font-black ${getStatusClass(
+                  request.status
+                )}`}
+              >
+                {getStatusIcon(request.status)}
+                {request.status}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* MAIN CONTENT */}
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] transition hover:text-[#9b7b40]"
+        >
+          <ArrowLeft size={16} />
+          Back to Admin Dashboard
+        </Link>
+
+        {/* RESIDENT INFORMATION */}
+        <section className="mt-8 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+          <div className="flex items-start justify-between gap-4 border-b border-[#e3e9ee] pb-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                Resident Information
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+                Requester Details
+              </h2>
+
+              <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+                Account information of the resident who
+                submitted this request.
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+              <UserRound size={22} />
+            </div>
+          </div>
+
+          {resident ? (
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              {[
+                {
+                  label: "Full Name",
+                  value: resident.full_name,
+                  icon: <UserRound size={19} />,
+                },
+                {
+                  label: "Email Address",
+                  value: resident.email,
+                  icon: <Mail size={19} />,
+                },
+                {
+                  label: "Phone Number",
+                  value: resident.phone_number,
+                  icon: <Phone size={19} />,
+                },
+                {
+                  label: "Address",
+                  value: resident.address,
+                  icon: <MapPin size={19} />,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="border border-[#dce3e8] bg-[#f8fafc] p-5"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                    {item.icon}
+                  </div>
+
+                  <p className="mt-5 text-xs font-bold uppercase tracking-wide text-[#8193a2]">
+                    {item.label}
+                  </p>
+
+                  <p className="mt-2 wrap-wrap-break-word text-base font-black leading-7 text-[#173149]">
+                    {item.value || "Not provided"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-7 border border-[#dce3e8] bg-[#f8fafc] p-8 text-center">
+              <UserRound
+                size={26}
+                className="mx-auto text-[#8193a2]"
+              />
+
+              <p className="mt-4 font-black text-[#0b304b]">
+                Resident profile not found
+              </p>
+
+              <p className="mt-2 text-sm text-[#697d8c]">
+                No matching profile was found for this
+                request.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* STATUS MANAGEMENT */}
+        <section className="mt-7 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+          <div className="flex items-start justify-between gap-4 border-b border-[#e3e9ee] pb-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                Admin Controls
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+                Update Request Status
+              </h2>
+
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#697d8c]">
+                Select a new status and optionally add
+                remarks for the resident.
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+              <ShieldCheck size={22} />
+            </div>
+          </div>
+
+          {successMessage && (
+            <div
+              role="status"
+              className="mt-6 flex items-start gap-3 border-l-4 border-[#357c60] bg-[#edf7f1] px-5 py-4"
+            >
+              <CheckCircle2
+                size={20}
+                className="mt-0.5 shrink-0 text-[#357c60]"
+              />
+
+              <p className="text-sm font-bold leading-7 text-[#245e48]">
+                {successMessage}
+              </p>
+            </div>
+          )}
+
+          {updateError && (
+            <div
+              role="alert"
+              className="mt-6 flex items-start gap-3 border-l-4 border-[#b74d3d] bg-[#fdf0ed] px-5 py-4"
+            >
+              <XCircle
+                size={20}
+                className="mt-0.5 shrink-0 text-[#a9473c]"
+              />
+
+              <p className="wrap-wrap-break-word text-sm font-bold leading-7 text-[#943d31]">
+                {updateError}
+              </p>
+            </div>
+          )}
+
+          {isCancelled ? (
+            <div className="mt-7 border border-[#dce3e8] bg-[#f8fafc] p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#eceff1] text-[#566775]">
+                  <Ban size={22} />
+                </div>
+
                 <div>
-                  <div className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2">
-                    <FileText size={14} />
+                  <h3 className="text-lg font-black text-[#0b304b]">
+                    Request Cancelled
+                  </h3>
 
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#d7d8c5]">
-                      Request #{request?.id}
-                    </span>
-                  </div>
-
-                  <h1 className="mt-5 text-3xl font-black tracking-[-0.04em] sm:text-4xl lg:text-5xl">
-                    {documentType?.name ??
-                      "Unknown Document"}
-                  </h1>
-
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-[#d4d5c5] sm:text-base">
-                    Review the resident, document
-                    request information, update its
-                    status, and view the complete
-                    processing history.
+                  <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+                    This request was cancelled by the
+                    resident. Its processing status can no
+                    longer be changed.
                   </p>
                 </div>
-
-                {request?.status && (
-                  <span
-                    className={`inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-black ${getStatusClass(
-                      request.status
-                    )}`}
-                  >
-                    {getStatusIcon(
-                      request.status
-                    )}
-                    {request.status}
-                  </span>
-                )}
               </div>
             </div>
-          </section>
-
-          {/* RESIDENT INFORMATION */}
-          <section className="mt-6 rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] p-6 sm:p-8">
-            <div className="flex flex-col justify-between gap-4 border-b border-[#ded7c6] pb-6 sm:flex-row sm:items-start">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7b8058]">
-                  Resident Information
-                </p>
-
-                <h2 className="mt-2 text-2xl font-black text-[#292c21]">
-                  Requester details
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-[#777465]">
-                  Account information of the resident
-                  who submitted this document request.
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e6e8d8] text-[#5b6442]">
-                <UserRound size={21} />
-              </div>
-            </div>
-
-            {resident ? (
-              <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <UserRound size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Full Name
-                  </p>
-
-                  <p className="mt-1 wrap-break-word text-base font-black text-[#303328]">
-                    {resident.full_name ||
-                      "Not provided"}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <Mail size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Email Address
-                  </p>
-
-                  <p className="mt-1 wrap-break-word text-base font-black text-[#303328]">
-                    {resident.email ||
-                      "Not provided"}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <Phone size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Phone Number
-                  </p>
-
-                  <p className="mt-1 wrap-break-word text-base font-black text-[#303328]">
-                    {resident.phone_number ||
-                      "Not provided"}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <MapPin size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Address
-                  </p>
-
-                  <p className="mt-1 wrap-break-word text-base font-black leading-6 text-[#303328]">
-                    {resident.address ||
-                      "Not provided"}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-7 rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-6 text-center">
-                <UserRound
-                  size={25}
-                  className="mx-auto text-[#7b8058]"
-                />
-
-                <p className="mt-3 font-black text-[#303328]">
-                  Resident profile not found
-                </p>
-
-                <p className="mt-1 text-sm text-[#777465]">
-                  No matching profile was found for
-                  this request.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* ADMIN STATUS MANAGEMENT */}
-          <section className="mt-6 rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] p-6 sm:p-8">
-            <div className="flex flex-col justify-between gap-4 border-b border-[#ded7c6] pb-6 sm:flex-row sm:items-start">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c96f46]">
-                  Admin Controls
-                </p>
-
-                <h2 className="mt-2 text-2xl font-black text-[#292c21]">
-                  Update request status
-                </h2>
-
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#777465]">
-                  Select the new request status and
-                  optionally leave a remark for the
-                  resident.
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e6e8d8] text-[#5b6442]">
-                <ShieldCheck size={21} />
-              </div>
-            </div>
-
-            {successMessage && (
-              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-[#bdc9ae] bg-[#e5ecdc] p-4">
-                <CheckCircle2
-                  size={20}
-                  className="mt-0.5 shrink-0 text-[#53663e]"
-                />
-
-                <p className="text-sm font-bold text-[#435332]">
-                  {successMessage}
-                </p>
-              </div>
-            )}
-
-            {updateError && (
-              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-[#e2c3b8] bg-[#f3ddd5] p-4">
-                <XCircle
-                  size={20}
-                  className="mt-0.5 shrink-0 text-[#9a4f3c]"
-                />
-
-                <p className="text-sm font-bold text-[#8d4938]">
-                  {updateError}
-                </p>
-              </div>
-            )}
-
+          ) : (
             <form
               onSubmit={handleStatusUpdate}
-              className="mt-6"
+              className="mt-7"
             >
-              <div className="grid gap-5 lg:grid-cols-2">
-                {/* STATUS */}
+              <div className="grid gap-6 lg:grid-cols-2">
                 <div>
                   <label
                     htmlFor="status"
-                    className="text-sm font-black text-[#34372b]"
+                    className="block text-sm font-black text-[#173149]"
                   >
                     New Status
                   </label>
@@ -869,41 +866,31 @@ export default function AdminRequestDetailsPage() {
                     value={selectedStatus}
                     disabled={updating}
                     onChange={(event) => {
-                      setSelectedStatus(
-                        event.target.value
-                      );
-
+                      setSelectedStatus(event.target.value);
                       setSuccessMessage("");
                       setUpdateError("");
                     }}
-                    className="mt-2 w-full rounded-2xl border border-[#d5cebc] bg-[#fffdf7] px-4 py-3.5 text-sm font-bold text-[#34372b] outline-none transition focus:border-[#777f55] focus:ring-2 focus:ring-[#777f55]/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-3 w-full border border-[#cdd9e2] bg-[#f8fafc] px-4 py-4 text-sm font-bold text-[#173149] outline-none transition focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {STATUS_OPTIONS.map(
-                      (status) => (
-                        <option
-                          key={status}
-                          value={status}
-                        >
-                          {status}
-                        </option>
-                      )
-                    )}
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
                   </select>
 
-                  <p className="mt-2 text-xs leading-5 text-[#858273]">
+                  <p className="mt-3 text-xs leading-6 text-[#718391]">
                     Current status:{" "}
-                    <span className="font-black text-[#55594a]">
-                      {request?.status ||
-                        "Pending"}
+                    <span className="font-black text-[#0b304b]">
+                      {request?.status || "Pending"}
                     </span>
                   </p>
                 </div>
 
-                {/* REMARKS */}
                 <div>
                   <label
                     htmlFor="remarks"
-                    className="text-sm font-black text-[#34372b]"
+                    className="block text-sm font-black text-[#173149]"
                   >
                     Remarks
                   </label>
@@ -913,45 +900,37 @@ export default function AdminRequestDetailsPage() {
                     value={remarks}
                     disabled={updating}
                     onChange={(event) => {
-                      setRemarks(
-                        event.target.value
-                      );
-
+                      setRemarks(event.target.value);
                       setSuccessMessage("");
                       setUpdateError("");
                     }}
                     rows={4}
                     placeholder="Example: Your document is now being processed."
-                    className="mt-2 w-full resize-none rounded-2xl border border-[#d5cebc] bg-[#fffdf7] px-4 py-3.5 text-sm leading-6 text-[#34372b] outline-none transition placeholder:text-[#aaa697] focus:border-[#777f55] focus:ring-2 focus:ring-[#777f55]/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-3 w-full resize-none border border-[#cdd9e2] bg-[#f8fafc] px-4 py-4 text-sm leading-7 text-[#173149] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-col justify-between gap-4 rounded-3xl bg-[#ebe6d8] p-5 sm:flex-row sm:items-center">
+              <div className="mt-6 flex flex-col justify-between gap-5 bg-[#f0f4f7] p-5 sm:flex-row sm:items-center">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#777465]">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#718391]">
                     Selected Status
                   </p>
 
-                  <div className="mt-2">
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black ${getStatusClass(
-                        selectedStatus
-                      )}`}
-                    >
-                      {getStatusIcon(
-                        selectedStatus
-                      )}
-
-                      {selectedStatus}
-                    </span>
-                  </div>
+                  <span
+                    className={`mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-black ${getStatusClass(
+                      selectedStatus
+                    )}`}
+                  >
+                    {getStatusIcon(selectedStatus)}
+                    {selectedStatus}
+                  </span>
                 </div>
 
                 <button
                   type="submit"
                   disabled={updating}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3 text-sm font-black text-white transition hover:bg-[#b8613d] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#0b304b] px-7 py-3 text-sm font-black text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {updating ? (
                     <>
@@ -970,260 +949,226 @@ export default function AdminRequestDetailsPage() {
                 </button>
               </div>
             </form>
+          )}
+        </section>
+
+        {/* DOCUMENT DETAILS AND HISTORY */}
+        <div className="mt-7 grid gap-7 lg:grid-cols-[1.35fr_0.65fr]">
+          {/* DOCUMENT DETAILS */}
+          <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+            <div className="border-b border-[#e3e9ee] pb-6">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                Request Information
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+                Document Details
+              </h2>
+
+              <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+                Information submitted for this barangay
+                document request.
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              {[
+                {
+                  label: "Request ID",
+                  value: `#${request?.id}`,
+                  icon: <FileText size={19} />,
+                },
+                {
+                  label: "Document Type",
+                  value:
+                    documentType?.name ??
+                    "Unknown Document",
+                  icon: <FileText size={19} />,
+                },
+                {
+                  label: "Processing Time",
+                  value: `${
+                    documentType?.processing_days ?? 0
+                  } day${
+                    documentType?.processing_days === 1
+                      ? ""
+                      : "s"
+                  }`,
+                  icon: <Timer size={19} />,
+                },
+                {
+                  label: "Fee",
+                  value: `₱${documentType?.fee ?? 0}`,
+                  icon: <PhilippinePeso size={19} />,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="border border-[#dce3e8] bg-[#f8fafc] p-5"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                    {item.icon}
+                  </div>
+
+                  <p className="mt-5 text-xs font-bold uppercase tracking-wide text-[#8193a2]">
+                    {item.label}
+                  </p>
+
+                  <p className="mt-2 wrap-wrap-break-word text-lg font-black text-[#173149]">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-7">
+              <p className="text-sm font-black text-[#173149]">
+                Purpose
+              </p>
+
+              <div className="mt-3 border border-[#dce3e8] bg-[#f8fafc] p-5">
+                <p className="wrap-wrap-break-word text-sm leading-8 text-[#697d8c]">
+                  {request?.purpose ||
+                    "No purpose provided."}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-7 bg-[#f0f4f7] p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#718391]">
+                Current Request Status
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                <p className="text-lg font-black text-[#0b304b]">
+                  {request?.status || "Pending"}
+                </p>
+
+                {request?.status && (
+                  <span
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-black ${getStatusClass(
+                      request.status
+                    )}`}
+                  >
+                    {getStatusIcon(request.status)}
+                    {request.status}
+                  </span>
+                )}
+              </div>
+            </div>
           </section>
 
-          {/* DETAILS + HISTORY */}
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-            {/* REQUEST DETAILS */}
-            <section className="rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] p-6 sm:p-8">
-              <div className="border-b border-[#ded7c6] pb-6">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7b8058]">
-                  Request Information
-                </p>
+          {/* STATUS HISTORY */}
+          <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-7">
+            <div className="flex items-start gap-4 border-b border-[#e3e9ee] pb-6">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                <Clock size={20} />
+              </div>
 
-                <h2 className="mt-2 text-2xl font-black text-[#292c21]">
-                  Document details
+              <div>
+                <h2 className="text-lg font-black text-[#0b304b]">
+                  Status History
                 </h2>
 
-                <p className="mt-2 text-sm leading-6 text-[#777465]">
-                  Information submitted for this
-                  barangay document request.
+                <p className="mt-2 text-sm text-[#697d8c]">
+                  Request processing timeline.
                 </p>
               </div>
+            </div>
 
-              <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <FileText size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Request ID
-                  </p>
-
-                  <p className="mt-1 text-lg font-black text-[#303328]">
-                    #{request?.id}
-                  </p>
+            {history.length === 0 ? (
+              <div className="py-12 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                  <Clock size={23} />
                 </div>
 
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <FileText size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Document Type
-                  </p>
-
-                  <p className="mt-1 wrap-break-word text-lg font-black text-[#303328]">
-                    {documentType?.name ??
-                      "Unknown Document"}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <Timer size={18} />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Processing Time
-                  </p>
-
-                  <p className="mt-1 text-lg font-black text-[#303328]">
-                    {documentType?.processing_days ??
-                      0}{" "}
-                    day
-                    {documentType?.processing_days ===
-                    1
-                      ? ""
-                      : "s"}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e3d5] text-[#616849]">
-                    <PhilippinePeso
-                      size={18}
-                    />
-                  </div>
-
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-[#8a8778]">
-                    Fee
-                  </p>
-
-                  <p className="mt-1 text-lg font-black text-[#303328]">
-                    ₱{documentType?.fee ?? 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* PURPOSE */}
-              <div className="mt-6">
-                <p className="text-sm font-black text-[#34372b]">
-                  Purpose
+                <p className="mt-5 font-black text-[#0b304b]">
+                  No history yet
                 </p>
 
-                <div className="mt-3 rounded-3xl border border-[#ded7c6] bg-[#fffdf7] p-5">
-                  <p className="wrap-break-word text-sm leading-7 text-[#666658]">
-                    {request?.purpose ||
-                      "No purpose provided."}
-                  </p>
-                </div>
+                <p className="mt-2 text-sm leading-7 text-[#697d8c]">
+                  No status history is available for this
+                  request.
+                </p>
               </div>
+            ) : (
+              <div className="mt-7">
+                {history.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="relative flex gap-4 pb-8 last:pb-0"
+                  >
+                    {index < history.length - 1 && (
+                      <div className="absolute left-5 top-10 h-[calc(100%-24px)] w-px bg-[#dce3e8]" />
+                    )}
 
-              {/* CURRENT STATUS */}
-              <div className="mt-6 rounded-3xl bg-[#ebe6d8] p-5">
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#777465]">
-                      Current Request Status
-                    </p>
-
-                    <p className="mt-1 text-lg font-black text-[#303328]">
-                      {request?.status ||
-                        "Pending"}
-                    </p>
-                  </div>
-
-                  {request?.status && (
-                    <span
-                      className={`inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-black ${getStatusClass(
-                        request.status
+                    <div
+                      className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center ${getTimelineCircleClass(
+                        item.status
                       )}`}
                     >
-                      {getStatusIcon(
-                        request.status
-                      )}
+                      {getStatusIcon(item.status)}
+                    </div>
 
-                      {request.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </section>
+                    <div className="min-w-0 flex-1 pt-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-black text-[#0b304b]">
+                          {item.status}
+                        </p>
 
-            {/* STATUS HISTORY */}
-            <section className="rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] p-6 sm:p-7">
-              <div className="flex items-start gap-3 border-b border-[#ded7c6] pb-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e6e8d8] text-[#5b6442]">
-                  <Clock size={18} />
-                </div>
-
-                <div>
-                  <p className="font-black text-[#303328]">
-                    Status History
-                  </p>
-
-                  <p className="mt-1 text-sm text-[#777465]">
-                    Request processing timeline.
-                  </p>
-                </div>
-              </div>
-
-              {history.length === 0 ? (
-                <div className="py-10 text-center">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#ebe6d8] text-[#6a704e]">
-                    <Clock size={22} />
-                  </div>
-
-                  <p className="mt-4 font-black text-[#4d5042]">
-                    No history yet
-                  </p>
-
-                  <p className="mt-1 text-sm text-[#858273]">
-                    No status history is
-                    available for this request.
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-6">
-                  {history.map(
-                    (item, index) => (
-                      <div
-                        key={item.id}
-                        className="relative flex gap-4 pb-7 last:pb-0"
-                      >
-                        {index <
-                          history.length - 1 && (
-                          <div className="absolute left-5 top-10 h-[calc(100%-24px)] w-px bg-[#d7d0bf]" />
-                        )}
-
-                        <div
-                          className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${getTimelineCircleClass(
-                            item.status
-                          )}`}
-                        >
-                          {getStatusIcon(
-                            item.status
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1 pt-1">
-                          <div className="flex items-start justify-between gap-3">
-                            <p className="font-black text-[#3d4033]">
-                              {item.status}
-                            </p>
-
-                            <span className="shrink-0 rounded-full bg-[#ece7da] px-2.5 py-1 text-[10px] font-black text-[#858273]">
-                              #{item.id}
-                            </span>
-                          </div>
-
-                          <p className="mt-1 wrap-break-word text-sm leading-6 text-[#777465]">
-                            {item.remarks ||
-                              "No remarks provided."}
-                          </p>
-                        </div>
+                        <span className="shrink-0 bg-[#f0f4f7] px-2.5 py-1 text-[10px] font-black text-[#718391]">
+                          #{item.id}
+                        </span>
                       </div>
-                    )
-                  )}
-                </div>
-              )}
 
-              {history.length > 0 && (
-                <div className="mt-7 border-t border-[#ded7c6] pt-5">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#858273]">
-                    <CheckCircle2
-                      size={14}
-                      className="text-[#657157]"
-                    />
-
-                    {history.length} status{" "}
-                    {history.length === 1
-                      ? "update"
-                      : "updates"}{" "}
-                    recorded
+                      <p className="mt-2 wrap-wrap-break-word text-sm leading-7 text-[#697d8c]">
+                        {item.remarks ||
+                          "No remarks provided."}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </section>
-          </div>
+                ))}
+              </div>
+            )}
 
-          {/* BOTTOM ACTION */}
-          <div className="mt-6 flex justify-start">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#4d5435] px-5 py-3 text-sm font-black text-white transition hover:bg-[#41482d]"
-            >
-              <ArrowLeft size={16} />
-              Back to Admin Dashboard
-            </Link>
-          </div>
+            {history.length > 0 && (
+              <div className="mt-7 border-t border-[#e3e9ee] pt-5">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[#718391]">
+                  <CheckCircle2
+                    size={15}
+                    className="text-[#28724e]"
+                  />
+
+                  {history.length} status{" "}
+                  {history.length === 1
+                    ? "update"
+                    : "updates"}{" "}
+                  recorded
+                </div>
+              </div>
+            )}
+          </section>
         </div>
 
-        {/* FOOTER */}
-        <footer className="mt-8 border-t border-[#d9d2c1] bg-[#f7f3e9] px-5 py-5 sm:px-8 lg:px-12">
-          <div className="flex flex-col gap-2 text-xs text-[#858273] sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 eBarangay Connect</p>
-
-            <p>
-              Administrator request management
-              portal.
-            </p>
-          </div>
-        </footer>
+        {/* BACK BUTTON */}
+        <div className="mt-8">
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 bg-[#0b304b] px-6 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70]"
+          >
+            <ArrowLeft size={16} />
+            Back to Admin Dashboard
+          </Link>
+        </div>
       </div>
+
+      {/* FOOTER */}
+      <footer className="mt-12 border-t border-[#dce3e8] bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <p>© 2026 eBarangay Connect</p>
+          <p>Administrator request management portal.</p>
+        </div>
+      </footer>
     </main>
   );
 }

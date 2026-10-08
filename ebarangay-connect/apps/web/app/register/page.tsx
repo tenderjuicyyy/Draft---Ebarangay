@@ -1,3 +1,4 @@
+﻿
 "use client";
 
 import Link from "next/link";
@@ -9,7 +10,7 @@ import {
   Eye,
   EyeOff,
   FileText,
-  Home,
+  Landmark,
   Loader2,
   LockKeyhole,
   Mail,
@@ -34,6 +35,7 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Existing registration logic preserved.
   async function handleRegister(event: React.FormEvent) {
     event.preventDefault();
 
@@ -95,449 +97,455 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#77794f] p-3 text-[#292c21] sm:p-5">
-      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl overflow-hidden rounded-[28px] bg-[#f4f0e4] shadow-2xl sm:min-h-[calc(100vh-40px)] sm:rounded-[36px]">
-        <div className="grid min-h-[calc(100vh-24px)] lg:grid-cols-[0.92fr_1.08fr] sm:min-h-[calc(100vh-40px)]">
+    <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
+      {/* TOP GOVERNMENT BAR */}
+      <div className="bg-[#061b2b] text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
+            Digital Citizen Services Portal
+          </span>
+          <span className="hidden text-xs text-[#c7d7e3] sm:block">
+            Mines View, Baguio City, Philippines
+          </span>
+        </div>
+      </div>
 
-          {/* LEFT SIDE */}
-          <section className="relative hidden overflow-hidden bg-[#4d5435] p-10 text-[#f7f2e7] lg:flex lg:flex-col lg:justify-between xl:p-12">
-            {/* Decorative shapes */}
-            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full border-45 border-[#606846]" />
+      {/* HEADER */}
+      <header className="bg-[#0b304b] text-white shadow-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
+          <Link href="/" className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
+              <Landmark size={23} strokeWidth={1.7} />
+            </div>
 
-            <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[#59613f]" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d5bd81]">
+                Digital Barangay Portal
+              </p>
+              <p className="mt-1 text-lg font-black tracking-tight sm:text-xl">
+                eBarangay Connect
+              </p>
+            </div>
+          </Link>
 
-            <div className="absolute bottom-28 right-10 h-28 w-28 rounded-full border-20 border-[#626a45]" />
+          <Link
+            href="/"
+            className="hidden items-center gap-2 border border-white/30 px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b] sm:inline-flex"
+          >
+            <ArrowLeft size={15} />
+            Back to Home
+          </Link>
+        </div>
+      </header>
 
-            {/* Logo */}
+      {/* MAIN CONTENT */}
+      <div className="mx-auto grid min-h-[calc(100vh-132px)] max-w-7xl lg:grid-cols-[0.95fr_1.05fr]">
+        {/* LEFT INFORMATION PANEL */}
+        <section className="relative hidden overflow-hidden bg-[#102f48] px-10 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-75"
+            style={{
+              backgroundImage: "url('/barangay-hall.jpg')",
+            }}
+          />
+
+          <div className="absolute inset-0 bg-linear-to- from-[#0b304b]/95 via-[#0b304b]/80 to-[#061b2b]/95" />
+
+          <div className="relative z-10">
+            <div className="mb-8 h-1 w-14 bg-[#d5bd81]" />
+
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#e2c991]">
+              Resident Registration
+            </p>
+
+            <h1 className="mt-7 text-5xl font-black leading-tight tracking-tight xl:text-6xl">
+              Your barangay
+              <br />
+              services,
+              <br />
+              online.
+            </h1>
+
+            <p className="mt-7 max-w-md text-sm leading-8 text-[#d6e1e9]">
+              Create your resident account to request barangay
+              documents, monitor their progress, and manage your
+              transactions through eBarangay Connect.
+            </p>
+
+            <div className="mt-12 space-y-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
+                  <FileText size={20} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-bold">
+                    Request documents online
+                  </p>
+                  <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
+                    Submit barangay requests from your account.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
+                  <CheckCircle2 size={20} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-bold">
+                    Track your requests
+                  </p>
+                  <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
+                    Monitor request status from your dashboard.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
+                  <ShieldCheck size={20} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-bold">
+                    Personal resident account
+                  </p>
+                  <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
+                    Your requests stay connected to your account.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 mt-14 border-t border-white/20 pt-6">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#aebfcd]">
+              eBarangay Connect â€¢ Digital Citizen Services
+            </p>
+          </div>
+        </section>
+
+        {/* RIGHT REGISTRATION PANEL */}
+        <section className="flex flex-col bg-white">
+          <div className="px-6 pt-7 sm:px-10 lg:hidden">
             <Link
               href="/"
-              className="relative z-10 flex w-fit items-center gap-3"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#0b304b]"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#afb395] text-[#f7f2e7]">
-                <Home size={20} />
-              </div>
-
-              <div>
-                <p className="text-lg font-black leading-none">
-                  eBarangay
-                </p>
-
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#cdd0b4]">
-                  Connect
-                </p>
-              </div>
+              <ArrowLeft size={16} />
+              Back to Home
             </Link>
+          </div>
 
-            {/* Main message */}
-            <div className="relative z-10 max-w-lg py-12">
-              <div className="mb-6 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2">
-                <span className="h-2 w-2 rounded-full bg-[#d49a70]" />
+          <div className="flex flex-1 justify-center px-6 py-12 sm:px-10 lg:px-14">
+            <div className="w-full max-w-lg">
+              {/* HEADING */}
+              <div className="mb-8">
+                <div className="mb-6 flex h-14 w-14 items-center justify-center bg-[#0b304b] text-white">
+                  <UserRound size={24} />
+                </div>
 
-                <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d8dac4]">
-                  Resident Registration
-                </span>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9b7b40]">
+                  Create Account
+                </p>
+
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-[#0b304b] sm:text-4xl">
+                  Create resident account
+                </h2>
+
+                <p className="mt-4 text-sm leading-7 text-[#697d8c]">
+                  Register to submit and track your barangay
+                  document requests online.
+                </p>
               </div>
 
-              <h1 className="text-5xl font-black leading-[0.98] tracking-[-0.04em] xl:text-6xl">
-                Your barangay
-                <br />
-                services,
-                <br />
-                online.
-              </h1>
-
-              <p className="mt-6 max-w-md text-sm leading-6 text-[#d6d7c6]">
-                Create your resident account to request barangay
-                documents, monitor their progress, and manage your
-                transactions through eBarangay Connect.
-              </p>
-
-              <div className="mt-9 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#626a45]">
-                    <FileText size={16} />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-bold">
-                      Request documents online
-                    </p>
-
-                    <p className="text-xs text-[#c6c8b4]">
-                      Submit barangay requests from your account.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#626a45]">
-                    <CheckCircle2 size={16} />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-bold">
-                      Track your requests
-                    </p>
-
-                    <p className="text-xs text-[#c6c8b4]">
-                      Monitor request status from your dashboard.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#626a45]">
-                    <ShieldCheck size={16} />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-bold">
-                      Personal resident account
-                    </p>
-
-                    <p className="text-xs text-[#c6c8b4]">
-                      Your requests stay connected to your account.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <p className="relative z-10 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#aeb19b]">
-              Digital Citizen Services Portal
-            </p>
-          </section>
-
-          {/* RIGHT SIDE */}
-          <section className="flex min-h-full flex-col bg-[#f4f0e4]">
-            {/* Top navigation */}
-            <div className="flex items-center justify-between px-6 py-6 sm:px-10 lg:px-12">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 text-sm font-bold text-[#676858] transition hover:text-[#c96f46]"
-              >
-                <ArrowLeft size={16} />
-                Back to home
-              </Link>
-
-              <Link
-                href="/"
-                className="flex items-center gap-2 lg:hidden"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
-                  <Home size={17} />
-                </div>
-
-                <span className="hidden text-sm font-black sm:block">
-                  eBarangay Connect
-                </span>
-              </Link>
-            </div>
-
-            {/* Registration form */}
-            <div className="flex flex-1 justify-center px-6 pb-10 sm:px-10 lg:px-12">
-              <div className="w-full max-w-lg py-4 lg:py-6">
-                <div className="mb-7">
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[#505738] text-[#f7f2e7]">
-                    <UserRound size={21} />
-                  </div>
-
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7b8058]">
-                    Create Account
-                  </p>
-
-                  <h2 className="mt-2 text-3xl font-black tracking-[-0.03em] text-[#292c21] sm:text-4xl">
-                    Create resident account
-                  </h2>
-
-                  <p className="mt-3 text-sm leading-6 text-[#777465]">
-                    Register to submit and track your barangay
-                    document requests online.
-                  </p>
-                </div>
-
-                {/* ERROR */}
-                {errorMessage && (
-                  <div className="mb-5 rounded-[18px] border border-[#dfb9aa] bg-[#f7e5de] p-4">
-                    <p className="text-xs font-black uppercase tracking-wide text-[#8d4938]">
-                      Registration failed
-                    </p>
-
-                    <p className="mt-1 text-sm text-[#9b5a49]">
-                      {errorMessage}
-                    </p>
-                  </div>
-                )}
-
-                {/* SUCCESS */}
-                {successMessage && (
-                  <div className="mb-5 rounded-[18px] border border-[#bdcbaa] bg-[#e6eddc] p-4">
-                    <div className="flex gap-3">
-                      <CheckCircle2
-                        size={19}
-                        className="mt-0.5 shrink-0 text-[#5e7048]"
-                      />
-
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-wide text-[#52633e]">
-                          Account created
-                        </p>
-
-                        <p className="mt-1 text-sm leading-6 text-[#647153]">
-                          {successMessage}
-                        </p>
-
-                        <Link
-                          href="/login"
-                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-black text-[#52633e] transition hover:text-[#3f4d30]"
-                        >
-                          Go to Login
-                          <ArrowRight size={14} />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <form
-                  onSubmit={handleRegister}
-                  className="space-y-5"
+              {/* ERROR MESSAGE */}
+              {errorMessage && (
+                <div
+                  role="alert"
+                  className="mb-6 border-l-4 border-[#b74d3d] bg-[#fdf0ed] px-5 py-4"
                 >
-                  {/* FULL NAME */}
-                  <div>
-                    <label
-                      htmlFor="fullName"
-                      className="mb-2 block text-sm font-bold text-[#4d5040]"
-                    >
-                      Full name
-                    </label>
+                  <p className="text-xs font-black uppercase tracking-wide text-[#943d31]">
+                    Registration failed
+                  </p>
+                  <p className="mt-2 text-sm text-[#943d31]">
+                    {errorMessage}
+                  </p>
+                </div>
+              )}
 
-                    <div className="relative">
-                      <UserRound
-                        size={18}
-                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#999582]"
-                      />
-
-                      <input
-                        id="fullName"
-                        type="text"
-                        autoComplete="name"
-                        required
-                        value={fullName}
-                        onChange={(event) =>
-                          setFullName(event.target.value)
-                        }
-                        placeholder="Juan Dela Cruz"
-                        disabled={loading}
-                        className="w-full rounded-2xl border border-[#d5cebc] bg-[#faf7ef] py-3.5 pl-12 pr-4 text-sm text-[#292c21] outline-none transition placeholder:text-[#aaa694] focus:border-[#7b8058] focus:bg-white focus:ring-2 focus:ring-[#7b8058]/10 disabled:cursor-not-allowed disabled:bg-[#ebe7dc] disabled:opacity-70"
-                      />
-                    </div>
-                  </div>
-
-                  {/* EMAIL */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="mb-2 block text-sm font-bold text-[#4d5040]"
-                    >
-                      Email address
-                    </label>
-
-                    <div className="relative">
-                      <Mail
-                        size={18}
-                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#999582]"
-                      />
-
-                      <input
-                        id="email"
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(event) =>
-                          setEmail(event.target.value)
-                        }
-                        placeholder="you@example.com"
-                        disabled={loading}
-                        className="w-full rounded-2xl border border-[#d5cebc] bg-[#faf7ef] py-3.5 pl-12 pr-4 text-sm text-[#292c21] outline-none transition placeholder:text-[#aaa694] focus:border-[#7b8058] focus:bg-white focus:ring-2 focus:ring-[#7b8058]/10 disabled:cursor-not-allowed disabled:bg-[#ebe7dc] disabled:opacity-70"
-                      />
-                    </div>
-                  </div>
-
-                  {/* PASSWORDS */}
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor="password"
-                        className="mb-2 block text-sm font-bold text-[#4d5040]"
-                      >
-                        Password
-                      </label>
-
-                      <div className="relative">
-                        <LockKeyhole
-                          size={18}
-                          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#999582]"
-                        />
-
-                        <input
-                          id="password"
-                          type={
-                            showPassword
-                              ? "text"
-                              : "password"
-                          }
-                          autoComplete="new-password"
-                          required
-                          minLength={8}
-                          value={password}
-                          onChange={(event) =>
-                            setPassword(event.target.value)
-                          }
-                          placeholder="At least 8 characters"
-                          disabled={loading}
-                          className="w-full rounded-2xl border border-[#d5cebc] bg-[#faf7ef] py-3.5 pl-12 pr-11 text-sm text-[#292c21] outline-none transition placeholder:text-[#aaa694] focus:border-[#7b8058] focus:bg-white focus:ring-2 focus:ring-[#7b8058]/10 disabled:cursor-not-allowed disabled:bg-[#ebe7dc] disabled:opacity-70"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowPassword(
-                              (current) => !current
-                            )
-                          }
-                          disabled={loading}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8d8978] transition hover:text-[#4d5435] disabled:opacity-50"
-                          aria-label={
-                            showPassword
-                              ? "Hide password"
-                              : "Show password"
-                          }
-                        >
-                          {showPassword ? (
-                            <EyeOff size={17} />
-                          ) : (
-                            <Eye size={17} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="confirmPassword"
-                        className="mb-2 block text-sm font-bold text-[#4d5040]"
-                      >
-                        Confirm password
-                      </label>
-
-                      <div className="relative">
-                        <LockKeyhole
-                          size={18}
-                          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#999582]"
-                        />
-
-                        <input
-                          id="confirmPassword"
-                          type={
-                            showConfirmPassword
-                              ? "text"
-                              : "password"
-                          }
-                          autoComplete="new-password"
-                          required
-                          minLength={8}
-                          value={confirmPassword}
-                          onChange={(event) =>
-                            setConfirmPassword(
-                              event.target.value
-                            )
-                          }
-                          placeholder="Re-enter password"
-                          disabled={loading}
-                          className="w-full rounded-2xl border border-[#d5cebc] bg-[#faf7ef] py-3.5 pl-12 pr-11 text-sm text-[#292c21] outline-none transition placeholder:text-[#aaa694] focus:border-[#7b8058] focus:bg-white focus:ring-2 focus:ring-[#7b8058]/10 disabled:cursor-not-allowed disabled:bg-[#ebe7dc] disabled:opacity-70"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(
-                              (current) => !current
-                            )
-                          }
-                          disabled={loading}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8d8978] transition hover:text-[#4d5435] disabled:opacity-50"
-                          aria-label={
-                            showConfirmPassword
-                              ? "Hide confirm password"
-                              : "Show confirm password"
-                          }
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff size={17} />
-                          ) : (
-                            <Eye size={17} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2 rounded-2xl bg-[#ebe5d7] px-4 py-3">
-                    <ShieldCheck
-                      size={16}
-                      className="mt-0.5 shrink-0 text-[#737a52]"
+              {/* SUCCESS MESSAGE */}
+              {successMessage && (
+                <div
+                  role="status"
+                  className="mb-6 border-l-4 border-[#357c60] bg-[#edf7f1] px-5 py-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2
+                      size={20}
+                      className="mt-0.5 shrink-0 text-[#357c60]"
                     />
 
-                    <p className="text-xs leading-5 text-[#747265]">
-                      Your password must contain at least 8
-                      characters. You may also need to verify your
-                      email before signing in.
-                    </p>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-[#245e48]">
+                        Account created
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-[#376a55]">
+                        {successMessage}
+                      </p>
+
+                      <Link
+                        href="/login"
+                        className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[#245e48] transition hover:text-[#173f31]"
+                      >
+                        Go to Login
+                        <ArrowRight size={16} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* REGISTRATION FORM */}
+              <form onSubmit={handleRegister} className="space-y-6">
+                {/* FULL NAME */}
+                <div>
+                  <label
+                    htmlFor="fullName"
+                    className="mb-2 block text-sm font-bold text-[#173149]"
+                  >
+                    Full name
+                  </label>
+
+                  <div className="relative">
+                    <UserRound
+                      size={18}
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
+                    />
+
+                    <input
+                      id="fullName"
+                      type="text"
+                      autoComplete="name"
+                      required
+                      value={fullName}
+                      onChange={(event) =>
+                        setFullName(event.target.value)
+                      }
+                      placeholder="Juan Dela Cruz"
+                      disabled={loading}
+                      className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                    />
+                  </div>
+                </div>
+
+                {/* EMAIL */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-2 block text-sm font-bold text-[#173149]"
+                  >
+                    Email address
+                  </label>
+
+                  <div className="relative">
+                    <Mail
+                      size={18}
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
+                    />
+
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(event) =>
+                        setEmail(event.target.value)
+                      }
+                      placeholder="you@example.com"
+                      disabled={loading}
+                      className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                    />
+                  </div>
+                </div>
+
+                {/* PASSWORD FIELDS */}
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {/* PASSWORD */}
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="mb-2 block text-sm font-bold text-[#173149]"
+                    >
+                      Password
+                    </label>
+
+                    <div className="relative">
+                      <LockKeyhole
+                        size={18}
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
+                      />
+
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={(event) =>
+                          setPassword(event.target.value)
+                        }
+                        placeholder="At least 8 characters"
+                        disabled={loading}
+                        className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-11 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPassword((current) => !current)
+                        }
+                        disabled={loading}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b] disabled:opacity-50"
+                        aria-label={
+                          showPassword
+                            ? "Hide password"
+                            : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#c96f46] px-5 py-3.5 text-sm font-black text-white shadow-sm transition hover:bg-[#b8613d] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2
-                          size={18}
-                          className="animate-spin"
-                        />
-                        Creating account...
-                      </>
-                    ) : (
-                      <>
-                        Create Account
-                        <ArrowRight size={17} />
-                      </>
-                    )}
-                  </button>
-                </form>
+                  {/* CONFIRM PASSWORD */}
+                  <div>
+                    <label
+                      htmlFor="confirmPassword"
+                      className="mb-2 block text-sm font-bold text-[#173149]"
+                    >
+                      Confirm password
+                    </label>
 
-                {/* LOGIN LINK */}
-                <div className="mt-7 rounded-[20px] border border-[#ddd6c5] bg-[#ebe5d7] p-5 text-center">
-                  <p className="text-sm text-[#6f6d5f]">
-                    Already have a resident account?
-                  </p>
+                    <div className="relative">
+                      <LockKeyhole
+                        size={18}
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
+                      />
 
-                  <Link
-                    href="/login"
-                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-black text-[#b75f3b] transition hover:text-[#944a2e]"
-                  >
-                    Sign in to your account
-                    <ArrowRight size={14} />
-                  </Link>
+                      <input
+                        id="confirmPassword"
+                        type={
+                          showConfirmPassword
+                            ? "text"
+                            : "password"
+                        }
+                        autoComplete="new-password"
+                        required
+                        minLength={8}
+                        value={confirmPassword}
+                        onChange={(event) =>
+                          setConfirmPassword(event.target.value)
+                        }
+                        placeholder="Re-enter password"
+                        disabled={loading}
+                        className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-11 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(
+                            (current) => !current
+                          )
+                        }
+                        disabled={loading}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b] disabled:opacity-50"
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
+                {/* PASSWORD NOTE */}
+                <div className="flex items-start gap-3 bg-[#edf2f5] px-4 py-4">
+                  <ShieldCheck
+                    size={18}
+                    className="mt-0.5 shrink-0 text-[#9b7b40]"
+                  />
+
+                  <p className="text-xs leading-6 text-[#697d8c]">
+                    Your password must contain at least 8
+                    characters. You may also need to verify your
+                    email before signing in.
+                  </p>
+                </div>
+
+                {/* SUBMIT BUTTON */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-3 bg-[#0b304b] px-5 py-4 text-sm font-black uppercase tracking-wide text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2
+                        size={18}
+                        className="animate-spin"
+                      />
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* LOGIN LINK */}
+              <div className="mt-8 border border-[#dce3e8] bg-[#f5f8fa] p-6 text-center">
+                <p className="text-sm text-[#697d8c]">
+                  Already have a resident account?
+                </p>
+
+                <Link
+                  href="/login"
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-black text-[#0b304b] transition hover:text-[#9b7b40]"
+                >
+                  Sign in to your account
+                  <ArrowRight size={16} />
+                </Link>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+
+          <div className="border-t border-[#e3e9ee] px-6 py-5 text-center text-xs text-[#8393a0]">
+            Â© 2026 eBarangay Connect. All rights reserved.
+          </div>
+        </section>
       </div>
     </main>
   );
 }
+

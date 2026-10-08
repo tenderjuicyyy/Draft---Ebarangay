@@ -1,3 +1,4 @@
+﻿
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +7,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CheckCircle2,
-  Home,
+  Landmark,
   Loader2,
   LockKeyhole,
   Mail,
@@ -40,6 +41,7 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // LOAD RESIDENT PROFILE
   useEffect(() => {
     let cancelled = false;
 
@@ -52,9 +54,7 @@ export default function ProfilePage() {
         error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (sessionError || !session) {
         router.replace("/login");
@@ -71,9 +71,7 @@ export default function ProfilePage() {
         .eq("id", userId)
         .maybeSingle();
 
-      if (cancelled) {
-        return;
-      }
+      if (cancelled) return;
 
       if (error) {
         setErrorMessage(error.message);
@@ -102,6 +100,7 @@ export default function ProfilePage() {
     };
   }, [router]);
 
+  // SAVE PROFILE CHANGES
   async function handleSave(
     event: React.FormEvent<HTMLFormElement>
   ) {
@@ -154,20 +153,17 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f0e4] px-6">
+      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-6 font-sans">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4d5435] text-[#f7f2e7]">
-            <Loader2
-              size={27}
-              className="animate-spin"
-            />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#0b304b] text-white">
+            <Loader2 size={28} className="animate-spin" />
           </div>
 
-          <p className="mt-5 text-lg font-black text-[#25281e]">
+          <p className="mt-5 text-lg font-black text-[#0b304b]">
             Loading your profile
           </p>
 
-          <p className="mt-1 text-sm text-[#777465]">
+          <p className="mt-2 text-sm text-[#697d8c]">
             Getting your resident information ready.
           </p>
         </div>
@@ -176,379 +172,410 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#77794f] px-3 py-3 text-[#25281e] sm:px-5 sm:py-5">
-      <div className="mx-auto min-h-[calc(100vh-24px)] max-w-7xl overflow-hidden rounded-4xl bg-[#f4f0e4] shadow-2xl sm:min-h-[calc(100vh-40px)]">
-        {/* HEADER */}
-        <header className="border-b border-[#dcd5c4] bg-[#f7f3e9]">
-          <div className="flex items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#7b8058] text-[#59603d]">
-                <Home size={20} />
-              </div>
+    <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
+      {/* TOP GOVERNMENT BAR */}
+      <div className="bg-[#061b2b] text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
+            Digital Citizen Services Portal
+          </span>
 
-              <div>
-                <p className="text-lg font-black leading-none tracking-tight text-[#24271d]">
-                  eBarangay
-                </p>
+          <span className="hidden text-xs text-[#c7d7e3] sm:block">
+            eBarangay Connect
+          </span>
+        </div>
+      </div>
 
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7b8058]">
-                  Connect
-                </p>
-              </div>
-            </Link>
-
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-full border border-[#d3ccba] px-4 py-2.5 text-sm font-bold text-[#555548] transition hover:bg-[#ebe5d7] sm:px-5"
-            >
-              <ArrowLeft size={16} />
-
-              <span className="hidden sm:inline">
-                Dashboard
-              </span>
-
-              <span className="sm:hidden">
-                Back
-              </span>
-            </Link>
-          </div>
-        </header>
-
-        {/* CONTENT */}
-        <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-12 lg:py-10">
+      {/* HEADER */}
+      <header className="bg-[#0b304b] text-white shadow-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-sm font-bold text-[#696958] transition hover:text-[#b55f3b]"
+            className="flex items-center gap-4"
           >
-            <ArrowLeft size={16} />
-            Back to Dashboard
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
+              <Landmark size={23} strokeWidth={1.7} />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5bd81]">
+                Digital Barangay Portal
+              </p>
+
+              <p className="mt-1 text-lg font-black tracking-tight sm:text-xl">
+                eBarangay Connect
+              </p>
+            </div>
           </Link>
 
-          {/* INTRO */}
-          <section className="mt-6">
-            <div className="flex w-fit items-center gap-2 rounded-full border border-[#d2cab6] bg-[#eee8da] px-4 py-2">
-              <UserRound
-                size={14}
-                className="text-[#6c744d]"
-              />
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 border border-white/30 px-4 py-3 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b]"
+          >
+            <ArrowLeft size={16} />
 
-              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#65664e]">
-                Resident Account
-              </span>
-            </div>
+            <span className="hidden sm:inline">
+              Dashboard
+            </span>
 
-            <h1 className="mt-5 text-4xl font-black tracking-[-0.04em] text-[#25271e] sm:text-5xl">
-              My Profile
-            </h1>
+            <span className="sm:hidden">
+              Back
+            </span>
+          </Link>
+        </div>
+      </header>
 
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#706f62] sm:text-base">
-              Review and update your personal information
-              used for your eBarangay Connect account.
+      {/* PAGE HERO */}
+      <section className="relative overflow-hidden bg-[#102f48] text-white">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-75"
+          style={{
+            backgroundImage: "url('/barangay-hall.jpg')",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/95 via-[#0b304b]/90 to-[#0b304b]/75" />
+
+        <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-10 bg-[#d5bd81]" />
+
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2c991]">
+              Resident Portal
             </p>
-          </section>
+          </div>
 
-          {/* MESSAGES */}
-          {errorMessage && (
-            <div className="mt-6 rounded-3xl border border-[#dfb9aa] bg-[#f7e5de] p-5">
-              <p className="font-black text-[#8d4938]">
-                Something went wrong
+          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+            My Profile
+          </h1>
+
+          <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9] sm:text-base">
+            Review and update your personal information
+            used for your eBarangay Connect account.
+          </p>
+
+          <div className="mt-7 flex items-center gap-2 text-xs font-bold text-[#d6e1e9]">
+            <ShieldCheck
+              size={18}
+              className="text-[#e2c991]"
+            />
+            Resident Account Information
+          </div>
+        </div>
+      </section>
+
+      {/* MAIN CONTENT */}
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
+        <Link
+          href="/dashboard"
+          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] transition hover:text-[#9b7b40]"
+        >
+            
+        </Link>
+
+        {/* ERROR MESSAGE */}
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mb-7 border-l-4 border-[#b74d3d] bg-[#fdf0ed] px-6 py-5"
+          >
+            <p className="font-black text-[#943d31]">
+              Something went wrong
+            </p>
+
+            <p className="mt-2 wrap-break-word text-sm leading-7 text-[#943d31]">
+              {errorMessage}
+            </p>
+          </div>
+        )}
+
+        {/* SUCCESS MESSAGE */}
+        {successMessage && (
+          <div
+            role="status"
+            className="mb-7 flex items-start gap-3 border-l-4 border-[#357c60] bg-[#edf7f1] px-6 py-5"
+          >
+            <CheckCircle2
+              size={22}
+              className="mt-0.5 shrink-0 text-[#357c60]"
+            />
+
+            <div>
+              <p className="font-black text-[#245e48]">
+                Changes Saved
               </p>
 
-              <p className="mt-1 wrap-break-word text-sm leading-6 text-[#9b5a49]">
-                {errorMessage}
+              <p className="mt-2 text-sm leading-7 text-[#376a55]">
+                {successMessage}
               </p>
             </div>
-          )}
+          </div>
+        )}
 
-          {successMessage && (
-            <div className="mt-6 flex items-start gap-3 rounded-3xl border border-[#bdc9ae] bg-[#e5ecdc] p-5">
-              <CheckCircle2
-                size={21}
-                className="mt-0.5 shrink-0 text-[#53663e]"
-              />
-
-              <div>
-                <p className="font-black text-[#435332]">
-                  Changes saved
-                </p>
-
-                <p className="mt-1 text-sm text-[#5f704d]">
-                  {successMessage}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {profile && (
-            <div className="mt-7 grid gap-6 lg:grid-cols-[0.68fr_1.32fr]">
+        {profile && (
+          <div className="grid gap-7 lg:grid-cols-[0.68fr_1.32fr]">
+            {/* LEFT COLUMN */}
+            <aside className="space-y-6">
               {/* PROFILE SUMMARY */}
-              <aside className="space-y-5">
-                <section className="overflow-hidden rounded-4xl bg-[#4d5435] p-7 text-[#f7f2e7]">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f2ecdf] text-[#505738]">
-                    <UserRound size={34} />
-                  </div>
+              <section className="bg-[#0b304b] p-7 text-white sm:p-8">
+                <div className="flex h-20 w-20 items-center justify-center border-2 border-[#d5bd81] bg-white/10 text-[#e2c991]">
+                  <UserRound size={35} />
+                </div>
 
-                  <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-[#d1d3ba]">
-                    Your Account
+                <p className="mt-7 text-xs font-bold uppercase tracking-[0.18em] text-[#e2c991]">
+                  Your Account
+                </p>
+
+                <h2 className="mt-3 wrap-wrap-break-word text-2xl font-black">
+                  {profile.full_name || "Resident"}
+                </h2>
+
+                <p className="mt-3 wrap-wrap-break-word text-sm leading-7 text-[#c7d7e3]">
+                  {profile.email || "No email available"}
+                </p>
+
+                <div className="mt-7 border-t border-white/20 pt-7">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#e2c991]">
+                    Account Role
                   </p>
 
-                  <h2 className="mt-2 wrap-break-word text-2xl font-black">
-                    {profile.full_name || "Resident"}
-                  </h2>
-
-                  <p className="mt-2 wrap-break-word text-sm text-[#d4d5c5]">
-                    {profile.email ||
-                      "No email available"}
-                  </p>
-
-                  <div className="mt-7 border-t border-white/15 pt-6">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#bfc2a8]">
-                      Account Role
-                    </p>
-
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#69704a]">
-                        <ShieldCheck size={18} />
-                      </div>
-
-                      <div>
-                        <p className="font-black capitalize">
-                          {profile.role || "resident"}
-                        </p>
-
-                        <p className="mt-0.5 text-xs text-[#d4d5c5]">
-                          eBarangay Connect account
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="rounded-3xl border border-[#dcd5c4] bg-[#f8f4ea] p-6">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e6e8d8] text-[#5b6442]">
-                      <LockKeyhole size={18} />
+                  <div className="mt-5 flex items-center gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center bg-white/10 text-[#e2c991]">
+                      <ShieldCheck size={21} />
                     </div>
 
                     <div>
-                      <p className="font-black text-[#303328]">
-                        Account security
-                      </p>
-
-                      <p className="mt-1 text-sm leading-6 text-[#706f62]">
-                        Your email address and account role
-                        cannot be changed from this profile
-                        page.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-              </aside>
-
-              {/* FORM */}
-              <form
-                onSubmit={handleSave}
-                className="rounded-4xl border border-[#dcd5c4] bg-[#f8f4ea] p-6 sm:p-8"
-              >
-                <div className="border-b border-[#ded7c6] pb-6">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7b8058]">
-                    Personal Information
-                  </p>
-
-                  <h2 className="mt-2 text-2xl font-black text-[#292c21]">
-                    Profile details
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-6 text-[#777465]">
-                    Keep your resident information accurate
-                    and up to date.
-                  </p>
-                </div>
-
-                <div className="mt-7 space-y-6">
-                  {/* FULL NAME */}
-                  <div>
-                    <label
-                      htmlFor="fullName"
-                      className="flex items-center gap-2 text-sm font-black text-[#34372b]"
-                    >
-                      <UserRound
-                        size={16}
-                        className="text-[#747b51]"
-                      />
-                      Full Name
-                    </label>
-
-                    <input
-                      id="fullName"
-                      type="text"
-                      value={fullName}
-                      onChange={(event) =>
-                        setFullName(event.target.value)
-                      }
-                      disabled={saving}
-                      required
-                      placeholder="Enter your full name"
-                      className="mt-3 w-full rounded-2xl border border-[#d5cebc] bg-[#fffdf7] px-4 py-3.5 text-sm font-semibold text-[#34372b] outline-none transition placeholder:text-[#aaa697] focus:border-[#777f55] focus:ring-2 focus:ring-[#777f55]/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                  </div>
-
-                  {/* EMAIL */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="flex items-center gap-2 text-sm font-black text-[#34372b]"
-                    >
-                      <Mail
-                        size={16}
-                        className="text-[#747b51]"
-                      />
-                      Email Address
-                    </label>
-
-                    <input
-                      id="email"
-                      type="email"
-                      value={profile.email || ""}
-                      disabled
-                      className="mt-3 w-full cursor-not-allowed rounded-2xl border border-[#d8d2c3] bg-[#ece8dd] px-4 py-3.5 text-sm font-semibold text-[#8a8778]"
-                    />
-
-                    <p className="mt-2 flex items-center gap-1.5 text-xs text-[#8a8778]">
-                      <LockKeyhole size={12} />
-                      Your email is managed by your account.
-                    </p>
-                  </div>
-
-                  {/* PHONE */}
-                  <div>
-                    <label
-                      htmlFor="phoneNumber"
-                      className="flex items-center gap-2 text-sm font-black text-[#34372b]"
-                    >
-                      <Phone
-                        size={16}
-                        className="text-[#747b51]"
-                      />
-                      Phone Number
-                    </label>
-
-                    <input
-                      id="phoneNumber"
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(event) =>
-                        setPhoneNumber(event.target.value)
-                      }
-                      disabled={saving}
-                      placeholder="Enter your phone number"
-                      className="mt-3 w-full rounded-2xl border border-[#d5cebc] bg-[#fffdf7] px-4 py-3.5 text-sm font-semibold text-[#34372b] outline-none transition placeholder:text-[#aaa697] focus:border-[#777f55] focus:ring-2 focus:ring-[#777f55]/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                  </div>
-
-                  {/* ADDRESS */}
-                  <div>
-                    <label
-                      htmlFor="address"
-                      className="flex items-center gap-2 text-sm font-black text-[#34372b]"
-                    >
-                      <MapPin
-                        size={16}
-                        className="text-[#747b51]"
-                      />
-                      Address
-                    </label>
-
-                    <textarea
-                      id="address"
-                      value={address}
-                      onChange={(event) =>
-                        setAddress(event.target.value)
-                      }
-                      disabled={saving}
-                      placeholder="Enter your address"
-                      rows={4}
-                      className="mt-3 w-full resize-none rounded-2xl border border-[#d5cebc] bg-[#fffdf7] px-4 py-3.5 text-sm leading-6 text-[#34372b] outline-none transition placeholder:text-[#aaa697] focus:border-[#777f55] focus:ring-2 focus:ring-[#777f55]/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                  </div>
-
-                  {/* ROLE */}
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-black text-[#34372b]">
-                      <ShieldCheck
-                        size={16}
-                        className="text-[#747b51]"
-                      />
-                      Account Role
-                    </label>
-
-                    <div className="mt-3 flex items-center justify-between rounded-2xl border border-[#d8d2c3] bg-[#ece8dd] px-4 py-3.5">
-                      <span className="text-sm font-bold capitalize text-[#666658]">
+                      <p className="font-black capitalize">
                         {profile.role || "resident"}
-                      </span>
+                      </p>
 
-                      <LockKeyhole
-                        size={15}
-                        className="text-[#9b9788]"
-                      />
+                      <p className="mt-1 text-xs text-[#c7d7e3]">
+                        eBarangay Connect account
+                      </p>
                     </div>
+                  </div>
+                </div>
+              </section>
 
-                    <p className="mt-2 text-xs text-[#8a8778]">
-                      Account roles are managed by the
-                      system.
+              {/* SECURITY INFORMATION */}
+              <section className="border border-[#dce3e8] bg-white p-7">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                    <LockKeyhole size={20} />
+                  </div>
+
+                  <div>
+                    <p className="font-black text-[#0b304b]">
+                      Account Security
+                    </p>
+
+                    <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+                      Your email address and account role
+                      cannot be changed from this profile page.
                     </p>
                   </div>
                 </div>
+              </section>
+            </aside>
 
-                {/* SAVE */}
-                <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[#ded7c6] pt-6 sm:flex-row sm:items-center sm:justify-between">
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d1c9b7] px-5 py-3 text-sm font-bold text-[#646455] transition hover:bg-[#eee8da]"
+            {/* PROFILE FORM */}
+            <form
+              onSubmit={handleSave}
+              className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-9"
+            >
+              <div className="border-b border-[#e3e9ee] pb-7">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                  Personal Information
+                </p>
+
+                <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+                  Profile Details
+                </h2>
+
+                <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+                  Keep your resident information accurate
+                  and up to date.
+                </p>
+              </div>
+
+              <div className="mt-8 space-y-7">
+                {/* FULL NAME */}
+                <div>
+                  <label
+                    htmlFor="fullName"
+                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
                   >
-                    <ArrowLeft size={16} />
-                    Cancel
-                  </Link>
+                    <UserRound
+                      size={17}
+                      className="text-[#9b7b40]"
+                    />
+                    Full Name
+                  </label>
 
-                  <button
-                    type="submit"
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(event) =>
+                      setFullName(event.target.value)
+                    }
                     disabled={saving}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#c96f46] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#b8613d] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2
-                          size={17}
-                          className="animate-spin"
-                        />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={17} />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
+                    required
+                    placeholder="Enter your full name"
+                    className="mt-4 w-full border border-[#cdd9e2] bg-[#f8fafc] px-4 py-4 text-sm font-semibold text-[#173149] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
                 </div>
-              </form>
-            </div>
-          )}
-        </div>
 
-        {/* FOOTER */}
-        <footer className="mt-8 border-t border-[#d9d2c1] bg-[#f7f3e9] px-5 py-5 sm:px-8 lg:px-12">
-          <div className="flex flex-col gap-2 text-xs text-[#858273] sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 eBarangay Connect</p>
-            <p>
-              Digital barangay services for residents.
-            </p>
+                {/* EMAIL */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                  >
+                    <Mail
+                      size={17}
+                      className="text-[#9b7b40]"
+                    />
+                    Email Address
+                  </label>
+
+                  <input
+                    id="email"
+                    type="email"
+                    value={profile.email || ""}
+                    disabled
+                    className="mt-4 w-full cursor-not-allowed border border-[#dce3e8] bg-[#edf2f5] px-4 py-4 text-sm font-semibold text-[#718391]"
+                  />
+
+                  <p className="mt-2 flex items-center gap-2 text-xs text-[#8193a2]">
+                    <LockKeyhole size={13} />
+                    Your email is managed by your account.
+                  </p>
+                </div>
+
+                {/* PHONE NUMBER */}
+                <div>
+                  <label
+                    htmlFor="phoneNumber"
+                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                  >
+                    <Phone
+                      size={17}
+                      className="text-[#9b7b40]"
+                    />
+                    Phone Number
+                  </label>
+
+                  <input
+                    id="phoneNumber"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(event) =>
+                      setPhoneNumber(event.target.value)
+                    }
+                    disabled={saving}
+                    placeholder="Enter your phone number"
+                    className="mt-4 w-full border border-[#cdd9e2] bg-[#f8fafc] px-4 py-4 text-sm font-semibold text-[#173149] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </div>
+
+                {/* ADDRESS */}
+                <div>
+                  <label
+                    htmlFor="address"
+                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                  >
+                    <MapPin
+                      size={17}
+                      className="text-[#9b7b40]"
+                    />
+                    Address
+                  </label>
+
+                  <textarea
+                    id="address"
+                    value={address}
+                    onChange={(event) =>
+                      setAddress(event.target.value)
+                    }
+                    disabled={saving}
+                    placeholder="Enter your address"
+                    rows={4}
+                    className="mt-4 w-full resize-none border border-[#cdd9e2] bg-[#f8fafc] px-4 py-4 text-sm leading-7 text-[#173149] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </div>
+
+                {/* ACCOUNT ROLE */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-black text-[#173149]">
+                    <ShieldCheck
+                      size={17}
+                      className="text-[#9b7b40]"
+                    />
+                    Account Role
+                  </label>
+
+                  <div className="mt-4 flex items-center justify-between border border-[#dce3e8] bg-[#edf2f5] px-4 py-4">
+                    <span className="text-sm font-bold capitalize text-[#718391]">
+                      {profile.role || "resident"}
+                    </span>
+
+                    <LockKeyhole
+                      size={16}
+                      className="text-[#98a9b5]"
+                    />
+                  </div>
+
+                  <p className="mt-2 text-xs text-[#8193a2]">
+                    Account roles are managed by the system.
+                  </p>
+                </div>
+              </div>
+
+              {/* FORM ACTIONS */}
+              <div className="mt-9 flex flex-col-reverse gap-3 border-t border-[#e3e9ee] pt-7 sm:flex-row sm:items-center sm:justify-between">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 border border-[#cdd9e2] px-6 py-3.5 text-sm font-bold text-[#0b304b] transition hover:bg-[#edf2f5]"
+                >
+                  <ArrowLeft size={16} />
+                  Cancel
+                </Link>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 bg-[#0b304b] px-7 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2
+                        size={18}
+                        className="animate-spin"
+                      />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-        </footer>
+        )}
       </div>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#dce3e8] bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <p>Â© 2026 eBarangay Connect</p>
+          <p>Digital barangay services for residents.</p>
+        </div>
+      </footer>
     </main>
   );
 }
+
