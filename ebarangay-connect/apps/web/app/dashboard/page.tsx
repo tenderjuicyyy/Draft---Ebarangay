@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import DashboardSwitcher from "@/components/DashboardSwitcher";
 import {
   ArrowRight,
   Ban,
@@ -340,6 +341,8 @@ export default function DashboardPage() {
 
           {/* DESKTOP LOGOUT BUTTON */}
           <div className="hidden items-center lg:flex">
+            <DashboardSwitcher current="resident" />
+
             <button
               type="button"
               onClick={handleLogout}
@@ -408,6 +411,8 @@ export default function DashboardPage() {
               >
                 My Profile
               </Link>
+
+              <DashboardSwitcher current="resident" />
 
               {/* MOBILE LOGOUT BUTTON */}
               <button

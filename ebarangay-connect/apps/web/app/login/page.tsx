@@ -33,16 +33,18 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] = useState("");
   const [resetError, setResetError] = useState("");
 
-  async function handleLogin(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  // LOGIN WITH ROLE-BASED REDIRECTION
+  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (loading) return;
 
     setLoading(true);
     setErrorMessage("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // 1. Authenticate the user
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -52,19 +54,64 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
-    } catch {
+      if (!data.user) {
+        setErrorMessage("Unable to identify your account. Please try again.");
+        return;
+      }
+
+      // 2. Retrieve the user's role from the profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Profile lookup failed:", profileError.message);
+
+        await supabase.auth.signOut();
+
+        setErrorMessage(
+          "Unable to verify your account role. Please try again.",
+        );
+        return;
+      }
+
+      // 3. Handle accounts without a profile
+      if (!profile) {
+        await supabase.auth.signOut();
+
+        setErrorMessage(
+          "Your profile was not found. Please contact the administrator.",
+        );
+        return;
+      }
+
+      // 4. Redirect according to the verified role
+      if (profile.role === "admin") {
+        router.replace("/admin");
+      } else if (profile.role === "resident") {
+        router.replace("/dashboard");
+      } else {
+        await supabase.auth.signOut();
+
+        setErrorMessage(
+          "Your account role is not recognized. Please contact the administrator.",
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+
       setErrorMessage(
-        "Something went wrong while signing in. Please try again."
+        "Something went wrong while signing in. Please try again.",
       );
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleForgotPassword(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  // FORGOT PASSWORD
+  async function handleForgotPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const normalizedEmail = email.trim();
@@ -80,29 +127,26 @@ export default function LoginPage() {
     setResetMessage("");
 
     try {
-      const redirectTo =
-        `${window.location.origin}/reset-password`;
+      const redirectTo = `${window.location.origin}/reset-password`;
 
-      const { error } =
-        await supabase.auth.resetPasswordForEmail(
-          normalizedEmail,
-          { redirectTo }
-        );
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        normalizedEmail,
+        { redirectTo },
+      );
 
       if (error) {
         setResetError(
-          "We could not send the reset email. Please try again later."
+          "We could not send the reset email. Please try again later.",
         );
         return;
       }
 
-      // Do not disclose whether an email is registered.
       setResetMessage(
-        "If an account exists for this email address, a password reset link has been sent. Please check your inbox and spam folder."
+        "If an account exists for this email address, a password reset link has been sent. Please check your inbox and spam folder.",
       );
     } catch {
       setResetError(
-        "A connection error occurred. Please check your internet connection and try again."
+        "A connection error occurred. Please check your internet connection and try again.",
       );
     } finally {
       setResetLoading(false);
@@ -194,9 +238,8 @@ export default function LoginPage() {
             </h1>
 
             <p className="mt-7 max-w-md text-sm leading-8 text-[#d6e1e9]">
-              Access your resident dashboard to request barangay
-              documents, monitor their progress, and manage your
-              transactions online.
+              Access your resident dashboard to request barangay documents,
+              monitor their progress, and manage your transactions online.
             </p>
 
             <div className="mt-12 space-y-7">
@@ -206,10 +249,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-bold">
-                    Manage document requests
-                  </p>
-
+                  <p className="text-sm font-bold">Manage document requests</p>
                   <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
                     Access all your barangay requests.
                   </p>
@@ -222,10 +262,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-bold">
-                    Track request status
-                  </p>
-
+                  <p className="text-sm font-bold">Track request status</p>
                   <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
                     See pending, processing, and completed requests.
                   </p>
@@ -238,10 +275,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-bold">
-                    Secure resident access
-                  </p>
-
+                  <p className="text-sm font-bold">Secure account access</p>
                   <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
                     Your account keeps your requests organized.
                   </p>
@@ -279,7 +313,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9b7b40]">
-                  Resident Login
+                  Secure Account Access
                 </p>
 
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-[#0b304b] sm:text-4xl">
@@ -291,7 +325,7 @@ export default function LoginPage() {
                 <p className="mt-4 text-sm leading-7 text-[#697d8c]">
                   {showForgotPassword
                     ? "Enter your registered email address and we will send you a secure password reset link."
-                    : "Enter your registered email and password to access your eBarangay Connect dashboard."}
+                    : "Enter your registered email and password to access your eBarangay Connect account."}
                 </p>
               </div>
 
@@ -305,9 +339,7 @@ export default function LoginPage() {
                     Login failed
                   </p>
 
-                  <p className="mt-2 text-sm text-[#943d31]">
-                    {errorMessage}
-                  </p>
+                  <p className="mt-2 text-sm text-[#943d31]">{errorMessage}</p>
                 </div>
               )}
 
@@ -349,10 +381,7 @@ export default function LoginPage() {
                     </div>
                   )}
 
-                  <form
-                    onSubmit={handleForgotPassword}
-                    className="space-y-5"
-                  >
+                  <form onSubmit={handleForgotPassword} className="space-y-5">
                     <div>
                       <label
                         htmlFor="reset-email"
@@ -373,9 +402,7 @@ export default function LoginPage() {
                           autoComplete="email"
                           required
                           value={email}
-                          onChange={(event) =>
-                            setEmail(event.target.value)
-                          }
+                          onChange={(event) => setEmail(event.target.value)}
                           placeholder="you@example.com"
                           className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
                         />
@@ -389,10 +416,7 @@ export default function LoginPage() {
                     >
                       {resetLoading ? (
                         <>
-                          <Loader2
-                            size={18}
-                            className="animate-spin"
-                          />
+                          <Loader2 size={18} className="animate-spin" />
                           Sending link...
                         </>
                       ) : (
@@ -414,121 +438,105 @@ export default function LoginPage() {
                   </button>
                 </section>
               ) : (
-                <>
-                  {/* LOGIN FORM */}
-                  <form
-                    onSubmit={handleLogin}
-                    className="space-y-6"
-                  >
-                    <div>
+                /* LOGIN FORM */
+                <form onSubmit={handleLogin} className="space-y-6">
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="mb-2 block text-sm font-bold text-[#173149]"
+                    >
+                      Email address
+                    </label>
+
+                    <div className="relative">
+                      <Mail
+                        size={18}
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
+                      />
+
+                      <input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between gap-3">
                       <label
-                        htmlFor="email"
-                        className="mb-2 block text-sm font-bold text-[#173149]"
+                        htmlFor="password"
+                        className="block text-sm font-bold text-[#173149]"
                       >
-                        Email address
+                        Password
                       </label>
 
-                      <div className="relative">
-                        <Mail
-                          size={18}
-                          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
-                        />
-
-                        <input
-                          id="email"
-                          type="email"
-                          autoComplete="email"
-                          required
-                          value={email}
-                          onChange={(event) =>
-                            setEmail(event.target.value)
-                          }
-                          placeholder="you@example.com"
-                          className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
-                        />
-                      </div>
+                      <button
+                        type="button"
+                        onClick={openForgotPassword}
+                        className="text-xs font-bold text-[#0b557b] transition hover:text-[#9b7b40] sm:text-sm"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
 
-                    <div>
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <label
-                          htmlFor="password"
-                          className="block text-sm font-bold text-[#173149]"
-                        >
-                          Password
-                        </label>
+                    <div className="relative">
+                      <LockKeyhole
+                        size={18}
+                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
+                      />
 
-                        <button
-                          type="button"
-                          onClick={openForgotPassword}
-                          className="text-xs font-bold text-[#0b557b] transition hover:text-[#9b7b40] sm:text-sm"
-                        >
-                          Forgot password?
-                        </button>
-                      </div>
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Enter your password"
+                        className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-12 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
+                      />
 
-                      <div className="relative">
-                        <LockKeyhole
-                          size={18}
-                          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
-                        />
-
-                        <input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete="current-password"
-                          required
-                          value={password}
-                          onChange={(event) =>
-                            setPassword(event.target.value)
-                          }
-                          placeholder="Enter your password"
-                          className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-12 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowPassword((current) => !current)
-                          }
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b]"
-                          aria-label={
-                            showPassword
-                              ? "Hide password"
-                              : "Show password"
-                          }
-                        >
-                          {showPassword ? (
-                            <EyeOff size={19} />
-                          ) : (
-                            <Eye size={19} />
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((current) => !current)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b]"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff size={19} />
+                        ) : (
+                          <Eye size={19} />
+                        )}
+                      </button>
                     </div>
+                  </div>
 
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex min-h-12 w-full items-center justify-center gap-3 bg-[#0b304b] px-5 py-4 text-sm font-black uppercase tracking-wide text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2
-                            size={18}
-                            className="animate-spin"
-                          />
-                          Signing in...
-                        </>
-                      ) : (
-                        <>
-                          Sign In
-                          <ArrowRight size={18} />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                </>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex min-h-12 w-full items-center justify-center gap-3 bg-[#0b304b] px-5 py-4 text-sm font-black uppercase tracking-wide text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        Sign In
+                        <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
+                </form>
               )}
 
               {/* CREATE ACCOUNT */}
@@ -554,8 +562,8 @@ export default function LoginPage() {
                 />
 
                 <p className="text-xs leading-6 text-[#7b8c99]">
-                  Sign in using the resident account you registered
-                  with eBarangay Connect.
+                  Sign in using your registered eBarangay Connect account. Your
+                  available pages depend on your assigned account role.
                 </p>
               </div>
             </div>

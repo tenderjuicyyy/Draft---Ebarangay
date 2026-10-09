@@ -1,9 +1,9 @@
-﻿
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import DashboardSwitcher from "@/components/DashboardSwitcher";
 import {
   ArrowLeft,
   ArrowRight,
@@ -40,26 +40,22 @@ const STATUS_OPTIONS = [
   {
     name: "Pending",
     icon: Clock,
-    style:
-      "border-[#eadab8] bg-[#fffaf0] text-[#8e6b25] hover:bg-[#fbf1d9]",
+    style: "border-[#eadab8] bg-[#fffaf0] text-[#8e6b25] hover:bg-[#fbf1d9]",
   },
   {
     name: "Processing",
     icon: Loader2,
-    style:
-      "border-[#d4e3f1] bg-[#f4f8fc] text-[#255e91] hover:bg-[#e5eff9]",
+    style: "border-[#d4e3f1] bg-[#f4f8fc] text-[#255e91] hover:bg-[#e5eff9]",
   },
   {
     name: "Completed",
     icon: Check,
-    style:
-      "border-[#cde2d5] bg-[#f3faf5] text-[#28724e] hover:bg-[#e6f2eb]",
+    style: "border-[#cde2d5] bg-[#f3faf5] text-[#28724e] hover:bg-[#e6f2eb]",
   },
   {
     name: "Rejected",
     icon: X,
-    style:
-      "border-[#efcfc9] bg-[#fdf6f4] text-[#a9473c] hover:bg-[#fae9e6]",
+    style: "border-[#efcfc9] bg-[#fdf6f4] text-[#a9473c] hover:bg-[#fae9e6]",
   },
 ];
 
@@ -130,9 +126,7 @@ function StatCard({
         <Icon size={19} />
       </div>
 
-      <p className={`text-3xl font-black ${textStyle}`}>
-        {count}
-      </p>
+      <p className={`text-3xl font-black ${textStyle}`}>{count}</p>
 
       <p
         className={`mt-2 text-xs font-bold uppercase tracking-wide ${textStyle}`}
@@ -148,9 +142,7 @@ export default function AdminPage() {
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<number | null>(
-    null
-  );
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -179,12 +171,11 @@ export default function AdminPage() {
         return;
       }
 
-      const { data: profile, error: profileError } =
-        await supabase
-          .from("profiles")
-          .select("id, role")
-          .eq("id", session.user.id)
-          .maybeSingle();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("id", session.user.id)
+        .maybeSingle();
 
       if (cancelled) return;
 
@@ -207,14 +198,16 @@ export default function AdminPage() {
 
       const { data, error } = await supabase
         .from("document_requests")
-        .select(`
+        .select(
+          `
           id,
           status,
           purpose,
           document_types (
             name
           )
-        `)
+        `,
+        )
         .order("id", { ascending: false });
 
       if (cancelled) return;
@@ -237,30 +230,19 @@ export default function AdminPage() {
   }, [router]);
 
   // UPDATE REQUEST STATUS
-  async function updateStatus(
-    requestId: number,
-    newStatus: string
-  ) {
-    const currentRequest = requests.find(
-      (request) => request.id === requestId
-    );
+  async function updateStatus(requestId: number, newStatus: string) {
+    const currentRequest = requests.find((request) => request.id === requestId);
 
     if (!currentRequest) return;
 
-    if (
-      currentRequest.status?.toLowerCase() === "cancelled"
-    ) {
-      setErrorMessage(
-        "Cancelled requests cannot be updated."
-      );
+    if (currentRequest.status?.toLowerCase() === "cancelled") {
+      setErrorMessage("Cancelled requests cannot be updated.");
       setSuccessMessage("");
       return;
     }
 
     if (currentRequest.status === newStatus) {
-      setSuccessMessage(
-        `Request #${requestId} is already ${newStatus}.`
-      );
+      setSuccessMessage(`Request #${requestId} is already ${newStatus}.`);
       setErrorMessage("");
       return;
     }
@@ -279,12 +261,11 @@ export default function AdminPage() {
         return;
       }
 
-      const { data: profile, error: profileError } =
-        await supabase
-          .from("profiles")
-          .select("id, role")
-          .eq("id", session.user.id)
-          .maybeSingle();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("id", session.user.id)
+        .maybeSingle();
 
       if (profileError) {
         setErrorMessage(profileError.message);
@@ -305,35 +286,32 @@ export default function AdminPage() {
       if (updateError) {
         console.error("Status update error:", updateError);
         setErrorMessage(
-          `Failed to update request status: ${updateError.message}`
+          `Failed to update request status: ${updateError.message}`,
         );
         return;
       }
 
-      const { data: updatedRequest, error: verifyError } =
-        await supabase
-          .from("document_requests")
-          .select("id, status")
-          .eq("id", requestId)
-          .maybeSingle();
+      const { data: updatedRequest, error: verifyError } = await supabase
+        .from("document_requests")
+        .select("id, status")
+        .eq("id", requestId)
+        .maybeSingle();
 
       if (verifyError) {
         setErrorMessage(
-          `Status update verification failed: ${verifyError.message}`
+          `Status update verification failed: ${verifyError.message}`,
         );
         return;
       }
 
       if (!updatedRequest) {
-        setErrorMessage(
-          "The request could not be found after updating."
-        );
+        setErrorMessage("The request could not be found after updating.");
         return;
       }
 
       if (updatedRequest.status !== newStatus) {
         setErrorMessage(
-          "The request status was not saved correctly. It may have changed elsewhere."
+          "The request status was not saved correctly. It may have changed elsewhere.",
         );
         return;
       }
@@ -361,7 +339,7 @@ export default function AdminPage() {
       if (historyError) {
         console.error("History error:", historyError);
         setErrorMessage(
-          `Status was saved, but history could not be saved: ${historyError.message}`
+          `Status was saved, but history could not be saved: ${historyError.message}`,
         );
       }
 
@@ -369,14 +347,12 @@ export default function AdminPage() {
         currentRequests.map((request) =>
           request.id === requestId
             ? { ...request, status: newStatus }
-            : request
-        )
+            : request,
+        ),
       );
 
       if (!historyError) {
-        setSuccessMessage(
-          `Request #${requestId} updated to ${newStatus}.`
-        );
+        setSuccessMessage(`Request #${requestId} updated to ${newStatus}.`);
       }
     } finally {
       setUpdatingId(null);
@@ -389,44 +365,37 @@ export default function AdminPage() {
   }
 
   const pending = requests.filter(
-    (request) =>
-      request.status?.toLowerCase() === "pending"
+    (request) => request.status?.toLowerCase() === "pending",
   ).length;
 
   const processing = requests.filter(
-    (request) =>
-      request.status?.toLowerCase() === "processing"
+    (request) => request.status?.toLowerCase() === "processing",
   ).length;
 
   const completed = requests.filter(
-    (request) =>
-      request.status?.toLowerCase() === "completed"
+    (request) => request.status?.toLowerCase() === "completed",
   ).length;
 
   const rejected = requests.filter(
-    (request) =>
-      request.status?.toLowerCase() === "rejected"
+    (request) => request.status?.toLowerCase() === "rejected",
   ).length;
 
   const cancelledCount = requests.filter(
-    (request) =>
-      request.status?.toLowerCase() === "cancelled"
+    (request) => request.status?.toLowerCase() === "cancelled",
   ).length;
 
   const documentTypes = Array.from(
     new Set(
       requests
         .map((request) => getDocumentName(request))
-        .filter((name) => name !== "Unknown Document")
-    )
+        .filter((name) => name !== "Unknown Document"),
+    ),
   );
 
   const filteredRequests = requests.filter((request) => {
-    const documentName =
-      getDocumentName(request).toLowerCase();
+    const documentName = getDocumentName(request).toLowerCase();
 
-    const purpose =
-      request.purpose?.toLowerCase() || "";
+    const purpose = request.purpose?.toLowerCase() || "";
 
     const requestId = request.id.toString();
 
@@ -439,18 +408,12 @@ export default function AdminPage() {
 
     const matchesStatus =
       statusFilter === "All" ||
-      request.status?.toLowerCase() ===
-        statusFilter.toLowerCase();
+      request.status?.toLowerCase() === statusFilter.toLowerCase();
 
     const matchesDocument =
-      documentFilter === "All" ||
-      getDocumentName(request) === documentFilter;
+      documentFilter === "All" || getDocumentName(request) === documentFilter;
 
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesDocument
-    );
+    return matchesSearch && matchesStatus && matchesDocument;
   });
 
   if (loading) {
@@ -458,10 +421,7 @@ export default function AdminPage() {
       <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-6 font-sans">
         <div className="text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#0b304b] text-white">
-            <Loader2
-              size={28}
-              className="animate-spin"
-            />
+            <Loader2 size={28} className="animate-spin" />
           </div>
 
           <p className="mt-5 text-lg font-black text-[#0b304b]">
@@ -494,10 +454,7 @@ export default function AdminPage() {
       {/* HEADER */}
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-4"
-          >
+          <Link href="/dashboard" className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
               <Landmark size={23} strokeWidth={1.7} />
             </div>
@@ -519,7 +476,7 @@ export default function AdminPage() {
               Administrator
             </span>
 
-            
+            <DashboardSwitcher current="admin" />
 
             <button
               type="button"
@@ -528,9 +485,7 @@ export default function AdminPage() {
               className="inline-flex items-center gap-2 border border-white/30 px-4 py-3 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b]"
             >
               <LogOut size={16} />
-              <span className="hidden sm:inline">
-                Logout
-              </span>
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
@@ -563,9 +518,8 @@ export default function AdminPage() {
               </h1>
 
               <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9] sm:text-base">
-                Review resident document requests,
-                monitor their progress, and manage
-                request statuses from one place.
+                Review resident document requests, monitor their progress, and
+                manage request statuses from one place.
               </p>
             </div>
 
@@ -579,9 +533,7 @@ export default function AdminPage() {
                   Access
                 </p>
 
-                <p className="mt-1 font-black text-white">
-                  Administrator
-                </p>
+                <p className="mt-1 font-black text-white">Administrator</p>
               </div>
             </div>
           </div>
@@ -610,9 +562,7 @@ export default function AdminPage() {
             />
 
             <div>
-              <p className="font-black text-[#245e48]">
-                Status Updated
-              </p>
+              <p className="font-black text-[#245e48]">Status Updated</p>
 
               <p className="mt-2 text-sm leading-7 text-[#376a55]">
                 {successMessage}
@@ -627,9 +577,7 @@ export default function AdminPage() {
             role="alert"
             className="mt-7 border-l-4 border-[#b74d3d] bg-[#fdf0ed] px-6 py-5"
           >
-            <p className="font-black text-[#943d31]">
-              Something went wrong
-            </p>
+            <p className="font-black text-[#943d31]">Something went wrong</p>
 
             <p className="mt-2 wrap-break-word text-sm leading-7 text-[#943d31]">
               {errorMessage}
@@ -712,9 +660,8 @@ export default function AdminPage() {
                 </h2>
 
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-[#697d8c]">
-                  Scan a resident&apos;s QR code to verify
-                  a completed document request before
-                  confirming its release.
+                  Scan a resident&apos;s QR code to verify a completed document
+                  request before confirming its release.
                 </p>
               </div>
             </div>
@@ -731,9 +678,8 @@ export default function AdminPage() {
 
           <div className="border-t border-[#e3e9ee] bg-[#f8fafb] px-6 py-4 sm:px-8">
             <p className="text-xs leading-6 text-[#718391]">
-              Only completed, unclaimed requests should be
-              eligible for document release. Administrator
-              verification is required.
+              Only completed, unclaimed requests should be eligible for document
+              release. Administrator verification is required.
             </p>
           </div>
         </section>
@@ -746,9 +692,7 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <p className="text-xl font-black text-[#0b304b]">
-                Find Requests
-              </p>
+              <p className="text-xl font-black text-[#0b304b]">Find Requests</p>
 
               <p className="mt-2 text-sm leading-7 text-[#697d8c]">
                 Search and filter resident document requests.
@@ -776,9 +720,7 @@ export default function AdminPage() {
                   id="request-search"
                   type="text"
                   value={searchTerm}
-                  onChange={(event) =>
-                    setSearchTerm(event.target.value)
-                  }
+                  onChange={(event) => setSearchTerm(event.target.value)}
                   placeholder="ID, document, or purpose..."
                   className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#173149] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
                 />
@@ -797,9 +739,7 @@ export default function AdminPage() {
               <select
                 id="status-filter"
                 value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value)
-                }
+                onChange={(event) => setStatusFilter(event.target.value)}
                 className="w-full border border-[#cdd9e2] bg-[#f8fafc] px-4 py-4 text-sm font-semibold text-[#173149] outline-none transition focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
               >
                 <option value="All">All Requests</option>
@@ -829,18 +769,13 @@ export default function AdminPage() {
                 <select
                   id="document-filter"
                   value={documentFilter}
-                  onChange={(event) =>
-                    setDocumentFilter(event.target.value)
-                  }
+                  onChange={(event) => setDocumentFilter(event.target.value)}
                   className="w-full appearance-none border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm font-semibold text-[#173149] outline-none transition focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10"
                 >
                   <option value="All">All Documents</option>
 
                   {documentTypes.map((documentType) => (
-                    <option
-                      key={documentType}
-                      value={documentType}
-                    >
+                    <option key={documentType} value={documentType}>
                       {documentType}
                     </option>
                   ))}
@@ -893,16 +828,14 @@ export default function AdminPage() {
               </h3>
 
               <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[#697d8c]">
-                Try changing your search term or selecting
-                different filters.
+                Try changing your search term or selecting different filters.
               </p>
             </div>
           ) : (
             <div className="space-y-5">
               {filteredRequests.map((request) => {
                 const isCancelled =
-                  request.status?.toLowerCase() ===
-                  "cancelled";
+                  request.status?.toLowerCase() === "cancelled";
 
                 return (
                   <article
@@ -929,15 +862,14 @@ export default function AdminPage() {
                               <span className="font-black text-[#173149]">
                                 Purpose:
                               </span>{" "}
-                              {request.purpose ||
-                                "No purpose provided."}
+                              {request.purpose || "No purpose provided."}
                             </p>
                           </div>
                         </div>
 
                         <span
                           className={`inline-flex w-fit shrink-0 items-center gap-2 px-4 py-2 text-xs font-black ${getStatusStyle(
-                            request.status
+                            request.status,
                           )}`}
                         >
                           <StatusIcon status={request.status} />
@@ -960,10 +892,9 @@ export default function AdminPage() {
                                 </p>
 
                                 <p className="mt-2 max-w-xl text-xs leading-6 text-[#697d8c]">
-                                  This request was cancelled
-                                  by the resident while it was
-                                  pending. Its processing
-                                  status can no longer be changed.
+                                  This request was cancelled by the resident
+                                  while it was pending. Its processing status
+                                  can no longer be changed.
                                 </p>
                               </div>
                             </div>
@@ -984,8 +915,8 @@ export default function AdminPage() {
                               </p>
 
                               <p className="mt-2 text-xs leading-6 text-[#718391]">
-                                Select the new processing
-                                status for this request.
+                                Select the new processing status for this
+                                request.
                               </p>
 
                               <div className="mt-5 flex flex-wrap gap-2">
@@ -997,14 +928,9 @@ export default function AdminPage() {
                                       key={option.name}
                                       type="button"
                                       onClick={() =>
-                                        updateStatus(
-                                          request.id,
-                                          option.name
-                                        )
+                                        updateStatus(request.id, option.name)
                                       }
-                                      disabled={
-                                        updatingId !== null
-                                      }
+                                      disabled={updatingId !== null}
                                       className={`inline-flex items-center gap-2 border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${option.style}`}
                                     >
                                       {updatingId === request.id &&
@@ -1024,10 +950,7 @@ export default function AdminPage() {
 
                               {updatingId === request.id && (
                                 <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#718391]">
-                                  <Loader2
-                                    size={14}
-                                    className="animate-spin"
-                                  />
+                                  <Loader2 size={14} className="animate-spin" />
                                   Updating request status...
                                 </div>
                               )}
