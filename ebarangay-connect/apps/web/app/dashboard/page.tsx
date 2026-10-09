@@ -682,16 +682,8 @@ export default function DashboardPage() {
 
               <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-[#697d8c]">
                 Your submitted document requests will appear here
-                once you create one.
               </p>
 
-              <Link
-                href="/requests/new"
-                className="mt-6 inline-flex items-center gap-2 bg-[#0b304b] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#174b70]"
-              >
-                Create New Request
-                <ArrowRight size={16} />
-              </Link>
             </div>
           ) : (
             <div className="mt-2">
@@ -742,7 +734,7 @@ export default function DashboardPage() {
 
         {/* FOOTER */}
         <footer className="mt-9 flex flex-col gap-3 border-t border-[#d4dfe7] py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 eBarangay Connect</p>
+          <p>2026 eBarangay Connect</p>
           <p>Digital barangay services for residents.</p>
         </footer>
       </div>

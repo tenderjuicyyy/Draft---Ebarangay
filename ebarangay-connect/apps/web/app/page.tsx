@@ -443,7 +443,7 @@ export default function HomePage() {
 
           <div className="mt-12 flex flex-col justify-between gap-3 border-t border-white/15 pt-7 text-xs text-[#aebfcd] sm:flex-row">
             <p>
-              Â© 2026 eBarangay Connect. All rights reserved.
+              2026 eBarangay Connect. All rights reserved.
             </p>
             <p>Digital barangay services for residents.</p>
           </div>
