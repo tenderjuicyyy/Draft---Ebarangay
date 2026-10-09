@@ -142,21 +142,9 @@ function StatusTracker({ status }: { status: string | null }) {
   }
 
   const steps = [
-    {
-      name: "Pending",
-      value: "pending",
-      icon: Clock,
-    },
-    {
-      name: "Processing",
-      value: "processing",
-      icon: Loader2,
-    },
-    {
-      name: "Completed",
-      value: "completed",
-      icon: Check,
-    },
+    { name: "Pending", value: "pending", icon: Clock },
+    { name: "Processing", value: "processing", icon: Loader2 },
+    { name: "Completed", value: "completed", icon: Check },
   ];
 
   const currentIndex = steps.findIndex(
@@ -308,9 +296,7 @@ export default function RequestDetailsPage() {
 
       if (historyError) {
         console.error("HISTORY ERROR:", historyError);
-        setErrorMessage(
-          `HISTORY ERROR: ${historyError.message}`
-        );
+        setErrorMessage(`HISTORY ERROR: ${historyError.message}`);
         setHistory([]);
       } else {
         setHistory((historyData as HistoryItem[]) || []);
@@ -360,9 +346,7 @@ export default function RequestDetailsPage() {
       .eq("status", "Pending");
 
     if (updateError) {
-      setErrorMessage(
-        `CANCEL ERROR: ${updateError.message}`
-      );
+      setErrorMessage(`CANCEL ERROR: ${updateError.message}`);
       setCancelling(false);
       return;
     }
@@ -376,9 +360,7 @@ export default function RequestDetailsPage() {
         .maybeSingle();
 
     if (verifyError) {
-      setErrorMessage(
-        `VERIFY ERROR: ${verifyError.message}`
-      );
+      setErrorMessage(`VERIFY ERROR: ${verifyError.message}`);
       setCancelling(false);
       return;
     }
@@ -494,6 +476,7 @@ export default function RequestDetailsPage() {
             </div>
           </Link>
 
+          {/* KEEP THE RIGHT-SIDE MY REQUESTS BUTTON */}
           <Link
             href="/requests"
             className="inline-flex items-center gap-2 border border-white/30 px-4 py-3 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b]"
@@ -536,16 +519,8 @@ export default function RequestDetailsPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN CONTENT — REDUNDANT LEFT-SIDE BACK LINK REMOVED */}
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
-        <Link
-          href="/requests"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] transition hover:text-[#9b7b40]"
-        >
-          <ArrowLeft size={16} />
-          Back to My Requests
-        </Link>
-
         {/* ERROR */}
         {errorMessage && (
           <div
@@ -676,9 +651,7 @@ export default function RequestDetailsPage() {
                       <p className="mt-3 font-black text-[#0b304b]">
                         {documentType?.processing_days != null
                           ? `${documentType.processing_days} day${
-                              documentType.processing_days === 1
-                                ? ""
-                                : "s"
+                              documentType.processing_days === 1 ? "" : "s"
                             }`
                           : "Not specified"}
                       </p>
@@ -745,10 +718,7 @@ export default function RequestDetailsPage() {
 
                     {isClaimed ? (
                       <div className="mt-7 flex items-start gap-4 border-l-4 border-[#357c60] bg-[#edf7f1] p-5 text-[#245e48]">
-                        <CheckCircle2
-                          size={23}
-                          className="shrink-0"
-                        />
+                        <CheckCircle2 size={23} className="shrink-0" />
 
                         <div>
                           <p className="font-black">
@@ -757,12 +727,13 @@ export default function RequestDetailsPage() {
 
                           <p className="mt-2 text-sm leading-7">
                             Claimed on{" "}
-                            {new Date(
-                              request.claimed_at!
-                            ).toLocaleString("en-PH", {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            })}
+                            {new Date(request.claimed_at!).toLocaleString(
+                              "en-PH",
+                              {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              }
+                            )}
                           </p>
                         </div>
                       </div>

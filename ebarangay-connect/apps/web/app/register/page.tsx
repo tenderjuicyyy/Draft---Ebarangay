@@ -1,5 +1,7 @@
 ﻿
+
 "use client";
+
 
 import Link from "next/link";
 import { useState } from "react";
@@ -16,85 +18,122 @@ import {
   Mail,
   ShieldCheck,
   UserRound,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+
 export default function RegisterPage() {
   const router = useRouter();
+
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Existing registration logic preserved.
-  async function handleRegister(event: React.FormEvent) {
+
+  const [showTerms, setShowTerms] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+
+  async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
 
     setErrorMessage("");
     setSuccessMessage("");
 
+
     const cleanedName = fullName.trim();
     const cleanedEmail = email.trim();
+
 
     if (!cleanedName) {
       setErrorMessage("Please enter your full name.");
       return;
     }
 
+
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
       return;
     }
+
 
     if (password.length < 8) {
       setErrorMessage("Password must be at least 8 characters.");
       return;
     }
 
+
+    if (!agreedToTerms) {
+      setErrorMessage(
+        "Please read and accept the Terms and Conditions before registering."
+      );
+      return;
+    }
+
+
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanedEmail,
-      password,
-      options: {
-        data: {
-          full_name: cleanedName,
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanedEmail,
+        password,
+        options: {
+          data: {
+            full_name: cleanedName,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      setErrorMessage(error.message);
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+
+      if (!data.user) {
+        setErrorMessage("Registration failed. Please try again.");
+        return;
+      }
+
+
+      if (data.session) {
+        router.push("/dashboard");
+        return;
+      }
+
+
+      setSuccessMessage(
+        "Account created successfully! Please check your email to verify your account, then log in."
+      );
+    } catch {
+      setErrorMessage(
+        "Something went wrong. Please try again."
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!data.user) {
-      setErrorMessage("Registration failed. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    if (data.session) {
-      router.push("/dashboard");
-      return;
-    }
-
-    setSuccessMessage(
-      "Account created successfully! Please check your email to verify your account, then log in."
-    );
-
-    setLoading(false);
   }
+
+
+  const inputClass =
+    "w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70";
+
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
@@ -104,11 +143,14 @@ export default function RegisterPage() {
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
             Digital Citizen Services Portal
           </span>
+
+
           <span className="hidden text-xs text-[#c7d7e3] sm:block">
             Mines View, Baguio City, Philippines
           </span>
         </div>
       </div>
+
 
       {/* HEADER */}
       <header className="bg-[#0b304b] text-white shadow-md">
@@ -117,6 +159,7 @@ export default function RegisterPage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
               <Landmark size={23} strokeWidth={1.7} />
             </div>
+
 
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d5bd81]">
@@ -128,6 +171,7 @@ export default function RegisterPage() {
             </div>
           </Link>
 
+
           <Link
             href="/"
             className="hidden items-center gap-2 border border-white/30 px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b] sm:inline-flex"
@@ -137,6 +181,7 @@ export default function RegisterPage() {
           </Link>
         </div>
       </header>
+
 
       {/* MAIN CONTENT */}
       <div className="mx-auto grid min-h-[calc(100vh-132px)] max-w-7xl lg:grid-cols-[0.95fr_1.05fr]">
@@ -149,14 +194,18 @@ export default function RegisterPage() {
             }}
           />
 
-          <div className="absolute inset-0 bg-linear-to- from-[#0b304b]/95 via-[#0b304b]/80 to-[#061b2b]/95" />
+
+          <div className="absolute inset-0 bg-linear-to-r from-[#0b304b]/95 via-[#0b304b]/80 to-[#061b2b]/95" />
+
 
           <div className="relative z-10">
             <div className="mb-8 h-1 w-14 bg-[#d5bd81]" />
 
+
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#e2c991]">
               Resident Registration
             </p>
+
 
             <h1 className="mt-7 text-5xl font-black leading-tight tracking-tight xl:text-6xl">
               Your barangay
@@ -166,18 +215,19 @@ export default function RegisterPage() {
               online.
             </h1>
 
+
             <p className="mt-7 max-w-md text-sm leading-8 text-[#d6e1e9]">
               Create your resident account to request barangay
               documents, monitor their progress, and manage your
               transactions through eBarangay Connect.
             </p>
 
+
             <div className="mt-12 space-y-7">
               <div className="flex items-start gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
                   <FileText size={20} />
                 </div>
-
                 <div>
                   <p className="text-sm font-bold">
                     Request documents online
@@ -188,11 +238,11 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+
               <div className="flex items-start gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
                   <CheckCircle2 size={20} />
                 </div>
-
                 <div>
                   <p className="text-sm font-bold">
                     Track your requests
@@ -203,11 +253,11 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+
               <div className="flex items-start gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
                   <ShieldCheck size={20} />
                 </div>
-
                 <div>
                   <p className="text-sm font-bold">
                     Personal resident account
@@ -220,15 +270,17 @@ export default function RegisterPage() {
             </div>
           </div>
 
+
           <div className="relative z-10 mt-14 border-t border-white/20 pt-6">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#aebfcd]">
-              eBarangay Connect â€¢ Digital Citizen Services
+              eBarangay Connect • Digital Citizen Services
             </p>
           </div>
         </section>
 
+
         {/* RIGHT REGISTRATION PANEL */}
-        <section className="flex flex-col bg-white">
+        <section className="flex min-w-0 flex-col bg-white">
           <div className="px-6 pt-7 sm:px-10 lg:hidden">
             <Link
               href="/"
@@ -239,6 +291,7 @@ export default function RegisterPage() {
             </Link>
           </div>
 
+
           <div className="flex flex-1 justify-center px-6 py-12 sm:px-10 lg:px-14">
             <div className="w-full max-w-lg">
               {/* HEADING */}
@@ -247,19 +300,23 @@ export default function RegisterPage() {
                   <UserRound size={24} />
                 </div>
 
+
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9b7b40]">
                   Create Account
                 </p>
 
+
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-[#0b304b] sm:text-4xl">
                   Create resident account
                 </h2>
+
 
                 <p className="mt-4 text-sm leading-7 text-[#697d8c]">
                   Register to submit and track your barangay
                   document requests online.
                 </p>
               </div>
+
 
               {/* ERROR MESSAGE */}
               {errorMessage && (
@@ -276,6 +333,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
+
               {/* SUCCESS MESSAGE */}
               {successMessage && (
                 <div
@@ -287,16 +345,13 @@ export default function RegisterPage() {
                       size={20}
                       className="mt-0.5 shrink-0 text-[#357c60]"
                     />
-
                     <div>
                       <p className="text-xs font-black uppercase tracking-wide text-[#245e48]">
                         Account created
                       </p>
-
                       <p className="mt-2 text-sm leading-6 text-[#376a55]">
                         {successMessage}
                       </p>
-
                       <Link
                         href="/login"
                         className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[#245e48] transition hover:text-[#173f31]"
@@ -309,6 +364,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
+
               {/* REGISTRATION FORM */}
               <form onSubmit={handleRegister} className="space-y-6">
                 {/* FULL NAME */}
@@ -320,12 +376,12 @@ export default function RegisterPage() {
                     Full name
                   </label>
 
+
                   <div className="relative">
                     <UserRound
                       size={18}
                       className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
                     />
-
                     <input
                       id="fullName"
                       type="text"
@@ -337,10 +393,11 @@ export default function RegisterPage() {
                       }
                       placeholder="Juan Dela Cruz"
                       disabled={loading}
-                      className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                      className={inputClass}
                     />
                   </div>
                 </div>
+
 
                 {/* EMAIL */}
                 <div>
@@ -351,12 +408,12 @@ export default function RegisterPage() {
                     Email address
                   </label>
 
+
                   <div className="relative">
                     <Mail
                       size={18}
                       className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
                     />
-
                     <input
                       id="email"
                       type="email"
@@ -368,14 +425,14 @@ export default function RegisterPage() {
                       }
                       placeholder="you@example.com"
                       disabled={loading}
-                      className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-4 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                      className={inputClass}
                     />
                   </div>
                 </div>
 
+
                 {/* PASSWORD FIELDS */}
                 <div className="grid gap-5 sm:grid-cols-2">
-                  {/* PASSWORD */}
                   <div>
                     <label
                       htmlFor="password"
@@ -384,12 +441,12 @@ export default function RegisterPage() {
                       Password
                     </label>
 
+
                     <div className="relative">
                       <LockKeyhole
                         size={18}
                         className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
                       />
-
                       <input
                         id="password"
                         type={showPassword ? "text" : "password"}
@@ -402,8 +459,9 @@ export default function RegisterPage() {
                         }
                         placeholder="At least 8 characters"
                         disabled={loading}
-                        className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-11 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                        className={`${inputClass} pr-11`}
                       />
+
 
                       <button
                         type="button"
@@ -411,7 +469,7 @@ export default function RegisterPage() {
                           setShowPassword((current) => !current)
                         }
                         disabled={loading}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b] disabled:opacity-50"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b]"
                         aria-label={
                           showPassword
                             ? "Hide password"
@@ -427,7 +485,7 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
-                  {/* CONFIRM PASSWORD */}
+
                   <div>
                     <label
                       htmlFor="confirmPassword"
@@ -436,12 +494,12 @@ export default function RegisterPage() {
                       Confirm password
                     </label>
 
+
                     <div className="relative">
                       <LockKeyhole
                         size={18}
                         className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8497a5]"
                       />
-
                       <input
                         id="confirmPassword"
                         type={
@@ -458,8 +516,9 @@ export default function RegisterPage() {
                         }
                         placeholder="Re-enter password"
                         disabled={loading}
-                        className="w-full border border-[#cdd9e2] bg-[#f8fafc] py-4 pl-12 pr-11 text-sm text-[#172b3d] outline-none transition placeholder:text-[#98a9b5] focus:border-[#0b304b] focus:bg-white focus:ring-2 focus:ring-[#0b304b]/10 disabled:cursor-not-allowed disabled:opacity-70"
+                        className={`${inputClass} pr-11`}
                       />
+
 
                       <button
                         type="button"
@@ -469,7 +528,7 @@ export default function RegisterPage() {
                           )
                         }
                         disabled={loading}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b] disabled:opacity-50"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5] transition hover:text-[#0b304b]"
                         aria-label={
                           showConfirmPassword
                             ? "Hide confirm password"
@@ -486,13 +545,13 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
+
                 {/* PASSWORD NOTE */}
                 <div className="flex items-start gap-3 bg-[#edf2f5] px-4 py-4">
                   <ShieldCheck
                     size={18}
                     className="mt-0.5 shrink-0 text-[#9b7b40]"
                   />
-
                   <p className="text-xs leading-6 text-[#697d8c]">
                     Your password must contain at least 8
                     characters. You may also need to verify your
@@ -500,10 +559,43 @@ export default function RegisterPage() {
                   </p>
                 </div>
 
+
+                {/* TERMS AND CONDITIONS */}
+                <div className="border border-[#dce3e8] bg-[#f8fafc] p-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      id="agreeTerms"
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(event) =>
+                        setAgreedToTerms(event.target.checked)
+                      }
+                      disabled={loading}
+                      className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-[#0b304b]"
+                    />
+
+
+                    <div className="text-sm leading-6 text-[#697d8c]">
+                      <label htmlFor="agreeTerms">
+                        I have read and agree to the{" "}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowTerms(true)}
+                        className="font-bold text-[#0b304b] underline underline-offset-2 transition hover:text-[#9b7b40]"
+                      >
+                        Terms and Conditions & Privacy Policy
+                      </button>
+                      <span>.</span>
+                    </div>
+                  </div>
+                </div>
+
+
                 {/* SUBMIT BUTTON */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !agreedToTerms}
                   className="flex w-full items-center justify-center gap-3 bg-[#0b304b] px-5 py-4 text-sm font-black uppercase tracking-wide text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
@@ -523,11 +615,13 @@ export default function RegisterPage() {
                 </button>
               </form>
 
+
               {/* LOGIN LINK */}
               <div className="mt-8 border border-[#dce3e8] bg-[#f5f8fa] p-6 text-center">
                 <p className="text-sm text-[#697d8c]">
                   Already have a resident account?
                 </p>
+
 
                 <Link
                   href="/login"
@@ -540,12 +634,192 @@ export default function RegisterPage() {
             </div>
           </div>
 
+
           <div className="border-t border-[#e3e9ee] px-6 py-5 text-center text-xs text-[#8393a0]">
-            Â© 2026 eBarangay Connect. All rights reserved.
+            © 2026 eBarangay Connect. All rights reserved.
           </div>
         </section>
       </div>
+
+
+      {/* TERMS AND CONDITIONS MODAL */}
+      {showTerms && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/75 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowTerms(false);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="terms-title"
+            className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+          >
+            {/* MODAL HEADER */}
+            <div className="flex items-center justify-between bg-[#0b304b] px-5 py-5 text-white sm:px-7">
+              <div className="flex items-center gap-3">
+                <ShieldCheck
+                  size={25}
+                  className="text-[#d5bd81]"
+                />
+                <div>
+                  <h2
+                    id="terms-title"
+                    className="text-lg font-black"
+                  >
+                    Terms and Conditions
+                  </h2>
+                  <p className="text-xs text-[#c7d7e3]">
+                    Privacy Policy • eBarangay Connect
+                  </p>
+                </div>
+              </div>
+
+
+              <button
+                type="button"
+                onClick={() => setShowTerms(false)}
+                className="rounded p-2 transition hover:bg-white/10"
+                aria-label="Close terms and conditions"
+              >
+                <X size={21} />
+              </button>
+            </div>
+
+
+            {/* SCROLLABLE TERMS CONTENT */}
+            <div className="space-y-5 overflow-y-auto px-5 py-6 text-sm leading-7 text-[#526879] sm:px-7">
+              <p>
+                By registering for eBarangay Connect, you
+                acknowledge and agree to the following:
+              </p>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  1. Personal Information
+                </h3>
+                <p>
+                  We collect your name, email address, contact
+                  number, address, identification documents, and
+                  request details when required to provide barangay
+                  services.
+                </p>
+              </div>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  2. Use of Information
+                </h3>
+                <p>
+                  Your information will be used for account
+                  verification, document processing, request
+                  tracking, and communication regarding barangay
+                  services.
+                </p>
+              </div>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  3. Data Privacy
+                </h3>
+                <p>
+                  In accordance with the Data Privacy Act of 2012
+                  (RA 10173), we are committed to protecting your
+                  personal information and limiting access to
+                  authorized personnel.
+                </p>
+              </div>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  4. Data Storage and Security
+                </h3>
+                <p>
+                  Your information will be stored using appropriate
+                  security measures and retained only as necessary
+                  for legitimate purposes and legal requirements.
+                </p>
+              </div>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  5. User Responsibilities
+                </h3>
+                <p>
+                  You agree to provide accurate information,
+                  protect your account credentials, and use the
+                  platform responsibly.
+                </p>
+              </div>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  6. Your Privacy Rights
+                </h3>
+                <p>
+                  You may request access to or correction of your
+                  personal information and exercise other rights
+                  under applicable data privacy laws.
+                </p>
+              </div>
+
+
+              <div>
+                <h3 className="font-bold text-[#0b304b]">
+                  7. Agreement
+                </h3>
+                <p>
+                  By clicking &quot;I Agree,&quot; you confirm
+                  that you have read and understood these Terms
+                  and Conditions and Privacy Policy.
+                </p>
+              </div>
+
+
+              <p className="border-t border-[#dce3e8] pt-4 text-xs text-[#697d8c]">
+                This notice explains the intended handling of
+                resident information. Specific privacy requests
+                should be directed to the barangay administration.
+              </p>
+            </div>
+
+
+            {/* MODAL FOOTER */}
+            <div className="flex flex-col-reverse gap-3 border-t border-[#e3e9ee] bg-[#f8fafc] px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
+              <button
+                type="button"
+                onClick={() => setShowTerms(false)}
+                className="border border-[#cdd9e2] px-5 py-3 text-sm font-bold text-[#526879] transition hover:bg-[#e8eef2]"
+              >
+                Close
+              </button>
+
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAgreedToTerms(true);
+                  setShowTerms(false);
+                  setErrorMessage("");
+                }}
+                className="flex items-center justify-center gap-2 bg-[#0b304b] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#174b70]"
+              >
+                <CheckCircle2 size={18} />
+                I Agree
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
-

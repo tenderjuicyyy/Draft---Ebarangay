@@ -19,7 +19,7 @@ const services = [
   {
     category: "CLEARANCE",
     title: "Barangay Clearance",
-    price: "â‚±50",
+    price: "₱50",
     description:
       "A document commonly used for employment, applications, transactions, and other official purposes.",
     processing: "1 day",
@@ -37,7 +37,7 @@ const services = [
   {
     category: "CERTIFICATION",
     title: "Certificate of Residency",
-    price: "â‚±30",
+    price: "₱30",
     description:
       "Certifies that an individual is a resident of the barangay for official or personal transactions.",
     processing: "3 days",
