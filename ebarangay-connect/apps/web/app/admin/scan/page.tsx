@@ -1,18 +1,20 @@
 
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Ban,
   Camera,
+  CameraOff,
   CheckCircle2,
   FileCheck2,
   Landmark,
   Loader2,
   QrCode,
+  RotateCcw,
   ScanLine,
   ShieldCheck,
   XCircle,
@@ -26,183 +28,327 @@ type ClaimResult = {
   pickup_status: string;
 };
 
+type ScannerInstance = {
+  start: (
+    camera: { facingMode: string },
+    config: {
+      fps: number;
+      qrbox: (width: number, height: number) => {
+        width: number;
+        height: number;
+      };
+    },
+    onSuccess: (decodedText: string) => void,
+    onError?: (message: string) => void
+  ) => Promise<unknown>;
+  stop: () => Promise<void>;
+  clear: () => void;
+  isScanning: boolean;
+};
+
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function extractToken(value: string) {
+  const trimmed = value.trim();
+
+  if (UUID_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  // The existing resident QR is expected to contain
+  // the raw UUID claim token.
+  return "";
+}
+
+function cameraErrorMessage(error: unknown) {
+  const message =
+    error instanceof Error ? error.message : String(error);
+
+  if (
+    /notallowed|permission|denied|permissiondismissed/i.test(
+      message
+    )
+  ) {
+    return "Camera permission was denied. Allow camera access in your browser settings and try again.";
+  }
+
+  if (/notfound|no camera|devicesnotfound/i.test(message)) {
+    return "No camera was detected. Connect a camera or use a phone with a working camera.";
+  }
+
+  if (/notreadable|trackstarterror|could not start/i.test(message)) {
+    return "The camera is being used by another application or could not be started. Close other camera apps and try again.";
+  }
+
+  if (/overconstrained/i.test(message)) {
+    return "The requested camera is unavailable on this device.";
+  }
+
+  return (
+    "Unable to start the camera. Make sure camera permission is enabled " +
+    "and the page is opened using HTTPS or localhost."
+  );
+}
 
 export default function AdminScanPage() {
   const router = useRouter();
 
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+
   const [token, setToken] = useState("");
-  const [result, setResult] = useState<ClaimResult | null>(null);
   const [verifiedToken, setVerifiedToken] = useState("");
+  const [result, setResult] = useState<ClaimResult | null>(null);
+
   const [scanning, setScanning] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const scannerRef = useRef<{
-    clear: () => Promise<void>;
-  } | null>(null);
-
+  const scannerRef = useRef<ScannerInstance | null>(null);
   const scanHandledRef = useRef(false);
+  const verificationCounterRef = useRef(0);
+  const confirmingRef = useRef(false);
 
-  // Check administrator access.
+  // CHECK ADMINISTRATOR ACCESS
   useEffect(() => {
     let cancelled = false;
 
     async function checkAccess() {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (authError || !user) {
-        router.replace("/login");
-        return;
+        if (authError || !user) {
+          router.replace("/login");
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (profile?.role !== "admin") {
+          router.replace("/dashboard");
+          return;
+        }
+
+        setAuthorized(true);
+      } catch (error) {
+        if (cancelled) return;
+
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Unable to verify administrator access."
+        );
+      } finally {
+        if (!cancelled) {
+          setCheckingAccess(false);
+        }
       }
-
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (error || profile?.role !== "admin") {
-        router.replace("/dashboard");
-        return;
-      }
-
-      setAuthorized(true);
-      setCheckingAccess(false);
     }
 
-    checkAccess();
+    void checkAccess();
 
     return () => {
       cancelled = true;
     };
   }, [router]);
 
-  const stopScanner = useCallback(async () => {
-    const scanner = scannerRef.current;
-    scannerRef.current = null;
-
-    if (scanner) {
-      try {
-        await scanner.clear();
-      } catch (error) {
-        console.warn("Scanner cleanup:", error);
-      }
-    }
-
-    setScanning(false);
-  }, []);
-
-  // Camera scanner setup.
+  // START / STOP CAMERA
   useEffect(() => {
     if (!scanning || !authorized) return;
 
     let disposed = false;
-    let instance: {
-      clear: () => Promise<void>;
-      render: (
-        onSuccess: (decodedText: string) => void,
-        onFailure: (error: string) => void
-      ) => void;
-    } | null = null;
+    let localScanner: ScannerInstance | null = null;
 
-    async function initializeScanner() {
+    async function startCamera() {
       try {
-        const { Html5QrcodeScanner } = await import(
-          "html5-qrcode"
-        );
+        if (
+          !window.isSecureContext ||
+          !navigator.mediaDevices?.getUserMedia
+        ) {
+          throw new Error(
+            "Camera requires HTTPS or localhost."
+          );
+        }
+
+        const { Html5Qrcode } = await import("html5-qrcode");
 
         if (disposed) return;
 
-        const scanner = new Html5QrcodeScanner(
+        const scanner = new Html5Qrcode(
           "admin-qr-reader",
           {
-            fps: 10,
-            qrbox: {
-              width: 220,
-              height: 220,
-            },
-            rememberLastUsedCamera: true,
-          },
-          false
-        );
+            verbose: false,
+          }
+        ) as ScannerInstance;
 
-        instance = scanner;
+        localScanner = scanner;
         scannerRef.current = scanner;
 
-        scanner.render(
+        await scanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: (width, height) => {
+              const size = Math.max(
+                100,
+                Math.min(240, width - 24, height - 24)
+              );
+
+              return {
+                width: size,
+                height: size,
+              };
+            },
+          },
           (decodedText) => {
-            if (scanHandledRef.current) return;
+            if (disposed || scanHandledRef.current) {
+              return;
+            }
 
             scanHandledRef.current = true;
 
-            const value = decodedText.trim();
+            const scannedValue = decodedText.trim();
+            const cleanedToken = extractToken(scannedValue);
 
-            setToken(value);
+            verificationCounterRef.current += 1;
+
+            setToken(scannedValue);
             setResult(null);
             setVerifiedToken("");
             setSuccessMessage("");
 
-            if (!UUID_PATTERN.test(value)) {
+            if (!cleanedToken) {
               setErrorMessage(
-                "The scanned QR does not contain a valid claim token."
+                "The scanned QR code does not contain a valid UUID claim token."
               );
             } else {
               setErrorMessage("");
             }
 
+            // Unmount the camera after reading one QR code.
             setScanning(false);
           },
           () => {
-            // QR not detected in the current camera frame.
+            // A frame without a QR code is normal.
           }
         );
+
+        if (disposed) return;
+
+        setCameraStarting(false);
       } catch (error) {
-        console.error("Camera error:", error);
-        setErrorMessage(
-          "Unable to initialize the QR scanner. Check camera permissions."
-        );
+        if (disposed) return;
+
+        console.error("Camera initialization error:", error);
+
+        setCameraStarting(false);
+        setErrorMessage(cameraErrorMessage(error));
         setScanning(false);
       }
     }
 
-    initializeScanner();
+    void startCamera();
 
     return () => {
       disposed = true;
 
-      if (instance) {
-        void instance.clear().catch(() => {});
-        if (scannerRef.current === instance) {
-          scannerRef.current = null;
-        }
+      const scanner = localScanner;
+
+      if (scannerRef.current === scanner) {
+        scannerRef.current = null;
+      }
+
+      if (scanner) {
+        void (async () => {
+          try {
+            if (scanner.isScanning) {
+              await scanner.stop();
+            }
+          } catch (error) {
+            console.warn("Camera stop warning:", error);
+          }
+
+          try {
+            scanner.clear();
+          } catch (error) {
+            console.warn("Camera cleanup warning:", error);
+          }
+        })();
       }
     };
   }, [scanning, authorized]);
 
-  async function verifyToken(value: string) {
-    const cleanedToken = value.trim();
+  function resetVerification() {
+    verificationCounterRef.current += 1;
 
-    setErrorMessage("");
-    setSuccessMessage("");
+    setToken("");
     setResult(null);
     setVerifiedToken("");
+    setErrorMessage("");
+    setSuccessMessage("");
+    scanHandledRef.current = false;
+  }
 
-    if (!UUID_PATTERN.test(cleanedToken)) {
+  function startScanner() {
+    if (scanning || verifying || confirming) return;
+
+    resetVerification();
+    setCameraStarting(true);
+    setScanning(true);
+  }
+
+  function stopScanner() {
+    setScanning(false);
+    setCameraStarting(false);
+  }
+
+  function handleTokenChange(value: string) {
+    verificationCounterRef.current += 1;
+
+    setToken(value);
+    setResult(null);
+    setVerifiedToken("");
+    setErrorMessage("");
+    setSuccessMessage("");
+  }
+
+  // VERIFY DOCUMENT CLAIM
+  async function verifyToken() {
+    if (!authorized || verifying || confirming) return;
+
+    const cleanedToken = extractToken(token);
+
+    verificationCounterRef.current += 1;
+    const verificationId = verificationCounterRef.current;
+
+    setResult(null);
+    setVerifiedToken("");
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!cleanedToken) {
       setErrorMessage(
-        "Invalid claim token. Please scan a valid QR code."
+        "Invalid claim token. Enter or scan the UUID provided in the resident's QR code."
       );
       return;
     }
@@ -210,26 +356,50 @@ export default function AdminScanPage() {
     setVerifying(true);
 
     try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      const { data: profile, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+      if (profileError || profile?.role !== "admin") {
+        throw new Error(
+          "Only authorized administrators can verify claims."
+        );
+      }
+
       const { data, error } = await supabase.rpc(
         "verify_document_claim",
         { p_token: cleanedToken }
       );
 
-      if (error) {
-        setErrorMessage(
-          `Verification failed: ${error.message}`
-        );
+      if (verificationId !== verificationCounterRef.current) {
         return;
+      }
+
+      if (error) {
+        throw new Error(`Verification failed: ${error.message}`);
       }
 
       const records = data as ClaimResult[] | null;
       const record = records?.[0];
 
       if (!record) {
-        setErrorMessage(
+        throw new Error(
           "No document request matches this QR code."
         );
-        return;
       }
 
       setResult(record);
@@ -247,69 +417,109 @@ export default function AdminScanPage() {
         );
       }
     } catch (error) {
-      console.error(error);
+      if (verificationId !== verificationCounterRef.current) {
+        return;
+      }
+
+      console.error("QR verification error:", error);
+
       setErrorMessage(
-        "An unexpected error occurred during verification."
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred during verification."
       );
     } finally {
       setVerifying(false);
     }
   }
 
+  // CONFIRM DOCUMENT RELEASE
   async function confirmClaim() {
     if (
+      !authorized ||
       !result ||
       !verifiedToken ||
-      result.pickup_status !== "Ready for Pickup"
+      result.pickup_status !== "Ready for Pickup" ||
+      confirmingRef.current
     ) {
       return;
     }
 
+    confirmingRef.current = true;
     setConfirming(true);
     setErrorMessage("");
     setSuccessMessage("");
 
     try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      const { data: profile, error: profileError } =
+        await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+      if (profileError || profile?.role !== "admin") {
+        throw new Error(
+          "You are not authorized to release documents."
+        );
+      }
+
       const { data, error } = await supabase.rpc(
         "confirm_document_claim",
         { p_token: verifiedToken }
       );
 
       if (error) {
-        setErrorMessage(
+        throw new Error(
           `Unable to confirm pickup: ${error.message}`
         );
-        return;
       }
 
       const claimedRequestId = Number(data);
 
-      setResult({
-        ...result,
-        pickup_status: "Claimed",
-      });
+      setResult((current) =>
+        current
+          ? {
+              ...current,
+              pickup_status: "Claimed",
+            }
+          : current
+      );
 
       setSuccessMessage(
-        `Document Request #${claimedRequestId} was successfully marked as claimed.`
+        `Document Request #${
+          Number.isFinite(claimedRequestId)
+            ? claimedRequestId
+            : result.request_id
+        } was successfully marked as claimed.`
       );
     } catch (error) {
-      console.error(error);
+      console.error("Claim confirmation error:", error);
+
       setErrorMessage(
-        "An unexpected error occurred while confirming pickup."
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while confirming pickup."
       );
     } finally {
+      confirmingRef.current = false;
       setConfirming(false);
     }
   }
 
-  function resetScanner() {
-    setToken("");
-    setResult(null);
-    setVerifiedToken("");
-    setErrorMessage("");
-    setSuccessMessage("");
-    scanHandledRef.current = false;
-  }
+  const readyToClaim =
+    result?.pickup_status === "Ready for Pickup";
 
   if (checkingAccess) {
     return (
@@ -319,6 +529,7 @@ export default function AdminScanPage() {
             size={32}
             className="mx-auto animate-spin text-[#0b304b]"
           />
+
           <p className="mt-5 font-bold text-[#0b304b]">
             Checking administrator access...
           </p>
@@ -327,10 +538,37 @@ export default function AdminScanPage() {
     );
   }
 
-  if (!authorized) return null;
+  if (!authorized && !errorMessage) {
+    return null;
+  }
 
-  const readyToClaim =
-    result?.pickup_status === "Ready for Pickup";
+  if (!authorized) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-5">
+        <div className="max-w-md rounded-xl bg-white p-8 text-center shadow-sm">
+          <XCircle
+            size={32}
+            className="mx-auto text-red-600"
+          />
+
+          <h1 className="mt-4 text-xl font-black text-[#0b304b]">
+            Access Unavailable
+          </h1>
+
+          <p className="mt-3 text-sm text-red-700">
+            {errorMessage}
+          </p>
+
+          <Link
+            href="/login"
+            className="mt-6 inline-flex rounded-lg bg-[#0b304b] px-5 py-3 text-sm font-bold text-white"
+          >
+            Return to Login
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
@@ -340,6 +578,7 @@ export default function AdminScanPage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
             Digital Citizen Services Portal
           </p>
+
           <p className="hidden text-xs text-[#c7d7e3] sm:block">
             Administrator Access
           </p>
@@ -351,16 +590,17 @@ export default function AdminScanPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
             href="/admin"
-            className="flex items-center gap-4"
+            className="flex items-center gap-3"
           >
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
-              <Landmark size={23} strokeWidth={1.7} />
+              <Landmark size={23} />
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5bd81]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#d5bd81]">
                 Digital Barangay Portal
               </p>
+
               <p className="mt-1 text-lg font-black sm:text-xl">
                 eBarangay Connect
               </p>
@@ -369,7 +609,7 @@ export default function AdminScanPage() {
 
           <Link
             href="/admin"
-            className="inline-flex items-center gap-2 border border-white/30 px-4 py-3 text-xs font-bold uppercase transition hover:bg-white hover:text-[#0b304b]"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/30 px-4 py-3 text-xs font-bold transition hover:bg-white/10"
           >
             <ArrowLeft size={16} />
             <span className="hidden sm:inline">
@@ -383,16 +623,18 @@ export default function AdminScanPage() {
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-75"
+          className="absolute inset-0 bg-cover bg-center opacity-60"
           style={{
             backgroundImage: "url('/barangay-hall.jpg')",
           }}
         />
+
         <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/95 via-[#0b304b]/90 to-[#0b304b]/75" />
 
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
           <div className="flex items-center gap-3">
             <span className="h-px w-10 bg-[#d5bd81]" />
+
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2c991]">
               Document Release Management
             </p>
@@ -402,26 +644,27 @@ export default function AdminScanPage() {
             QR Document Scanner
           </h1>
 
-          <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9] sm:text-base">
-            Verify completed document requests and confirm
-            pickup securely using a resident&apos;s QR code.
+          <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9]">
+            Scan and verify a resident&apos;s document
+            claim QR code before confirming its release.
           </p>
         </div>
       </section>
 
+      {/* CONTENT */}
       <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
         <Link
           href="/admin"
           className="inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] hover:text-[#9b7b40]"
         >
-         
+          <ArrowLeft size={16} />
+          Back to Admin Dashboard
         </Link>
 
-        {/* ERROR */}
         {errorMessage && (
           <div
             role="alert"
-            className="mt-7 flex items-start gap-3 border-l-4 border-[#b74d3d] bg-[#fdf0ed] p-5 text-[#943d31]"
+            className="mt-7 flex items-start gap-3 rounded-lg border-l-4 border-[#b74d3d] bg-[#fdf0ed] p-5 text-[#943d31]"
           >
             <XCircle size={22} className="shrink-0" />
             <p className="text-sm leading-7">
@@ -430,13 +673,15 @@ export default function AdminScanPage() {
           </div>
         )}
 
-        {/* SUCCESS */}
         {successMessage && (
           <div
             role="status"
-            className="mt-7 flex items-start gap-3 border-l-4 border-[#357c60] bg-[#edf7f1] p-5 text-[#245e48]"
+            className="mt-7 flex items-start gap-3 rounded-lg border-l-4 border-[#357c60] bg-[#edf7f1] p-5 text-[#245e48]"
           >
-            <CheckCircle2 size={22} className="shrink-0" />
+            <CheckCircle2
+              size={22}
+              className="shrink-0"
+            />
             <p className="text-sm leading-7">
               {successMessage}
             </p>
@@ -445,16 +690,17 @@ export default function AdminScanPage() {
 
         <div className="mt-8 grid gap-7 lg:grid-cols-2">
           {/* CAMERA SCANNER */}
-          <section className="h-fit border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+          <section className="h-fit rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e8eef3] text-[#0b304b]">
                 <Camera size={23} />
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#9b7b40]">
                   Camera Verification
                 </p>
+
                 <h2 className="mt-2 text-xl font-black text-[#0b304b]">
                   Scan Resident QR
                 </h2>
@@ -462,36 +708,48 @@ export default function AdminScanPage() {
             </div>
 
             <p className="mt-5 text-sm leading-7 text-[#697d8c]">
-              Allow camera access, then position the
-              resident&apos;s QR code inside the scanning area.
+              Allow camera access and point the camera at
+              the resident&apos;s QR code. The scanner
+              will stop automatically after reading it.
             </p>
 
             {scanning ? (
               <div className="mt-6">
-                <div
-                  id="admin-qr-reader"
-                  className="min-h-64 w-full overflow-hidden border border-[#dce3e8]"
-                />
+                <div className="overflow-hidden rounded-xl border border-[#dce3e8] bg-[#061b2b]">
+                  <div
+                    id="admin-qr-reader"
+                    className="min-h-64 w-full"
+                  />
+                </div>
+
+                {cameraStarting && (
+                  <p
+                    role="status"
+                    className="mt-4 flex items-center justify-center gap-2 text-sm text-[#697d8c]"
+                  >
+                    <Loader2
+                      size={17}
+                      className="animate-spin"
+                    />
+                    Starting camera...
+                  </p>
+                )}
 
                 <button
                   type="button"
-                  onClick={() => {
-                    void stopScanner();
-                  }}
-                  className="mt-5 w-full border border-[#a9473c] px-5 py-3.5 text-sm font-black text-[#a9473c] transition hover:bg-[#fdf0ed]"
+                  onClick={stopScanner}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#a9473c] px-5 py-3.5 text-sm font-black text-[#a9473c] hover:bg-[#fdf0ed]"
                 >
+                  <CameraOff size={18} />
                   Stop Scanner
                 </button>
               </div>
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  resetScanner();
-                  scanHandledRef.current = false;
-                  setScanning(true);
-                }}
-                className="mt-7 inline-flex w-full items-center justify-center gap-3 bg-[#0b304b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#174b70]"
+                onClick={startScanner}
+                disabled={verifying || confirming}
+                className="mt-7 inline-flex w-full items-center justify-center gap-3 rounded-lg bg-[#0b304b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#174b70] disabled:opacity-50"
               >
                 <ScanLine size={19} />
                 Start Camera Scanner
@@ -499,22 +757,24 @@ export default function AdminScanPage() {
             )}
 
             <p className="mt-4 text-xs leading-6 text-[#8193a2]">
-              Camera scanning requires browser permission
-              and generally works on localhost or HTTPS.
+              Use HTTPS for your deployed website.
+              Localhost also supports camera access.
+              Allow camera permission when prompted.
             </p>
           </section>
 
           {/* MANUAL VERIFICATION */}
-          <section className="h-fit border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+          <section className="h-fit rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e8eef3] text-[#0b304b]">
                 <QrCode size={23} />
               </div>
 
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#9b7b40]">
                   Claim Token
                 </p>
+
                 <h2 className="mt-2 text-xl font-black text-[#0b304b]">
                   Verify Document
                 </h2>
@@ -522,8 +782,9 @@ export default function AdminScanPage() {
             </div>
 
             <p className="mt-5 text-sm leading-7 text-[#697d8c]">
-              Scan a QR code or enter its claim token
-              manually to check the document&apos;s status.
+              Scan the resident&apos;s QR code or enter
+              the claim token manually to check its
+              status.
             </p>
 
             <label
@@ -537,24 +798,24 @@ export default function AdminScanPage() {
               id="claim-token"
               rows={3}
               value={token}
-              onChange={(event) => {
-                setToken(event.target.value);
-                setResult(null);
-                setVerifiedToken("");
-                setErrorMessage("");
-                setSuccessMessage("");
-              }}
+              onChange={(event) =>
+                handleTokenChange(event.target.value)
+              }
+              disabled={scanning || verifying || confirming}
               placeholder="Scan QR or enter claim token..."
-              className="mt-3 w-full resize-none border border-[#cdd9e2] bg-[#f8fafc] p-4 text-sm text-[#173149] outline-none focus:border-[#0b304b]"
+              className="mt-3 w-full resize-none rounded-lg border border-[#cdd9e2] bg-[#f8fafc] p-4 text-sm text-[#173149] outline-none focus:border-[#0b304b] disabled:opacity-60"
             />
 
             <button
               type="button"
-              disabled={verifying || confirming || !token.trim()}
-              onClick={() => {
-                void verifyToken(token);
-              }}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 bg-[#0b304b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={
+                scanning ||
+                verifying ||
+                confirming ||
+                !token.trim()
+              }
+              onClick={() => void verifyToken()}
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b304b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#174b70] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {verifying ? (
                 <>
@@ -576,10 +837,10 @@ export default function AdminScanPage() {
 
         {/* VERIFICATION RESULT */}
         {result && (
-          <section className="mt-8 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+          <section className="mt-8 rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#9b7b40]">
                   Verification Result
                 </p>
 
@@ -588,12 +849,13 @@ export default function AdminScanPage() {
                 </h2>
 
                 <p className="mt-3 text-sm text-[#697d8c]">
-                  {result.document_name || "Unknown Document"}
+                  {result.document_name ||
+                    "Unknown Document"}
                 </p>
               </div>
 
               <span
-                className={`inline-flex w-fit items-center gap-2 px-4 py-2 text-xs font-black ${
+                className={`inline-flex w-fit items-center gap-2 rounded-lg px-4 py-2 text-xs font-black ${
                   readyToClaim
                     ? "bg-[#e6f2eb] text-[#28724e]"
                     : "bg-[#eceff1] text-[#566775]"
@@ -609,19 +871,21 @@ export default function AdminScanPage() {
             </div>
 
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
-              <div className="bg-[#edf2f5] p-5">
+              <div className="rounded-lg bg-[#edf2f5] p-5">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
                   Processing Status
                 </p>
+
                 <p className="mt-3 font-black text-[#0b304b]">
                   {result.request_status}
                 </p>
               </div>
 
-              <div className="bg-[#edf2f5] p-5">
+              <div className="rounded-lg bg-[#edf2f5] p-5">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
                   Pickup Status
                 </p>
+
                 <p className="mt-3 font-black text-[#0b304b]">
                   {result.pickup_status}
                 </p>
@@ -630,26 +894,25 @@ export default function AdminScanPage() {
 
             {readyToClaim && (
               <div className="mt-7 border-t border-[#e3e9ee] pt-7">
-                <div className="flex items-start gap-3 bg-[#f8f0df] p-5">
+                <div className="flex items-start gap-3 rounded-lg bg-[#f8f0df] p-5">
                   <ShieldCheck
                     size={21}
                     className="mt-0.5 shrink-0 text-[#9b7b40]"
                   />
+
                   <p className="text-sm leading-7 text-[#6c592f]">
-                    Before confirming, verify the
-                    resident&apos;s identity and ensure the
-                    correct physical document is ready
-                    to be handed over.
+                    Before confirming release, check the
+                    resident&apos;s identity and ensure
+                    the correct physical document is
+                    ready to be handed over.
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  disabled={confirming}
-                  onClick={() => {
-                    void confirmClaim();
-                  }}
-                  className="mt-6 inline-flex w-full items-center justify-center gap-3 bg-[#28724e] px-6 py-4 text-sm font-black text-white transition hover:bg-[#205e40] disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={confirming || verifying}
+                  onClick={() => void confirmClaim()}
+                  className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-lg bg-[#28724e] px-6 py-4 text-sm font-black text-white transition hover:bg-[#205e40] disabled:opacity-50"
                 >
                   {confirming ? (
                     <>
@@ -670,7 +933,7 @@ export default function AdminScanPage() {
             )}
 
             {result.pickup_status === "Claimed" && (
-              <div className="mt-7 flex items-center gap-3 bg-[#edf7f1] p-5 text-[#245e48]">
+              <div className="mt-7 flex items-center gap-3 rounded-lg bg-[#edf7f1] p-5 text-[#245e48]">
                 <CheckCircle2 size={23} />
                 <p className="font-black">
                   This document has already been claimed.
@@ -680,9 +943,11 @@ export default function AdminScanPage() {
 
             <button
               type="button"
-              onClick={resetScanner}
-              className="mt-5 w-full border border-[#cdd9e2] px-5 py-3.5 text-sm font-black text-[#0b304b] hover:bg-[#edf2f5]"
+              onClick={resetVerification}
+              disabled={confirming}
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#cdd9e2] px-5 py-3.5 text-sm font-black text-[#0b304b] hover:bg-[#edf2f5] disabled:opacity-50"
             >
+              <RotateCcw size={17} />
               Verify Another Document
             </button>
           </section>

@@ -530,7 +530,7 @@ export default function RequestDetailsPage() {
             <p className="font-black text-[#943d31]">
               Something went wrong
             </p>
-            <p className="mt-2 wrap-break-words text-sm leading-7 text-[#943d31]">
+            <p className="mt-2 wrap-wrap-break-word text-sm leading-7 text-[#943d31]">
               {errorMessage}
             </p>
           </div>
