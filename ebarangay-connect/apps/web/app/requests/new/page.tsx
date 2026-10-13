@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   Clock3,
   FileCheck2,
-  FileText,
   ImagePlus,
   Landmark,
   Loader2,
@@ -509,8 +508,7 @@ export default function NewRequestPage() {
           href="/dashboard"
           className="mb-7 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b]"
         >
-          <ArrowLeft size={16} />
-          Back to Dashboard
+          
         </Link>
 
         {errorMessage && (

@@ -4,9 +4,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 import {
   ArrowLeft,
   ArrowRight,
+  Ban,
   Check,
   CheckCircle2,
   Clock,
@@ -16,6 +18,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+
 import { supabase } from "@/lib/supabase";
 
 type RequestItem = {
@@ -35,6 +38,283 @@ type HistoryItem = {
   status: string;
   remarks: string | null;
 };
+
+function getDocumentName(request: RequestItem): string {
+  if (Array.isArray(request.document_types)) {
+    return request.document_types[0]?.name || "Unknown Document";
+  }
+
+  return request.document_types?.name || "Unknown Document";
+}
+
+function normalizedStatus(status: string | null): string {
+  const value = status?.toLowerCase() || "pending";
+
+  if (value === "ready for claiming") {
+    return "completed";
+  }
+
+  return value;
+}
+
+function getStatusStyle(status: string | null): string {
+  switch (normalizedStatus(status)) {
+    case "completed":
+    case "claimed":
+    case "approved":
+      return "bg-[#e6f2eb] text-[#28724e]";
+
+    case "processing":
+      return "bg-[#e5eff9] text-[#255e91]";
+
+    case "rejected":
+      return "bg-[#fae9e6] text-[#a9473c]";
+
+    case "cancelled":
+      return "bg-[#edf0f2] text-[#60717f]";
+
+    default:
+      return "bg-[#fbf1d9] text-[#8e6b25]";
+  }
+}
+
+function getStatusIcon(status: string | null) {
+  switch (normalizedStatus(status)) {
+    case "completed":
+    case "claimed":
+    case "approved":
+      return <CheckCircle2 size={15} />;
+
+    case "processing":
+      return <Loader2 size={15} />;
+
+    case "rejected":
+      return <XCircle size={15} />;
+
+    case "cancelled":
+      return <Ban size={15} />;
+
+    default:
+      return <Clock size={15} />;
+  }
+}
+
+function getHistoryIcon(status: string) {
+  switch (normalizedStatus(status)) {
+    case "completed":
+    case "claimed":
+    case "approved":
+      return <Check size={16} />;
+
+    case "processing":
+      return <Loader2 size={16} />;
+
+    case "rejected":
+      return <X size={16} />;
+
+    case "cancelled":
+      return <Ban size={16} />;
+
+    default:
+      return <Clock size={16} />;
+  }
+}
+
+function getHistoryIconStyle(status: string): string {
+  return getStatusStyle(status);
+}
+
+function StatusTracker({
+  status,
+}: {
+  status: string | null;
+}) {
+  const currentStatus = normalizedStatus(status);
+
+  if (
+    currentStatus === "rejected" ||
+    currentStatus === "cancelled"
+  ) {
+    const isRejected = currentStatus === "rejected";
+
+    return (
+      <div
+        className={`mt-7 border-l-4 p-5 ${
+          isRejected
+            ? "border-[#b74d3d] bg-[#fdf0ed]"
+            : "border-[#8193a2] bg-[#f1f4f6]"
+        }`}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center ${
+              isRejected
+                ? "bg-[#fae0da] text-[#a9473c]"
+                : "bg-[#e3e9ee] text-[#60717f]"
+            }`}
+          >
+            {isRejected ? <X size={20} /> : <Ban size={20} />}
+          </div>
+
+          <div>
+            <p
+              className={`font-black ${
+                isRejected
+                  ? "text-[#943d31]"
+                  : "text-[#526575]"
+              }`}
+            >
+              Request {isRejected ? "Rejected" : "Cancelled"}
+            </p>
+
+            <p
+              className={`mt-2 text-sm leading-7 ${
+                isRejected
+                  ? "text-[#943d31]"
+                  : "text-[#526575]"
+              }`}
+            >
+              {isRejected
+                ? "This request has been rejected by the barangay."
+                : "This request has been cancelled."}{" "}
+              Check the status history below for additional remarks.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const steps = [
+    {
+      name: "Pending",
+      value: "pending",
+      icon: <Clock size={17} />,
+    },
+    {
+      name: "Processing",
+      value: "processing",
+      icon: <Loader2 size={17} />,
+    },
+    {
+      name: "Completed",
+      value: "completed",
+      icon: <Check size={17} />,
+    },
+  ];
+
+  const currentIndex =
+    currentStatus === "claimed"
+      ? 2
+      : currentStatus === "approved"
+        ? 1
+        : steps.findIndex(
+            (step) => step.value === currentStatus
+          );
+
+  return (
+    <div className="mt-8">
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <p className="text-sm font-black text-[#0b304b]">
+          Request Status
+        </p>
+
+        <span className="text-xs font-bold text-[#718391]">
+          {status || "Pending"}
+        </span>
+      </div>
+
+      <div className="flex items-start">
+        {steps.map((step, index) => {
+          const isCompleted =
+            currentIndex >= 0 && index <= currentIndex;
+
+          const isCurrent = currentIndex === index;
+
+          return (
+            <div
+              key={step.value}
+              className="flex flex-1 items-start"
+            >
+              <div className="flex min-w-16 flex-col items-center text-center">
+                <div
+                  className={`flex h-11 w-11 items-center justify-center border transition ${
+                    isCompleted
+                      ? "border-[#0b304b] bg-[#0b304b] text-white"
+                      : "border-[#dce3e8] bg-[#edf2f5] text-[#a0afba]"
+                  }`}
+                >
+                  {step.icon}
+                </div>
+
+                <p
+                  className={`mt-3 text-xs font-bold ${
+                    isCurrent
+                      ? "text-[#0b304b]"
+                      : isCompleted
+                        ? "text-[#47667c]"
+                        : "text-[#9babb6]"
+                  }`}
+                >
+                  {step.name}
+                </p>
+
+                {isCurrent && (
+                  <span className="mt-2 text-[10px] font-black uppercase tracking-wide text-[#9b7b40]">
+                    Current
+                  </span>
+                )}
+              </div>
+
+              {index < steps.length - 1 && (
+                <div
+                  className={`mx-2 mt-5 h-1 flex-1 ${
+                    currentIndex > index
+                      ? "bg-[#d5bd81]"
+                      : "bg-[#e3e9ee]"
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// STATISTICS CARD - SAME STYLE AS RESIDENT DASHBOARD
+function StatCard({
+  title,
+  count,
+  icon: Icon,
+  background,
+  iconColor,
+}: {
+  title: string;
+  count: number;
+  icon: typeof Clock;
+  background: string;
+  iconColor: string;
+}) {
+  return (
+    <div className="flex min-h-41.5 flex-col border border-[#dce3e8] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+      <div
+        className={`flex h-11 w-11 items-center justify-center ${background} ${iconColor}`}
+      >
+        <Icon size={21} strokeWidth={1.9} />
+      </div>
+
+      <p className="mt-5 text-[28px] font-black leading-none text-[#0b304b]">
+        {count}
+      </p>
+
+      <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.04em] text-[#58738a]">
+        {title}
+      </p>
+    </div>
+  );
+}
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -140,94 +420,12 @@ export default function RequestsPage() {
       setHistoryLoading(false);
     }
 
-    loadPage();
+    void loadPage();
 
     return () => {
       cancelled = true;
     };
   }, [router]);
-
-  function getDocumentName(request: RequestItem) {
-    if (Array.isArray(request.document_types)) {
-      return (
-        request.document_types[0]?.name ||
-        "Unknown Document"
-      );
-    }
-
-    return (
-      request.document_types?.name ||
-      "Unknown Document"
-    );
-  }
-
-  function getStatusStyle(status: string | null) {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return "bg-[#e6f2eb] text-[#28724e]";
-
-      case "processing":
-        return "bg-[#e5eff9] text-[#255e91]";
-
-      case "rejected":
-        return "bg-[#fae9e6] text-[#a9473c]";
-
-      case "pending":
-      default:
-        return "bg-[#fbf1d9] text-[#8e6b25]";
-    }
-  }
-
-  function getStatusIcon(status: string | null) {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return <CheckCircle2 size={15} />;
-
-      case "processing":
-        return <Loader2 size={15} />;
-
-      case "rejected":
-        return <XCircle size={15} />;
-
-      case "pending":
-      default:
-        return <Clock size={15} />;
-    }
-  }
-
-  function getHistoryIcon(status: string) {
-    switch (status.toLowerCase()) {
-      case "completed":
-        return <Check size={16} />;
-
-      case "processing":
-        return <Loader2 size={16} />;
-
-      case "rejected":
-        return <X size={16} />;
-
-      case "pending":
-      default:
-        return <Clock size={16} />;
-    }
-  }
-
-  function getHistoryIconStyle(status: string) {
-    switch (status.toLowerCase()) {
-      case "completed":
-        return "bg-[#e6f2eb] text-[#28724e]";
-
-      case "processing":
-        return "bg-[#e5eff9] text-[#255e91]";
-
-      case "rejected":
-        return "bg-[#fae9e6] text-[#a9473c]";
-
-      case "pending":
-      default:
-        return "bg-[#fbf1d9] text-[#8e6b25]";
-    }
-  }
 
   function getRequestHistory(requestId: number) {
     return history.filter(
@@ -235,141 +433,30 @@ export default function RequestsPage() {
     );
   }
 
-  function renderStatusTracker(status: string | null) {
-    const currentStatus =
-      status?.toLowerCase() || "pending";
-
-    if (currentStatus === "rejected") {
-      return (
-        <div className="mt-7 border-l-4 border-[#b74d3d] bg-[#fdf0ed] p-5">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#fae0da] text-[#a9473c]">
-              <X size={20} />
-            </div>
-
-            <div>
-              <p className="font-black text-[#943d31]">
-                Request Rejected
-              </p>
-
-              <p className="mt-2 text-sm leading-7 text-[#943d31]">
-                This request has been rejected by the
-                barangay. Check the status history below
-                for additional remarks.
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    const steps = [
-      {
-        name: "Pending",
-        value: "pending",
-        icon: <Clock size={17} />,
-      },
-      {
-        name: "Processing",
-        value: "processing",
-        icon: <Loader2 size={17} />,
-      },
-      {
-        name: "Completed",
-        value: "completed",
-        icon: <Check size={17} />,
-      },
-    ];
-
-    const currentIndex = steps.findIndex(
-      (step) => step.value === currentStatus
-    );
-
-    return (
-      <div className="mt-8">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <p className="text-sm font-black text-[#0b304b]">
-            Request Status
-          </p>
-
-          <span className="text-xs font-bold text-[#718391]">
-            {status || "Pending"}
-          </span>
-        </div>
-
-        <div className="flex items-start">
-          {steps.map((step, index) => {
-            const isCompleted =
-              currentIndex >= 0 &&
-              index <= currentIndex;
-
-            const isCurrent = currentIndex === index;
-
-            return (
-              <div
-                key={step.value}
-                className="flex flex-1 items-start"
-              >
-                <div className="flex min-w-16 flex-col items-center text-center">
-                  <div
-                    className={`flex h-11 w-11 items-center justify-center border transition ${
-                      isCompleted
-                        ? "border-[#0b304b] bg-[#0b304b] text-white"
-                        : "border-[#dce3e8] bg-[#edf2f5] text-[#a0afba]"
-                    }`}
-                  >
-                    {step.icon}
-                  </div>
-
-                  <p
-                    className={`mt-3 text-xs font-bold ${
-                      isCurrent
-                        ? "text-[#0b304b]"
-                        : isCompleted
-                        ? "text-[#47667c]"
-                        : "text-[#9babb6]"
-                    }`}
-                  >
-                    {step.name}
-                  </p>
-
-                  {isCurrent && (
-                    <span className="mt-2 text-[10px] font-black uppercase tracking-wide text-[#9b7b40]">
-                      Current
-                    </span>
-                  )}
-                </div>
-
-                {index < steps.length - 1 && (
-                  <div
-                    className={`mx-2 mt-5 h-1 flex-1 ${
-                      currentIndex > index
-                        ? "bg-[#d5bd81]"
-                        : "bg-[#e3e9ee]"
-                    }`}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
+  // ALL SIX STATISTICS
   const pendingCount = requests.filter(
     (request) =>
-      request.status?.toLowerCase() === "pending"
+      normalizedStatus(request.status) === "pending"
   ).length;
 
   const processingCount = requests.filter(
     (request) =>
-      request.status?.toLowerCase() === "processing"
+      normalizedStatus(request.status) === "processing"
   ).length;
 
   const completedCount = requests.filter(
     (request) =>
-      request.status?.toLowerCase() === "completed"
+      normalizedStatus(request.status) === "completed"
+  ).length;
+
+  const rejectedCount = requests.filter(
+    (request) =>
+      normalizedStatus(request.status) === "rejected"
+  ).length;
+
+  const cancelledCount = requests.filter(
+    (request) =>
+      normalizedStatus(request.status) === "cancelled"
   ).length;
 
   if (loading) {
@@ -418,10 +505,7 @@ export default function RequestsPage() {
             className="flex items-center gap-4"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
-              <Landmark
-                size={23}
-                strokeWidth={1.7}
-              />
+              <Landmark size={23} strokeWidth={1.7} />
             </div>
 
             <div>
@@ -435,7 +519,6 @@ export default function RequestsPage() {
             </div>
           </Link>
 
-          {/* DASHBOARD BUTTON ONLY */}
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
@@ -453,8 +536,7 @@ export default function RequestsPage() {
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
           style={{
-            backgroundImage:
-              "url('/barangay-hall.jpg')",
+            backgroundImage: "url('/barangay-hall.jpg')",
           }}
         />
 
@@ -490,66 +572,58 @@ export default function RequestsPage() {
           
         </Link>
 
-        {/* STATISTICS */}
-        <section className="mb-9 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
-              <FileText size={19} />
-            </div>
+        {/* SIX STATISTICS - THREE TOP, THREE BOTTOM */}
+        <section className="mb-9 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <StatCard
+            title="Total Requests"
+            count={requests.length}
+            icon={FileText}
+            background="bg-[#e8eef3]"
+            iconColor="text-[#0b304b]"
+          />
 
-            <p className="mt-5 text-3xl font-black text-[#0b304b]">
-              {requests.length}
-            </p>
+          <StatCard
+            title="Pending"
+            count={pendingCount}
+            icon={Clock}
+            background="bg-[#fbf1d9]"
+            iconColor="text-[#8e6b25]"
+          />
 
-            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
-              Total Requests
-            </p>
-          </div>
+          <StatCard
+            title="Processing"
+            count={processingCount}
+            icon={Loader2}
+            background="bg-[#e5eff9]"
+            iconColor="text-[#255e91]"
+          />
 
-          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center bg-[#fbf1d9] text-[#8e6b25]">
-              <Clock size={19} />
-            </div>
+          <StatCard
+            title="Completed"
+            count={completedCount}
+            icon={CheckCircle2}
+            background="bg-[#e6f2eb]"
+            iconColor="text-[#28724e]"
+          />
 
-            <p className="mt-5 text-3xl font-black text-[#0b304b]">
-              {pendingCount}
-            </p>
+          <StatCard
+            title="Rejected"
+            count={rejectedCount}
+            icon={XCircle}
+            background="bg-[#fae9e6]"
+            iconColor="text-[#a9473c]"
+          />
 
-            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
-              Pending
-            </p>
-          </div>
-
-          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center bg-[#e5eff9] text-[#255e91]">
-              <Loader2 size={19} />
-            </div>
-
-            <p className="mt-5 text-3xl font-black text-[#0b304b]">
-              {processingCount}
-            </p>
-
-            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
-              Processing
-            </p>
-          </div>
-
-          <div className="border border-[#dce3e8] bg-white p-6 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center bg-[#e6f2eb] text-[#28724e]">
-              <CheckCircle2 size={19} />
-            </div>
-
-            <p className="mt-5 text-3xl font-black text-[#0b304b]">
-              {completedCount}
-            </p>
-
-            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#718391]">
-              Completed
-            </p>
-          </div>
+          <StatCard
+            title="Cancelled"
+            count={cancelledCount}
+            icon={Ban}
+            background="bg-[#edf0f2]"
+            iconColor="text-[#60717f]"
+          />
         </section>
 
-        {/* ERROR */}
+        {/* ERROR MESSAGE */}
         {errorMessage && (
           <div
             role="alert"
@@ -559,7 +633,7 @@ export default function RequestsPage() {
               Something went wrong
             </p>
 
-            <p className="mt-2 wrap-break-word text-sm leading-7 text-[#943d31]">
+            <p className="mt-2 break-word text-sm leading-7 text-[#943d31]">
               {errorMessage}
             </p>
           </div>
@@ -603,8 +677,9 @@ export default function RequestsPage() {
             </div>
 
             {requests.map((request) => {
-              const requestHistory =
-                getRequestHistory(request.id);
+              const requestHistory = getRequestHistory(
+                request.id
+              );
 
               return (
                 <article
@@ -614,21 +689,21 @@ export default function RequestsPage() {
                   {/* REQUEST INFORMATION */}
                   <div className="p-6 sm:p-8">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
-                      <div className="flex gap-4">
+                      <div className="flex min-w-0 gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
                           <FileText size={22} />
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9b7b40]">
                             Request #{request.id}
                           </p>
 
-                          <h3 className="mt-2 text-xl font-black text-[#0b304b] sm:text-2xl">
+                          <h3 className="mt-2 break-word text-xl font-black text-[#0b304b] sm:text-2xl">
                             {getDocumentName(request)}
                           </h3>
 
-                          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#697d8c]">
+                          <p className="mt-4 max-w-2xl break-word text-sm leading-7 text-[#697d8c]">
                             <span className="font-black text-[#0b304b]">
                               Purpose:
                             </span>{" "}
@@ -649,7 +724,7 @@ export default function RequestsPage() {
                     </div>
 
                     {/* STATUS TRACKER */}
-                    {renderStatusTracker(request.status)}
+                    <StatusTracker status={request.status} />
 
                     {/* REQUEST DETAILS LINK */}
                     <div className="mt-8 border-t border-[#e3e9ee] pt-6">
@@ -705,7 +780,8 @@ export default function RequestsPage() {
                                 </div>
 
                                 {index <
-                                  requestHistory.length - 1 && (
+                                  requestHistory.length -
+                                    1 && (
                                   <div className="my-2 min-h-8 w-px flex-1 bg-[#d5dfe7]" />
                                 )}
                               </div>
@@ -717,14 +793,15 @@ export default function RequestsPage() {
                                   </p>
 
                                   {index ===
-                                    requestHistory.length - 1 && (
+                                    requestHistory.length -
+                                      1 && (
                                     <span className="bg-[#e8eef3] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-[#0b304b]">
                                       Latest
                                     </span>
                                   )}
                                 </div>
 
-                                <p className="mt-2 max-w-2xl text-sm leading-7 text-[#697d8c]">
+                                <p className="mt-2 max-w-2xl break-word text-sm leading-7 text-[#697d8c]">
                                   {historyItem.remarks ||
                                     "No remarks provided."}
                                 </p>

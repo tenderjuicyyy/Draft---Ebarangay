@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardSwitcher from "@/components/DashboardSwitcher";
+
 import {
-  ArrowLeft,
   ArrowRight,
   Ban,
   CheckCircle2,
@@ -21,6 +21,7 @@ import {
   SlidersHorizontal,
   XCircle,
 } from "lucide-react";
+
 import { supabase } from "@/lib/supabase";
 
 type DocumentType = {
@@ -42,6 +43,36 @@ const STATUS_OPTIONS = [
   "Rejected",
 ] as const;
 
+const STATUS_BUTTON_COLORS: Record<
+  string,
+  { normal: string; selected: string }
+> = {
+  Pending: {
+    normal:
+      "border-[#cdd9e2] bg-white text-[#0b304b] hover:border-[#d5bd81] hover:bg-[#f8fafc]",
+    selected:
+      "border-[#0b304b] bg-[#0b304b] text-[#f1d9a1]",
+  },
+  Processing: {
+    normal:
+      "border-[#cdd9e2] bg-white text-[#0b304b] hover:border-[#d5bd81] hover:bg-[#f8fafc]",
+    selected:
+      "border-[#0b304b] bg-[#0b304b] text-[#f1d9a1]",
+  },
+  Completed: {
+    normal:
+      "border-[#cdd9e2] bg-white text-[#0b304b] hover:border-[#d5bd81] hover:bg-[#f8fafc]",
+    selected:
+      "border-[#0b304b] bg-[#0b304b] text-[#f1d9a1]",
+  },
+  Rejected: {
+    normal:
+      "border-[#cdd9e2] bg-white text-[#0b304b] hover:border-[#d5bd81] hover:bg-[#f8fafc]",
+    selected:
+      "border-[#0b304b] bg-[#0b304b] text-[#f1d9a1]",
+  },
+};
+
 function documentName(request: RequestItem): string {
   const value = request.document_types;
 
@@ -59,19 +90,24 @@ function displayStatus(request: RequestItem): string {
 
   switch (request.status?.toLowerCase()) {
     case "completed":
-      return "Ready for Claiming";
-    case "approved":
-      return "Approved";
     case "ready for claiming":
       return "Ready for Claiming";
+
+    case "approved":
+      return "Approved";
+
     case "processing":
       return "Processing";
+
     case "rejected":
       return "Rejected";
+
     case "cancelled":
       return "Cancelled";
+
     case "claimed":
       return "Claimed";
+
     default:
       return "Pending";
   }
@@ -80,22 +116,32 @@ function displayStatus(request: RequestItem): string {
 function statusStyle(status: string): string {
   switch (status) {
     case "Pending":
-      return "bg-amber-100 text-amber-800";
+      return "border border-[#e6d5ac] bg-[#fffaf0] text-[#8e6b25]";
+
     case "Processing":
-      return "bg-blue-100 text-blue-800";
+      return "border border-[#b9cddd] bg-[#edf3f8] text-[#0b304b]";
+
     case "Approved":
-      return "bg-teal-100 text-teal-800";
+      return "border border-[#b9d6ca] bg-[#eef7f2] text-[#245e48]";
+
     case "Ready for Claiming":
-      return "bg-green-100 text-green-800";
+      return "border border-[#b9d6ca] bg-[#eef7f2] text-[#245e48]";
+
     case "Claimed":
-      return "bg-emerald-100 text-emerald-800";
+      return "border border-[#b9d6ca] bg-[#eef7f2] text-[#245e48]";
+
     case "Rejected":
-      return "bg-red-100 text-red-800";
+      return "border border-[#e6c6c2] bg-[#fdf0ed] text-[#943d31]";
+
+    case "Cancelled":
+      return "border border-[#d5dce2] bg-[#f1f4f6] text-[#667785]";
+
     default:
-      return "bg-gray-200 text-gray-700";
+      return "border border-[#d5dce2] bg-[#f1f4f6] text-[#667785]";
   }
 }
 
+// RESIDENT-STYLE STATISTICS CARDS
 function StatCard({
   title,
   count,
@@ -105,17 +151,66 @@ function StatCard({
   count: number;
   icon: typeof Clock;
 }) {
+  const styles: Record<
+    string,
+    { background: string; iconColor: string }
+  > = {
+    "Total Requests": {
+      background: "bg-[#e8f0f6]",
+      iconColor: "text-[#0b304b]",
+    },
+
+    Pending: {
+      background: "bg-[#fcf1d9]",
+      iconColor: "text-[#aa8136]",
+    },
+
+    Processing: {
+      background: "bg-[#e4f0fd]",
+      iconColor: "text-[#2563a6]",
+    },
+
+    Approved: {
+      background: "bg-[#e7f4ec]",
+      iconColor: "text-[#267553]",
+    },
+
+    "Ready for Claiming": {
+      background: "bg-[#e7f4ec]",
+      iconColor: "text-[#267553]",
+    },
+
+    Claimed: {
+      background: "bg-[#e7f4ec]",
+      iconColor: "text-[#267553]",
+    },
+
+    Rejected: {
+      background: "bg-[#fae8e5]",
+      iconColor: "text-[#b7483c]",
+    },
+
+    Cancelled: {
+      background: "bg-[#edf0f2]",
+      iconColor: "text-[#60717f]",
+    },
+  };
+
+  const style = styles[title] ?? styles["Total Requests"];
+
   return (
-    <div className="border border-[#dce3e8] bg-white p-5 shadow-sm">
-      <div className="flex h-11 w-11 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
-        <Icon size={21} />
+    <div className="flex min-h-41.5 flex-col border border-[#dce3e8] bg-white p-5 shadow-sm">
+      <div
+        className={`flex h-11 w-11 items-center justify-center ${style.background} ${style.iconColor}`}
+      >
+        <Icon size={21} strokeWidth={1.9} />
       </div>
 
-      <p className="mt-5 text-3xl font-black text-[#0b304b]">
+      <p className="mt-5 text-[28px] font-black leading-none text-[#0b304b]">
         {count}
       </p>
 
-      <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#697d8c]">
+      <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.04em] text-[#58738a]">
         {title}
       </p>
     </div>
@@ -216,7 +311,7 @@ export default function AdminPage() {
     };
   }, [router]);
 
-  // UPDATE STATUS
+  // UPDATE REQUEST STATUS
   async function updateStatus(
     requestId: number,
     newStatus: string
@@ -277,7 +372,7 @@ export default function AdminPage() {
         );
       }
 
-      // Recheck the latest database state before updating.
+      // CHECK LATEST DATABASE STATUS
       const { data: latest, error: latestError } =
         await supabase
           .from("document_requests")
@@ -310,13 +405,24 @@ export default function AdminPage() {
         );
       }
 
+      // UPDATE SUPABASE STATUS
+      let updateQuery = supabase
+        .from("document_requests")
+        .update({ status: newStatus })
+        .eq("id", requestId)
+        .is("claimed_at", null);
+
+      if (latest.status === null) {
+        updateQuery = updateQuery.is("status", null);
+      } else {
+        updateQuery = updateQuery.eq(
+          "status",
+          latest.status
+        );
+      }
+
       const { data: updated, error: updateError } =
-        await supabase
-          .from("document_requests")
-          .update({ status: newStatus })
-          .eq("id", requestId)
-          .eq("status", latest.status)
-          .is("claimed_at", null)
+        await updateQuery
           .select("id, status")
           .maybeSingle();
 
@@ -338,6 +444,7 @@ export default function AdminPage() {
         )
       );
 
+      // SAVE STATUS HISTORY
       const remarks: Record<string, string> = {
         Pending: "Request marked as pending.",
         Processing: "Request is now being processed.",
@@ -385,7 +492,7 @@ export default function AdminPage() {
     router.replace("/login");
   }
 
-  // DASHBOARD COUNTS
+  // STATUS COUNTS
   const countStatus = (status: string) =>
     requests.filter(
       (request) => displayStatus(request) === status
@@ -399,6 +506,7 @@ export default function AdminPage() {
   const rejected = countStatus("Rejected");
   const cancelled = countStatus("Cancelled");
 
+  // DOCUMENT TYPES
   const documentTypes = Array.from(
     new Set(
       requests
@@ -435,7 +543,6 @@ export default function AdminPage() {
             size={34}
             className="mx-auto animate-spin"
           />
-
           <p className="mt-5 font-black">
             Loading Admin Dashboard...
           </p>
@@ -535,15 +642,14 @@ export default function AdminPage() {
           href="/dashboard"
           className="inline-flex items-center gap-2 text-sm font-bold text-[#0b304b]"
         >
-          <ArrowLeft size={16} />
-          Back to Dashboard
+          
         </Link>
 
-        {/* SUCCESS */}
+        {/* SUCCESS MESSAGE */}
         {successMessage && (
           <div
             role="status"
-            className="mt-7 flex items-start gap-3 border-l-4 border-green-600 bg-green-50 p-5 text-green-800"
+            className="mt-7 flex items-start gap-3 border-l-4 border-[#357c60] bg-[#edf7f1] p-5 text-[#245e48]"
           >
             <CheckCircle2 size={20} />
             <p className="text-sm font-semibold">
@@ -552,17 +658,17 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ERROR */}
+        {/* ERROR MESSAGE */}
         {errorMessage && (
           <div
             role="alert"
-            className="mt-7 border-l-4 border-red-600 bg-red-50 p-5 text-sm text-red-800"
+            className="mt-7 border-l-4 border-[#b74d3d] bg-[#fdf0ed] p-5 text-sm text-[#943d31]"
           >
             {errorMessage}
           </div>
         )}
 
-        {/* STATUS SUMMARY */}
+        {/* STATISTICS: 4 UPPER, 4 LOWER */}
         <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard
             title="Total Requests"
@@ -613,7 +719,7 @@ export default function AdminPage() {
           />
         </section>
 
-        {/* QR CLAIMING */}
+        {/* QR DOCUMENT CLAIMING */}
         <section className="mt-8 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
             <div className="flex items-start gap-4">
@@ -655,7 +761,7 @@ export default function AdminPage() {
           </p>
         </section>
 
-        {/* FILTERS */}
+        {/* SEARCH AND FILTERS */}
         <section className="mt-8 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-3">
             <SlidersHorizontal
@@ -700,16 +806,37 @@ export default function AdminPage() {
                 }
                 className="mt-2 w-full border border-[#cdd9e2] bg-[#f8fafc] px-4 py-3 text-sm"
               >
-                <option value="All">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
-                <option value="Approved">Approved</option>
+                <option value="All">
+                  All Statuses
+                </option>
+
+                <option value="Pending">
+                  Pending
+                </option>
+
+                <option value="Processing">
+                  Processing
+                </option>
+
+                <option value="Approved">
+                  Approved
+                </option>
+
                 <option value="Ready for Claiming">
                   Ready for Claiming
                 </option>
-                <option value="Claimed">Claimed</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Cancelled">Cancelled</option>
+
+                <option value="Claimed">
+                  Claimed
+                </option>
+
+                <option value="Rejected">
+                  Rejected
+                </option>
+
+                <option value="Cancelled">
+                  Cancelled
+                </option>
               </select>
             </label>
 
@@ -723,7 +850,9 @@ export default function AdminPage() {
                 }
                 className="mt-2 w-full border border-[#cdd9e2] bg-[#f8fafc] px-4 py-3 text-sm"
               >
-                <option value="All">All Documents</option>
+                <option value="All">
+                  All Documents
+                </option>
 
                 {documentTypes.map((name) => (
                   <option key={name} value={name}>
@@ -747,7 +876,7 @@ export default function AdminPage() {
           </p>
         </section>
 
-        {/* REQUEST LIST */}
+        {/* DOCUMENT REQUESTS */}
         <section className="mt-10">
           <h2 className="mb-6 text-2xl font-black text-[#0b304b]">
             Document Requests
@@ -782,6 +911,7 @@ export default function AdminPage() {
                     key={request.id}
                     className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8"
                   >
+                    {/* REQUEST HEADER */}
                     <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
                       <div className="flex min-w-0 gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
@@ -793,11 +923,11 @@ export default function AdminPage() {
                             Request #{request.id}
                           </p>
 
-                          <h3 className="mt-2 wrap-break-words text-xl font-black text-[#0b304b]">
+                          <h3 className="mt-2 break-word text-xl font-black text-[#0b304b]">
                             {documentName(request)}
                           </h3>
 
-                          <p className="mt-3 wrap-break-word text-sm leading-7 text-[#697d8c]">
+                          <p className="mt-3 break-word text-sm leading-7 text-[#697d8c]">
                             <strong className="text-[#173149]">
                               Purpose:
                             </strong>{" "}
@@ -808,7 +938,7 @@ export default function AdminPage() {
                       </div>
 
                       <span
-                        className={`inline-flex w-fit shrink-0 items-center gap-2 px-4 py-2 text-xs font-black ${statusStyle(
+                        className={`inline-flex w-fit shrink-0 items-center px-4 py-2 text-xs font-black ${statusStyle(
                           status
                         )}`}
                       >
@@ -816,6 +946,7 @@ export default function AdminPage() {
                       </span>
                     </div>
 
+                    {/* UPDATE REQUEST STATUS */}
                     <div className="mt-7 border-t border-[#e3e9ee] pt-6">
                       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                         <div>
@@ -825,9 +956,10 @@ export default function AdminPage() {
 
                           {locked ? (
                             <p className="mt-3 text-sm text-[#697d8c]">
-                              This request is {status.toLowerCase()}.
-                              Its status can no longer be
-                              changed.
+                              This request is{" "}
+                              {status.toLowerCase()}.
+                              Its status can no longer
+                              be changed.
                             </p>
                           ) : (
                             <>
@@ -836,15 +968,22 @@ export default function AdminPage() {
                                 processing status.
                               </p>
 
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                {STATUS_OPTIONS.map(
-                                  (option) => (
+                              {/* NAVY AND GOLD BUTTONS */}
+                              <div className="mt-4 flex flex-wrap gap-3">
+                                {STATUS_OPTIONS.map((option) => {
+                                  const selected =
+                                    request.status === option;
+
+                                  const colors =
+                                    STATUS_BUTTON_COLORS[option];
+
+                                  return (
                                     <button
                                       key={option}
                                       type="button"
                                       disabled={
                                         updatingId !== null ||
-                                        request.status === option
+                                        selected
                                       }
                                       onClick={() =>
                                         updateStatus(
@@ -852,23 +991,25 @@ export default function AdminPage() {
                                           option
                                         )
                                       }
-                                      className="inline-flex items-center gap-2 border border-[#cdd9e2] bg-[#f8fafc] px-4 py-3 text-sm font-bold text-[#0b304b] transition hover:bg-[#e8eef3] disabled:cursor-not-allowed disabled:opacity-50"
+                                      aria-pressed={selected}
+                                      className={`rounded-md border px-5 py-3 text-sm font-semibold transition-colors duration-150 ${
+                                        selected
+                                          ? colors.selected
+                                          : colors.normal
+                                      } ${
+                                        updatingId !== null
+                                          ? "cursor-wait opacity-60"
+                                          : selected
+                                            ? "cursor-default"
+                                            : ""
+                                      }`}
                                     >
-                                      {updatingId ===
-                                      request.id ? (
-                                        <Loader2
-                                          size={15}
-                                          className="animate-spin"
-                                        />
-                                      ) : null}
-
-                                      {option ===
-                                      "Completed"
+                                      {option === "Completed"
                                         ? "Ready for Claiming"
                                         : option}
                                     </button>
-                                  )
-                                )}
+                                  );
+                                })}
                               </div>
                             </>
                           )}
@@ -893,9 +1034,11 @@ export default function AdminPage() {
 
       {/* FOOTER */}
       <footer className="mt-12 border-t border-[#dce3e8] bg-white">
-        <div className="mx-auto max-w-7xl flex flex-col justify-between gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:px-8">
           <p>© 2026 eBarangay Connect</p>
-          <p>Administrator Request Management Portal</p>
+          <p>
+            Administrator Request Management Portal
+          </p>
         </div>
       </footer>
     </main>

@@ -10,21 +10,24 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Camera,
   CheckCircle2,
+  ImagePlus,
   Landmark,
   Loader2,
   LockKeyhole,
   Mail,
   MapPin,
+  Pencil,
   Phone,
   Save,
   ShieldCheck,
-  UserRound,
+  Trash2,
   Upload,
-  Pencil,
+  UserRound,
   X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -41,102 +44,121 @@ type Profile = {
 
 const BUCKET = "avatars";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
 ];
 
+const PROFILE_COLUMNS =
+  "id, full_name, email, phone_number, address, role, avatar_url";
+
 export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoMenuRef = useRef<HTMLDivElement>(null);
 
-  const [profile, setProfile] = useState<Profile | null>(
-    null
-  );
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [emailSaving, setEmailSaving] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
-
-  // NEW: Edit mode
   const [isEditing, setIsEditing] = useState(false);
 
   const [avatarSrc, setAvatarSrc] = useState("");
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-
+  const [removing, setRemoving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // LOAD PROFILE
+  const photoBusy = uploading || removing;
+
+  // LOAD PROFILE AND AUTHENTICATION EMAIL
   useEffect(() => {
     let cancelled = false;
 
     async function loadProfile() {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (authError || !user) {
-        router.replace("/login");
-        return;
-      }
+        if (authError || !user) {
+          router.replace("/login");
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, full_name, email, phone_number, address, role, avatar_url"
-        )
-        .eq("id", user.id)
-        .maybeSingle();
+        setAuthEmail(user.email || "");
+        setPendingEmail(user.new_email || "");
 
-      if (cancelled) return;
+        const { data, error } = await supabase
+          .from("profiles")
+          .select(PROFILE_COLUMNS)
+          .eq("id", user.id)
+          .maybeSingle();
 
-      if (error || !data) {
-        setErrorMessage(
-          error?.message || "Profile not found."
-        );
-        setLoading(false);
-        return;
-      }
+        if (cancelled) return;
 
-      const loadedProfile = data as Profile;
+        if (error || !data) {
+          throw new Error(
+            error?.message || "Profile not found."
+          );
+        }
 
-      setProfile(loadedProfile);
-      setFullName(loadedProfile.full_name || "");
-      setPhoneNumber(loadedProfile.phone_number || "");
-      setAddress(loadedProfile.address || "");
+        const loadedProfile = data as Profile;
 
-      if (loadedProfile.avatar_url) {
-        const { data: signedData, error: signedError } =
-          await supabase.storage
-            .from(BUCKET)
-            .createSignedUrl(
-              loadedProfile.avatar_url,
-              60 * 60
-            );
+        setProfile(loadedProfile);
+        setFullName(loadedProfile.full_name || "");
+        setPhoneNumber(loadedProfile.phone_number || "");
+        setAddress(loadedProfile.address || "");
 
-        if (!cancelled) {
-          if (signedError) {
-            console.error(signedError);
-          } else {
-            setAvatarSrc(signedData?.signedUrl || "");
+        if (loadedProfile.avatar_url) {
+          const { data: signedData, error: signedError } =
+            await supabase.storage
+              .from(BUCKET)
+              .createSignedUrl(
+                loadedProfile.avatar_url,
+                3600
+              );
+
+          if (!cancelled) {
+            if (signedError) {
+              console.warn(
+                "Avatar loading error:",
+                signedError
+              );
+            } else {
+              setAvatarSrc(signedData?.signedUrl || "");
+            }
           }
         }
-      }
-
-      if (!cancelled) {
-        setLoading(false);
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Unable to load profile."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -156,24 +178,59 @@ export default function ProfilePage() {
     };
   }, [previewUrl]);
 
-  // NEW: ENABLE EDITING
-  function handleEditProfile() {
+  // CLOSE PHOTO MENU WHEN CLICKING OUTSIDE
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        photoMenuRef.current &&
+        !photoMenuRef.current.contains(event.target as Node)
+      ) {
+        setPhotoMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
+    };
+  }, []);
+
+  function clearMessages() {
     setErrorMessage("");
     setSuccessMessage("");
+  }
+
+  // EDIT PROFILE
+  function handleEditProfile() {
+    clearMessages();
     setIsEditing(true);
   }
 
-  // NEW: CANCEL EDITING
+  function cancelSelectedPhoto() {
+    setSelectedFile(null);
+    setPreviewUrl("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
   function handleCancelEditing() {
-    if (!profile) return;
+    if (!profile || photoBusy) return;
 
     setFullName(profile.full_name || "");
     setPhoneNumber(profile.phone_number || "");
     setAddress(profile.address || "");
 
     setIsEditing(false);
-    setErrorMessage("");
-    setSuccessMessage("");
+    setPhotoMenuOpen(false);
+    setShowRemoveConfirm(false);
+    cancelSelectedPhoto();
+    clearMessages();
   }
 
   // SELECT PROFILE PICTURE
@@ -181,11 +238,10 @@ export default function ProfilePage() {
     event: ChangeEvent<HTMLInputElement>
   ) {
     const file = event.target.files?.[0];
-
     if (!file) return;
 
-    setErrorMessage("");
-    setSuccessMessage("");
+    clearMessages();
+    setPhotoMenuOpen(false);
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       setErrorMessage(
@@ -207,22 +263,26 @@ export default function ProfilePage() {
     setPreviewUrl(URL.createObjectURL(file));
   }
 
-  function cancelSelectedPhoto() {
-    setSelectedFile(null);
-    setPreviewUrl("");
+  function openPhotoPicker() {
+    if (!isEditing || photoBusy) return;
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setPhotoMenuOpen(false);
+    fileInputRef.current?.click();
   }
 
   // UPLOAD PROFILE PICTURE
   async function uploadProfilePicture() {
-    if (!selectedFile || !profile || uploading) return;
+    if (
+      !selectedFile ||
+      !profile ||
+      !isEditing ||
+      photoBusy
+    ) {
+      return;
+    }
 
     setUploading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+    clearMessages();
 
     let uploadedPath = "";
 
@@ -238,15 +298,17 @@ export default function ProfilePage() {
       }
 
       if (user.id !== profile.id) {
-        throw new Error("Account verification failed.");
+        throw new Error(
+          "Account verification failed."
+        );
       }
 
       const extension =
         selectedFile.type === "image/png"
           ? "png"
           : selectedFile.type === "image/webp"
-            ? "webp"
-            : "jpg";
+          ? "webp"
+          : "jpg";
 
       const filePath =
         `${user.id}/${crypto.randomUUID()}.${extension}`;
@@ -260,36 +322,33 @@ export default function ProfilePage() {
             upsert: false,
           });
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
       uploadedPath = filePath;
-
       const previousPath = profile.avatar_url;
 
-      const { data: updatedProfile, error: updateError } =
-        await supabase
-          .from("profiles")
-          .update({ avatar_url: filePath })
-          .eq("id", user.id)
-          .select(
-            "id, full_name, email, phone_number, address, role, avatar_url"
-          )
-          .single();
+      const {
+        data: updatedProfile,
+        error: updateError,
+      } = await supabase
+        .from("profiles")
+        .update({ avatar_url: filePath })
+        .eq("id", user.id)
+        .select(PROFILE_COLUMNS)
+        .single();
 
-      if (updateError) {
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
-      const { data: signedData, error: signedError } =
-        await supabase.storage
-          .from(BUCKET)
-          .createSignedUrl(filePath, 60 * 60);
+      const {
+        data: signedData,
+        error: signedError,
+      } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(filePath, 3600);
 
       if (signedError) {
         console.warn(
-          "Photo saved, but signed URL failed:",
+          "Avatar signed URL error:",
           signedError
         );
       }
@@ -299,9 +358,10 @@ export default function ProfilePage() {
       cancelSelectedPhoto();
 
       setSuccessMessage(
-        "Profile picture uploaded and saved successfully!"
+        "Profile picture updated successfully."
       );
 
+      // REMOVE OLD FILE AFTER SUCCESSFUL UPDATE
       if (
         previousPath &&
         previousPath !== filePath &&
@@ -314,18 +374,17 @@ export default function ProfilePage() {
 
         if (removeError) {
           console.warn(
-            "Previous avatar cleanup failed:",
+            "Old avatar cleanup failed:",
             removeError
           );
         }
       }
     } catch (error) {
-      const message =
+      setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Unable to upload profile picture.";
-
-      setErrorMessage(message);
+          : "Unable to upload profile picture."
+      );
 
       if (uploadedPath) {
         const { data } = await supabase
@@ -345,17 +404,12 @@ export default function ProfilePage() {
     }
   }
 
-  // SAVE PERSONAL INFORMATION
-  async function handleSave(
-    event: FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
+  // REMOVE PROFILE PICTURE
+  async function removeProfilePicture() {
+    if (!profile || !isEditing || photoBusy) return;
 
-    if (!profile || !isEditing) return;
-
-    setSaving(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+    setRemoving(true);
+    clearMessages();
 
     try {
       const {
@@ -368,9 +422,100 @@ export default function ProfilePage() {
         return;
       }
 
-      if (!fullName.trim()) {
-        setErrorMessage("Full name is required.");
+      if (user.id !== profile.id) {
+        throw new Error(
+          "Account verification failed."
+        );
+      }
+
+      const previousPath = profile.avatar_url;
+
+      // FIRST UPDATE DATABASE
+      const {
+        data: updatedProfile,
+        error: updateError,
+      } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", user.id)
+        .select(PROFILE_COLUMNS)
+        .single();
+
+      if (updateError) throw updateError;
+
+      setProfile(updatedProfile as Profile);
+      setAvatarSrc("");
+      cancelSelectedPhoto();
+
+      setPhotoMenuOpen(false);
+      setShowRemoveConfirm(false);
+
+      setSuccessMessage(
+        "Profile picture removed successfully."
+      );
+
+      // THEN CLEAN UP OWNED STORAGE FILE
+      if (
+        previousPath &&
+        previousPath.startsWith(`${user.id}/`)
+      ) {
+        const { error: storageError } =
+          await supabase.storage
+            .from(BUCKET)
+            .remove([previousPath]);
+
+        if (storageError) {
+          console.warn(
+            "Avatar cleanup failed:",
+            storageError
+          );
+        }
+      }
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to remove profile picture."
+      );
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  // SAVE PERSONAL INFORMATION
+  async function handleSave(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (!profile || !isEditing || saving || photoBusy) {
+      return;
+    }
+
+    setSaving(true);
+    clearMessages();
+
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        router.replace("/login");
         return;
+      }
+
+      if (user.id !== profile.id) {
+        throw new Error(
+          "Account verification failed."
+        );
+      }
+
+      if (!fullName.trim()) {
+        throw new Error(
+          "Full name is required."
+        );
       }
 
       const { data, error } = await supabase
@@ -381,22 +526,19 @@ export default function ProfilePage() {
           address: address.trim(),
         })
         .eq("id", user.id)
-        .select(
-          "id, full_name, email, phone_number, address, role, avatar_url"
-        )
+        .select(PROFILE_COLUMNS)
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setProfile(data as Profile);
       setFullName(data.full_name || "");
       setPhoneNumber(data.phone_number || "");
       setAddress(data.address || "");
 
-      // NEW: Lock fields after successful save
       setIsEditing(false);
+      setPhotoMenuOpen(false);
+      cancelSelectedPhoto();
 
       setSuccessMessage(
         "Profile information updated successfully."
@@ -412,9 +554,109 @@ export default function ProfilePage() {
     }
   }
 
+  // REQUEST EMAIL CHANGE
+  async function handleEmailChange(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (emailSaving) return;
+
+    clearMessages();
+
+    const cleanedEmail =
+      newEmail.trim().toLowerCase();
+
+    if (!cleanedEmail) {
+      setErrorMessage(
+        "Please enter a new email address."
+      );
+      return;
+    }
+
+    if (
+      cleanedEmail === authEmail.toLowerCase()
+    ) {
+      setErrorMessage(
+        "This is already your registered email address."
+      );
+      return;
+    }
+
+    setEmailSaving(true);
+
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        router.replace("/login");
+        return;
+      }
+
+      const { error } =
+        await supabase.auth.updateUser({
+          email: cleanedEmail,
+        });
+
+      if (error) throw error;
+
+      setPendingEmail(cleanedEmail);
+      setNewEmail("");
+      setIsChangingEmail(false);
+
+      setSuccessMessage(
+        "Email change requested. Please check the required verification emails. Your current login email remains active until the change is confirmed."
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to request email change."
+      );
+    } finally {
+      setEmailSaving(false);
+    }
+  }
+
+  // REFRESH EMAIL AFTER VERIFICATION
+  async function refreshEmail() {
+    clearMessages();
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      setErrorMessage(
+        "Unable to refresh your account email."
+      );
+      return;
+    }
+
+    setAuthEmail(user.email || "");
+    setPendingEmail(user.new_email || "");
+
+    setSuccessMessage(
+      user.new_email
+        ? "Your email change is still awaiting verification."
+        : "Your registered email has been refreshed."
+    );
+  }
+
+  const editableInputClass = (enabled: boolean) =>
+    `mt-4 w-full border px-4 py-4 text-sm outline-none transition ${
+      enabled
+        ? "border-[#cdd9e2] bg-[#f8fafc] text-[#173149] focus:border-[#0b304b] focus:ring-2 focus:ring-[#0b304b]/10"
+        : "cursor-not-allowed border-[#dce3e8] bg-[#edf2f5] text-[#718391]"
+    }`;
+
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-6">
+      <main className="flex min-h-screen items-center justify-center bg-[#eef2f5]">
         <div className="text-center">
           <Loader2
             size={32}
@@ -433,9 +675,10 @@ export default function ProfilePage() {
       {/* TOP BAR */}
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#c7d7e3]">
             Digital Citizen Services Portal
           </span>
+
           <span className="hidden text-xs text-[#c7d7e3] sm:block">
             eBarangay Connect
           </span>
@@ -452,10 +695,12 @@ export default function ProfilePage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
               <Landmark size={23} />
             </div>
+
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5bd81]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#d5bd81]">
                 Digital Barangay Portal
               </p>
+
               <p className="mt-1 text-lg font-black sm:text-xl">
                 eBarangay Connect
               </p>
@@ -477,15 +722,17 @@ export default function ProfilePage() {
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
           style={{
-            backgroundImage: "url('/barangay-hall.jpg')",
+            backgroundImage:
+              "url('/barangay-hall.jpg')",
           }}
         />
+
         <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/95 via-[#0b304b]/90 to-[#0b304b]/75" />
 
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
           <div className="flex items-center gap-3">
             <span className="h-px w-10 bg-[#d5bd81]" />
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2c991]">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#e2c991]">
               Resident Portal
             </p>
           </div>
@@ -494,8 +741,9 @@ export default function ProfilePage() {
             My Profile
           </h1>
 
-          <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9] sm:text-base">
-            Manage your account information and profile
+          <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9]">
+            Manage your account information,
+            registered email address, and profile
             picture for eBarangay Connect.
           </p>
 
@@ -511,13 +759,7 @@ export default function ProfilePage() {
 
       {/* MAIN CONTENT */}
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
-        <Link
-          href="/dashboard"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] hover:text-[#9b7b40]"
-        >
-          
-        </Link>
-
+        {/* ERROR MESSAGE */}
         {errorMessage && (
           <div
             role="alert"
@@ -526,12 +768,14 @@ export default function ProfilePage() {
             <p className="font-black text-[#943d31]">
               Something went wrong
             </p>
-            <p className="mt-2 wrap-break-word text-sm text-[#943d31]">
+
+            <p className="mt-2 break-word text-sm text-[#943d31]">
               {errorMessage}
             </p>
           </div>
         )}
 
+        {/* SUCCESS MESSAGE */}
         {successMessage && (
           <div
             role="status"
@@ -539,13 +783,15 @@ export default function ProfilePage() {
           >
             <CheckCircle2
               size={22}
-              className="text-[#357c60]"
+              className="shrink-0 text-[#357c60]"
             />
+
             <div>
               <p className="font-black text-[#245e48]">
-                Changes Saved
+                Success
               </p>
-              <p className="mt-2 text-sm text-[#376a55]">
+
+              <p className="mt-2 text-sm leading-6 text-[#376a55]">
                 {successMessage}
               </p>
             </div>
@@ -553,39 +799,174 @@ export default function ProfilePage() {
         )}
 
         {profile && (
-          <div className="grid gap-7 lg:grid-cols-[0.68fr_1.32fr]">
+          <div className="grid items-start gap-7 lg:grid-cols-[0.68fr_1.32fr]">
             {/* LEFT COLUMN */}
-            <aside className="space-y-6">
-              {/* PROFILE SUMMARY */}
+            <aside className="min-w-0 space-y-6">
+              {/* ACCOUNT SUMMARY */}
               <section className="bg-[#0b304b] p-7 text-white sm:p-8">
-                <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-[#d5bd81] bg-white/10">
-                  {previewUrl || avatarSrc ? (
-                    <img
-                      src={previewUrl || avatarSrc}
-                      alt="Your profile picture"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-[#e2c991]">
-                      <UserRound size={39} />
-                    </div>
+                {/* PROFILE PICTURE */}
+                <div
+                  ref={photoMenuRef}
+                  className="relative inline-block"
+                >
+                  <div className="h-24 w-24 overflow-hidden rounded-full border-2 border-[#d5bd81] bg-white/10">
+                    {previewUrl || avatarSrc ? (
+                      <Image
+                            src={previewUrl || avatarSrc}
+                            alt="Your profile picture"
+                            width={96}
+                            height={96}
+                            unoptimized
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[#e2c991]">
+                        <UserRound size={39} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PENCIL ICON - EDIT MODE ONLY */}
+                  {isEditing && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPhotoMenuOpen(
+                            !photoMenuOpen
+                          )
+                        }
+                        disabled={photoBusy}
+                        aria-label="Edit profile picture"
+                        aria-expanded={photoMenuOpen}
+                        title="Edit profile picture"
+                        className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#0b304b] bg-[#d5bd81] text-[#0b304b] shadow-lg transition hover:scale-110 hover:bg-white disabled:opacity-50"
+                      >
+                        {photoBusy ? (
+                          <Loader2
+                            size={16}
+                            className="animate-spin"
+                          />
+                        ) : (
+                          <Pencil size={16} />
+                        )}
+                      </button>
+
+                      {/* PHOTO ACTION MENU */}
+                      {photoMenuOpen && (
+                        <div className="absolute left-0 top-full z-30 mt-3 w-60 max-w-[calc(100vw-4rem)] overflow-hidden border border-[#dce3e8] bg-white py-2 text-[#0b304b] shadow-xl">
+                          <p className="border-b border-[#e3e9ee] px-4 pb-3 pt-2 text-xs font-black uppercase tracking-wider text-[#9b7b40]">
+                            Profile Picture
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={openPhotoPicker}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold transition hover:bg-[#edf2f5]"
+                          >
+                            <ImagePlus size={18} />
+                            Change Picture
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPhotoMenuOpen(false);
+                              setShowRemoveConfirm(true);
+                            }}
+                            disabled={
+                              !profile.avatar_url &&
+                              !selectedFile
+                            }
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold text-[#b74d3d] transition hover:bg-[#fdf0ed] disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Trash2 size={18} />
+                            Remove Picture
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
-                <p className="mt-7 text-xs font-bold uppercase tracking-[0.18em] text-[#e2c991]">
+                {/* HIDDEN FILE INPUT */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={!isEditing || photoBusy}
+                  aria-label="Choose profile picture"
+                />
+
+                {/* SELECTED PHOTO PREVIEW ACTIONS */}
+                {isEditing && selectedFile && (
+                  <div className="mt-5 border border-white/20 bg-white/10 p-4">
+                    <div className="flex items-center gap-2 text-[#e2c991]">
+                      <Camera size={17} />
+                      <p className="text-xs font-black">
+                        New Picture Selected
+                      </p>
+                    </div>
+
+                    <p className="mt-3 break-all text-xs leading-5 text-[#d6e1e9]">
+                      {selectedFile.name}
+                    </p>
+
+                    <p className="mt-2 text-xs text-[#c7d7e3]">
+                      JPG, PNG, or WebP · Maximum 2 MB
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void uploadProfilePicture()
+                      }
+                      disabled={photoBusy}
+                      className="mt-4 flex w-full items-center justify-center gap-2 bg-[#d5bd81] px-4 py-3 text-xs font-black text-[#0b304b] transition hover:bg-white disabled:opacity-50"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2
+                            size={16}
+                            className="animate-spin"
+                          />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          Save Picture
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={cancelSelectedPhoto}
+                      disabled={photoBusy}
+                      className="mt-2 w-full px-4 py-2 text-xs font-bold text-[#d6e1e9] hover:text-white disabled:opacity-50"
+                    >
+                      Cancel Selection
+                    </button>
+                  </div>
+                )}
+
+                <p className="mt-7 text-xs font-bold uppercase tracking-widest text-[#e2c991]">
                   Your Account
                 </p>
 
-                <h2 className="mt-3 wrap-break-word text-2xl font-black">
+                <h2 className="mt-3 break-word text-2xl font-black">
                   {profile.full_name || "Resident"}
                 </h2>
 
-                <p className="mt-3 wrap-break-word text-sm leading-7 text-[#c7d7e3]">
-                  {profile.email || "No email available"}
+                <p className="mt-3 break-all text-sm leading-7 text-[#c7d7e3]">
+                  {authEmail || "No email available"}
                 </p>
 
                 <div className="mt-7 border-t border-white/20 pt-7">
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#e2c991]">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#e2c991]">
                     Account Role
                   </p>
 
@@ -593,10 +974,12 @@ export default function ProfilePage() {
                     <div className="flex h-11 w-11 items-center justify-center bg-white/10 text-[#e2c991]">
                       <ShieldCheck size={21} />
                     </div>
+
                     <div>
                       <p className="font-black capitalize">
                         {profile.role || "resident"}
                       </p>
+
                       <p className="mt-1 text-xs text-[#c7d7e3]">
                         eBarangay Connect account
                       </p>
@@ -605,105 +988,143 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-              {/* PHOTO UPLOAD */}
-              <section className="border border-[#dce3e8] bg-white p-7">
-                <div className="flex items-start gap-4">
+              {/* CHANGE EMAIL - MOVED TO LEFT COLUMN */}
+              <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-7">
+                <div className="flex items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
-                    <Camera size={20} />
+                    <Mail size={20} />
                   </div>
-                  <div>
-                    <h3 className="font-black text-[#0b304b]">
-                      Profile Picture
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#697d8c]">
-                      Upload or replace your profile photo.
+
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#9b7b40]">
+                      Account Settings
                     </p>
+
+                    <h2 className="mt-2 text-lg font-black leading-snug text-[#0b304b]">
+                      Change Email Address
+                    </h2>
                   </div>
                 </div>
 
-                <div className="mt-6 flex justify-center">
-                  <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-[#d5bd81] bg-[#e8eef3]">
-                    {previewUrl || avatarSrc ? (
-                      <img
-                        src={previewUrl || avatarSrc}
-                        alt="Profile picture preview"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <UserRound
-                        size={54}
-                        className="text-[#0b304b]"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="avatar-upload"
-                  disabled={uploading}
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    fileInputRef.current?.click()
-                  }
-                  disabled={uploading}
-                  className="mt-6 flex w-full items-center justify-center gap-2 border border-[#0b304b] px-5 py-3.5 text-sm font-black text-[#0b304b] transition hover:bg-[#edf2f5] disabled:opacity-50"
-                >
-                  <Camera size={17} />
-                  Choose Profile Picture
-                </button>
-
-                <p className="mt-3 text-center text-xs leading-6 text-[#8193a2]">
-                  JPG, PNG, or WebP · Maximum 2 MB
+                <p className="mt-5 text-sm leading-7 text-[#697d8c]">
+                  Update your registered login email.
+                  Verification is required before the
+                  new address becomes active.
                 </p>
 
-                {selectedFile && (
-                  <div className="mt-6 border-t border-[#e3e9ee] pt-5">
-                    <p className="break-all text-xs font-semibold text-[#697d8c]">
-                      Selected: {selectedFile.name}
+                {/* CURRENT EMAIL */}
+                <div className="mt-5 border border-[#dce3e8] bg-[#f8fafc] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#8193a2]">
+                    Current Email
+                  </p>
+
+                  <p className="mt-2 break-all text-sm font-bold text-[#0b304b]">
+                    {authEmail || "Not available"}
+                  </p>
+                </div>
+
+                {/* PENDING EMAIL */}
+                {pendingEmail && (
+                  <div className="mt-4 border border-[#e6d5ac] bg-[#fffaf0] p-4">
+                    <p className="text-xs font-bold uppercase text-[#8e6b25]">
+                      Pending Email Change
                     </p>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void uploadProfilePicture()
-                      }
-                      disabled={uploading}
-                      className="mt-4 flex w-full items-center justify-center gap-2 bg-[#0b304b] px-5 py-4 text-sm font-black text-white transition hover:bg-[#174b70] disabled:opacity-50"
-                    >
-                      {uploading ? (
-                        <>
+                    <p className="mt-2 break-all text-sm text-[#173149]">
+                      {pendingEmail}
+                    </p>
+
+                    <p className="mt-2 text-xs leading-6 text-[#697d8c]">
+                      Follow the verification
+                      instructions sent to your email.
+                    </p>
+                  </div>
+                )}
+
+                {/* CHANGE EMAIL BUTTON */}
+                {!isChangingEmail ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsChangingEmail(true);
+                      clearMessages();
+                    }}
+                    className="mt-5 inline-flex w-full items-center justify-center gap-2 bg-[#0b304b] px-4 py-3.5 text-sm font-black text-white transition hover:bg-[#164866]"
+                  >
+                    <Pencil size={16} />
+                    Change Email
+                  </button>
+                ) : (
+                  <form
+                    onSubmit={handleEmailChange}
+                    className="mt-5 space-y-4"
+                  >
+                    <div>
+                      <label
+                        htmlFor="newEmail"
+                        className="block text-sm font-bold text-[#173149]"
+                      >
+                        New Email Address
+                      </label>
+
+                      <input
+                        id="newEmail"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={newEmail}
+                        onChange={(event) =>
+                          setNewEmail(
+                            event.target.value
+                          )
+                        }
+                        placeholder="Enter your new email"
+                        disabled={emailSaving}
+                        className="mt-3 w-full min-w-0 border border-[#cdd9e2] bg-[#f8fafc] px-4 py-3.5 text-sm outline-none focus:border-[#0b304b]"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="submit"
+                        disabled={emailSaving}
+                        className="inline-flex w-full items-center justify-center gap-2 bg-[#0b304b] px-4 py-3.5 text-sm font-bold text-white disabled:opacity-50"
+                      >
+                        {emailSaving ? (
                           <Loader2
                             size={17}
                             className="animate-spin"
                           />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload size={17} />
-                          Save Profile Picture
-                        </>
-                      )}
-                    </button>
+                        ) : (
+                          <Mail size={17} />
+                        )}
+                        Send Verification
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={cancelSelectedPhoto}
-                      disabled={uploading}
-                      className="mt-3 w-full px-5 py-3 text-sm font-bold text-[#697d8c] hover:text-[#0b304b] disabled:opacity-50"
-                    >
-                      Cancel Selection
-                    </button>
-                  </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsChangingEmail(false);
+                          setNewEmail("");
+                        }}
+                        disabled={emailSaving}
+                        className="w-full border border-[#cdd9e2] px-4 py-3 text-sm font-bold text-[#0b304b]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    void refreshEmail()
+                  }
+                  className="mt-5 block text-left text-xs font-bold leading-6 text-[#0b304b] underline underline-offset-4 transition hover:text-[#9b7b40]"
+                >
+                  I have verified my new email — Refresh
+                </button>
               </section>
 
               {/* ACCOUNT SECURITY */}
@@ -712,263 +1133,343 @@ export default function ProfilePage() {
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
                     <LockKeyhole size={20} />
                   </div>
+
                   <div>
                     <p className="font-black text-[#0b304b]">
                       Account Security
                     </p>
+
                     <p className="mt-3 text-sm leading-7 text-[#697d8c]">
-                      Your email address and account role
-                      cannot be changed from this profile
-                      page.
+                      Email changes require verification
+                      through Supabase Authentication.
+                      Your account role cannot be
+                      changed from this page.
                     </p>
                   </div>
                 </div>
               </section>
             </aside>
 
-            {/* PROFILE FORM */}
-            <form
-              onSubmit={handleSave}
-              className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-9"
-            >
-              <div className="flex flex-col justify-between gap-5 border-b border-[#e3e9ee] pb-7 sm:flex-row sm:items-start">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
-                    Personal Information
-                  </p>
+            {/* RIGHT COLUMN */}
+            <div className="min-w-0 space-y-7">
+              {/* PROFILE FORM */}
+              <form
+                onSubmit={handleSave}
+                className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-9"
+              >
+                <div className="flex flex-col justify-between gap-5 border-b border-[#e3e9ee] pb-7 sm:flex-row sm:items-start">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#9b7b40]">
+                      Personal Information
+                    </p>
 
-                  <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
-                    Profile Details
-                  </h2>
+                    <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+                      Profile Details
+                    </h2>
 
-                  <p className="mt-3 text-sm leading-7 text-[#697d8c]">
-                    {isEditing
-                      ? "You can now edit your personal information."
-                      : "Click Edit Profile to update your information."}
-                  </p>
-                </div>
+                    <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+                      {isEditing
+                        ? "You can now edit your personal information and profile picture."
+                        : "Click Edit Profile to update your information."}
+                    </p>
+                  </div>
 
-                {/* NEW: EDIT PROFILE BUTTON */}
-                {!isEditing && (
-                  <button
-                    type="button"
-                    onClick={handleEditProfile}
-                    disabled={uploading}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 bg-[#0b304b] px-5 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70] disabled:opacity-50"
-                  >
-                    <Pencil size={17} />
-                    Edit Profile
-                  </button>
-                )}
-
-                {isEditing && (
-                  <span className="inline-flex shrink-0 items-center gap-2 border border-[#d5bd81] bg-[#fffaf0] px-4 py-3 text-xs font-black text-[#8e6b25]">
-                    <Pencil size={15} />
-                    Editing Mode
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-8 space-y-7">
-                {/* FULL NAME */}
-                <div>
-                  <label
-                    htmlFor="fullName"
-                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
-                  >
-                    <UserRound
-                      size={17}
-                      className="text-[#9b7b40]"
-                    />
-                    Full Name
-                  </label>
-
-                  <input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(event) =>
-                      setFullName(event.target.value)
-                    }
-                    disabled={!isEditing || saving}
-                    required
-                    placeholder="Enter your full name"
-                    className={`mt-4 w-full border px-4 py-4 text-sm font-semibold outline-none transition ${
-                      isEditing
-                        ? "border-[#cdd9e2] bg-[#f8fafc] text-[#173149] focus:border-[#0b304b] focus:ring-2 focus:ring-[#0b304b]/10"
-                        : "cursor-not-allowed border-[#dce3e8] bg-[#edf2f5] text-[#718391]"
-                    }`}
-                  />
-                </div>
-
-                {/* EMAIL */}
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
-                  >
-                    <Mail
-                      size={17}
-                      className="text-[#9b7b40]"
-                    />
-                    Email Address
-                  </label>
-
-                  <input
-                    id="email"
-                    type="email"
-                    value={profile.email || ""}
-                    disabled
-                    className="mt-4 w-full cursor-not-allowed border border-[#dce3e8] bg-[#edf2f5] px-4 py-4 text-sm font-semibold text-[#718391]"
-                  />
-
-                  <p className="mt-2 flex items-center gap-2 text-xs text-[#8193a2]">
-                    <LockKeyhole size={13} />
-                    Your email is managed by your account.
-                  </p>
-                </div>
-
-                {/* PHONE NUMBER */}
-                <div>
-                  <label
-                    htmlFor="phoneNumber"
-                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
-                  >
-                    <Phone
-                      size={17}
-                      className="text-[#9b7b40]"
-                    />
-                    Phone Number
-                  </label>
-
-                  <input
-                    id="phoneNumber"
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(event) =>
-                      setPhoneNumber(event.target.value)
-                    }
-                    disabled={!isEditing || saving}
-                    placeholder="Enter your phone number"
-                    className={`mt-4 w-full border px-4 py-4 text-sm font-semibold outline-none transition ${
-                      isEditing
-                        ? "border-[#cdd9e2] bg-[#f8fafc] text-[#173149] focus:border-[#0b304b] focus:ring-2 focus:ring-[#0b304b]/10"
-                        : "cursor-not-allowed border-[#dce3e8] bg-[#edf2f5] text-[#718391]"
-                    }`}
-                  />
-                </div>
-
-                {/* ADDRESS */}
-                <div>
-                  <label
-                    htmlFor="address"
-                    className="flex items-center gap-2 text-sm font-black text-[#173149]"
-                  >
-                    <MapPin
-                      size={17}
-                      className="text-[#9b7b40]"
-                    />
-                    Address
-                  </label>
-
-                  <textarea
-                    id="address"
-                    value={address}
-                    onChange={(event) =>
-                      setAddress(event.target.value)
-                    }
-                    disabled={!isEditing || saving}
-                    placeholder="Enter your address"
-                    rows={4}
-                    className={`mt-4 w-full resize-none border px-4 py-4 text-sm leading-7 outline-none transition ${
-                      isEditing
-                        ? "border-[#cdd9e2] bg-[#f8fafc] text-[#173149] focus:border-[#0b304b] focus:ring-2 focus:ring-[#0b304b]/10"
-                        : "cursor-not-allowed border-[#dce3e8] bg-[#edf2f5] text-[#718391]"
-                    }`}
-                  />
-                </div>
-
-                {/* ACCOUNT ROLE */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-black text-[#173149]">
-                    <ShieldCheck
-                      size={17}
-                      className="text-[#9b7b40]"
-                    />
-                    Account Role
-                  </label>
-
-                  <div className="mt-4 flex items-center justify-between border border-[#dce3e8] bg-[#edf2f5] px-4 py-4">
-                    <span className="text-sm font-bold capitalize text-[#718391]">
-                      {profile.role || "resident"}
+                  {/* EDIT PROFILE BUTTON - ORIGINAL LOCATION */}
+                  {!isEditing ? (
+                    <button
+                      type="button"
+                      onClick={handleEditProfile}
+                      disabled={photoBusy}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 bg-[#0b304b] px-5 py-3.5 text-sm font-black text-white transition hover:bg-[#164866] disabled:opacity-50"
+                    >
+                      <Pencil size={17} />
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-2 self-start border border-[#d5bd81] bg-[#fffaf0] px-4 py-3 text-xs font-black text-[#8e6b25]">
+                      <Pencil size={15} />
+                      Editing Mode
                     </span>
-                    <LockKeyhole
-                      size={16}
-                      className="text-[#98a9b5]"
+                  )}
+                </div>
+
+                <div className="mt-8 space-y-7">
+                  {/* FULL NAME */}
+                  <div>
+                    <label
+                      htmlFor="fullName"
+                      className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                    >
+                      <UserRound
+                        size={17}
+                        className="text-[#9b7b40]"
+                      />
+                      Full Name
+                    </label>
+
+                    <input
+                      id="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(event) =>
+                        setFullName(
+                          event.target.value
+                        )
+                      }
+                      disabled={!isEditing || saving}
+                      required
+                      className={editableInputClass(
+                        isEditing
+                      )}
                     />
                   </div>
 
-                  <p className="mt-2 text-xs text-[#8193a2]">
-                    Account roles are managed by the system.
-                  </p>
-                </div>
-              </div>
+                  {/* REGISTERED EMAIL */}
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                    >
+                      <Mail
+                        size={17}
+                        className="text-[#9b7b40]"
+                      />
+                      Registered Email Address
+                    </label>
 
-              {/* NEW: SHOW ACTIONS ONLY WHILE EDITING */}
-              {isEditing && (
-                <div className="mt-9 flex flex-col-reverse gap-3 border-t border-[#e3e9ee] pt-7 sm:flex-row sm:items-center sm:justify-between">
-                  <button
-                    type="button"
-                    onClick={handleCancelEditing}
-                    disabled={saving}
-                    className="inline-flex items-center justify-center gap-2 border border-[#cdd9e2] px-6 py-3.5 text-sm font-bold text-[#0b304b] transition hover:bg-[#edf2f5] disabled:opacity-50"
-                  >
-                    <X size={17} />
-                    Cancel Editing
-                  </button>
+                    <input
+                      id="email"
+                      type="email"
+                      value={authEmail}
+                      readOnly
+                      className="mt-4 w-full border border-[#dce3e8] bg-[#edf2f5] px-4 py-4 text-sm font-semibold text-[#718391]"
+                    />
 
-                  <button
-                    type="submit"
-                    disabled={saving || uploading}
-                    className="inline-flex items-center justify-center gap-2 bg-[#0b304b] px-7 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70] disabled:opacity-60"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2
-                          size={18}
-                          className="animate-spin"
-                        />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={18} />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
+                    <p className="mt-2 flex items-center gap-2 text-xs text-[#8193a2]">
+                      <LockKeyhole size={13} />
+                      This email is managed by
+                      Supabase Authentication.
+                    </p>
+                  </div>
 
-              {!isEditing && (
-                <div className="mt-9 flex items-center gap-3 border-t border-[#e3e9ee] pt-7 text-sm text-[#697d8c]">
-                  <LockKeyhole
-                    size={17}
-                    className="shrink-0 text-[#9b7b40]"
-                  />
-                  Your information is currently in view-only mode.
+                  {/* PHONE NUMBER */}
+                  <div>
+                    <label
+                      htmlFor="phoneNumber"
+                      className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                    >
+                      <Phone
+                        size={17}
+                        className="text-[#9b7b40]"
+                      />
+                      Phone Number
+                    </label>
+
+                    <input
+                      id="phoneNumber"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(event) =>
+                        setPhoneNumber(
+                          event.target.value
+                        )
+                      }
+                      disabled={!isEditing || saving}
+                      className={editableInputClass(
+                        isEditing
+                      )}
+                    />
+                  </div>
+
+                  {/* ADDRESS */}
+                  <div>
+                    <label
+                      htmlFor="address"
+                      className="flex items-center gap-2 text-sm font-black text-[#173149]"
+                    >
+                      <MapPin
+                        size={17}
+                        className="text-[#9b7b40]"
+                      />
+                      Address
+                    </label>
+
+                    <textarea
+                      id="address"
+                      value={address}
+                      onChange={(event) =>
+                        setAddress(
+                          event.target.value
+                        )
+                      }
+                      disabled={!isEditing || saving}
+                      rows={4}
+                      className={`${editableInputClass(
+                        isEditing
+                      )} resize-none leading-7`}
+                    />
+                  </div>
+
+                  {/* ACCOUNT ROLE */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black text-[#173149]">
+                      <ShieldCheck
+                        size={17}
+                        className="text-[#9b7b40]"
+                      />
+                      Account Role
+                    </label>
+
+                    <div className="mt-4 flex items-center justify-between border border-[#dce3e8] bg-[#edf2f5] px-4 py-4">
+                      <span className="text-sm font-bold capitalize text-[#718391]">
+                        {profile.role || "resident"}
+                      </span>
+
+                      <LockKeyhole
+                        size={16}
+                        className="text-[#98a9b5]"
+                      />
+                    </div>
+
+                    <p className="mt-2 text-xs text-[#8193a2]">
+                      Account roles are managed
+                      by the system.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </form>
+
+                {/* SAVE AND CANCEL BUTTONS */}
+                {isEditing ? (
+                  <div className="mt-9 flex flex-col-reverse gap-3 border-t border-[#e3e9ee] pt-7 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={handleCancelEditing}
+                      disabled={saving || photoBusy}
+                      className="inline-flex items-center justify-center gap-2 border border-[#cdd9e2] px-6 py-3.5 text-sm font-bold text-[#0b304b] transition hover:bg-[#edf2f5] disabled:opacity-50"
+                    >
+                      <X size={17} />
+                      Cancel Editing
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={saving || photoBusy}
+                      className="inline-flex items-center justify-center gap-2 bg-[#0b304b] px-7 py-3.5 text-sm font-black text-white transition hover:bg-[#164866] disabled:opacity-60"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2
+                            size={18}
+                            className="animate-spin"
+                          />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={18} />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-9 flex items-center gap-3 border-t border-[#e3e9ee] pt-7 text-sm text-[#697d8c]">
+                    <LockKeyhole
+                      size={17}
+                      className="shrink-0 text-[#9b7b40]"
+                    />
+                    Your personal information is
+                    currently in view-only mode.
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
         )}
       </div>
+
+      {/* REMOVE PROFILE PICTURE CONFIRMATION */}
+      {showRemoveConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/70 px-4 py-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-photo-title"
+            className="w-full max-w-md border border-[#dce3e8] bg-white p-6 shadow-2xl sm:p-8"
+          >
+            <div className="flex h-14 w-14 items-center justify-center bg-[#fdf0ed] text-[#b74d3d]">
+              <Trash2 size={25} />
+            </div>
+
+            <h2
+              id="remove-photo-title"
+              className="mt-6 text-xl font-black text-[#0b304b]"
+            >
+              Remove Profile Picture?
+            </h2>
+
+            <p className="mt-3 text-sm leading-7 text-[#697d8c]">
+              Your current profile picture will be
+              removed and replaced with the default
+              account avatar.
+            </p>
+
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() =>
+                  setShowRemoveConfirm(false)
+                }
+                disabled={removing}
+                className="border border-[#cdd9e2] px-5 py-3 text-sm font-bold text-[#0b304b] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                 if (!profile?.avatar_url) {
+                    cancelSelectedPhoto();
+                    setShowRemoveConfirm(false);
+                    setSuccessMessage(
+                      "Picture selection removed."
+                    );
+                    return;
+                  }
+
+                  void removeProfilePicture();
+                }}
+                disabled={removing}
+                className="inline-flex items-center justify-center gap-2 bg-[#b74d3d] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {removing ? (
+                  <>
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                    />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Remove Picture
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FOOTER */}
       <footer className="border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>© 2026 eBarangay Connect</p>
-          <p>Digital barangay services for residents.</p>
+          <p>
+            Digital barangay services for residents.
+          </p>
         </div>
       </footer>
     </main>

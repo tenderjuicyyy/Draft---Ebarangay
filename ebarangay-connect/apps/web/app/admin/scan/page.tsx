@@ -657,8 +657,8 @@ export default function AdminScanPage() {
           href="/admin"
           className="inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] hover:text-[#9b7b40]"
         >
-          <ArrowLeft size={16} />
-          Back to Admin Dashboard
+          
+          
         </Link>
 
         {errorMessage && (

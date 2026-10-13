@@ -87,7 +87,7 @@ export default function DashboardPage() {
       setLoading(false);
     }
 
-    checkUserAndLoadRequests();
+    void checkUserAndLoadRequests();
 
     return () => {
       cancelled = true;
@@ -467,9 +467,9 @@ export default function DashboardPage() {
 
         <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/85 via-[#0b304b]/55 to-[#0b304b]/25" />
 
-        <div className="relative mx-auto grid min-h-97.5 max-w-7xl items-center gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12">
+        <div className="relative mx-auto flex min-h-97.5 max-w-7xl items-center px-5 py-12 sm:px-8 lg:px-12">
           {/* LEFT CONTENT */}
-          <div>
+          <div className="w-full max-w-3xl">
             <div className="mb-6 flex items-center gap-3">
               <span className="h-px w-10 bg-[#d5bd81]" />
 
@@ -520,51 +520,6 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2 text-xs font-bold text-[#d6e1e9]">
                 <FileCheck2 size={18} className="text-[#e2c991]" />
                 Digital Records
-              </div>
-            </div>
-          </div>
-
-          {/* LIVE REQUEST SUMMARY */}
-          <div className="border border-white/20 bg-[#061b2b]/70 p-6 backdrop-blur-sm sm:p-8">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e2c991]">
-                  Your Requests
-                </p>
-
-                <p className="mt-3 text-5xl font-black">
-                  {allRequests.length}
-                </p>
-
-                <p className="mt-2 text-xs text-[#b9cbd8]">
-                  Total submitted requests
-                </p>
-              </div>
-
-              <div className="flex h-14 w-14 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
-                <FileText size={25} />
-              </div>
-            </div>
-
-            <div className="mt-9 grid grid-cols-2 gap-3">
-              <div className="border border-white/15 bg-white/10 p-5">
-                <p className="text-xs text-[#c7d7e3]">
-                  Processing
-                </p>
-
-                <p className="mt-2 text-3xl font-black">
-                  {processing}
-                </p>
-              </div>
-
-              <div className="border border-[#d5bd81]/40 bg-[#d5bd81] p-5 text-[#0b304b]">
-                <p className="text-xs font-semibold">
-                  Completed
-                </p>
-
-                <p className="mt-2 text-3xl font-black">
-                  {completed}
-                </p>
               </div>
             </div>
           </div>
@@ -688,7 +643,6 @@ export default function DashboardPage() {
               <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-[#697d8c]">
                 Your submitted document requests will appear here
               </p>
-
             </div>
           ) : (
             <div className="mt-2">
