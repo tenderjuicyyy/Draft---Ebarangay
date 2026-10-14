@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -141,7 +141,7 @@ function statusStyle(status: string): string {
   }
 }
 
-// RESIDENT-STYLE STATISTICS CARDS
+
 function StatCard({
   title,
   count,
@@ -233,7 +233,7 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [documentFilter, setDocumentFilter] = useState("All");
 
-  // LOAD ADMIN DATA
+
   useEffect(() => {
     let cancelled = false;
 
@@ -311,7 +311,7 @@ export default function AdminPage() {
     };
   }, [router]);
 
-  // UPDATE REQUEST STATUS
+
   async function updateStatus(
     requestId: number,
     newStatus: string
@@ -372,7 +372,7 @@ export default function AdminPage() {
         );
       }
 
-      // CHECK LATEST DATABASE STATUS
+
       const { data: latest, error: latestError } =
         await supabase
           .from("document_requests")
@@ -405,7 +405,7 @@ export default function AdminPage() {
         );
       }
 
-      // UPDATE SUPABASE STATUS
+
       let updateQuery = supabase
         .from("document_requests")
         .update({ status: newStatus })
@@ -444,7 +444,7 @@ export default function AdminPage() {
         )
       );
 
-      // SAVE STATUS HISTORY
+
       const remarks: Record<string, string> = {
         Pending: "Request marked as pending.",
         Processing: "Request is now being processed.",
@@ -492,7 +492,7 @@ export default function AdminPage() {
     router.replace("/login");
   }
 
-  // STATUS COUNTS
+
   const countStatus = (status: string) =>
     requests.filter(
       (request) => displayStatus(request) === status
@@ -506,7 +506,7 @@ export default function AdminPage() {
   const rejected = countStatus("Rejected");
   const cancelled = countStatus("Cancelled");
 
-  // DOCUMENT TYPES
+
   const documentTypes = Array.from(
     new Set(
       requests
@@ -515,7 +515,7 @@ export default function AdminPage() {
     )
   ).sort();
 
-  // SEARCH AND FILTER
+
   const filteredRequests = requests.filter((request) => {
     const search = searchTerm.toLowerCase().trim();
 
@@ -553,7 +553,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 text-xs sm:px-8">
           <span className="font-bold uppercase tracking-widest">
@@ -566,7 +566,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
@@ -610,7 +610,7 @@ export default function AdminPage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative overflow-hidden bg-[#0b304b] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-25"
@@ -636,16 +636,16 @@ export default function AdminPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
+
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 text-sm font-bold text-[#0b304b]"
         >
-          
+
         </Link>
 
-        {/* SUCCESS MESSAGE */}
+
         {successMessage && (
           <div
             role="status"
@@ -658,7 +658,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ERROR MESSAGE */}
+
         {errorMessage && (
           <div
             role="alert"
@@ -668,7 +668,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* STATISTICS: 4 UPPER, 4 LOWER */}
+
         <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard
             title="Total Requests"
@@ -719,7 +719,7 @@ export default function AdminPage() {
           />
         </section>
 
-        {/* QR DOCUMENT CLAIMING */}
+
         <section className="mt-8 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
             <div className="flex items-start gap-4">
@@ -761,7 +761,7 @@ export default function AdminPage() {
           </p>
         </section>
 
-        {/* SEARCH AND FILTERS */}
+
         <section className="mt-8 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-3">
             <SlidersHorizontal
@@ -876,7 +876,7 @@ export default function AdminPage() {
           </p>
         </section>
 
-        {/* DOCUMENT REQUESTS */}
+
         <section className="mt-10">
           <h2 className="mb-6 text-2xl font-black text-[#0b304b]">
             Document Requests
@@ -911,7 +911,7 @@ export default function AdminPage() {
                     key={request.id}
                     className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8"
                   >
-                    {/* REQUEST HEADER */}
+
                     <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
                       <div className="flex min-w-0 gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
@@ -946,7 +946,7 @@ export default function AdminPage() {
                       </span>
                     </div>
 
-                    {/* UPDATE REQUEST STATUS */}
+
                     <div className="mt-7 border-t border-[#e3e9ee] pt-6">
                       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                         <div>
@@ -968,7 +968,7 @@ export default function AdminPage() {
                                 processing status.
                               </p>
 
-                              {/* NAVY AND GOLD BUTTONS */}
+
                               <div className="mt-4 flex flex-wrap gap-3">
                                 {STATUS_OPTIONS.map((option) => {
                                   const selected =
@@ -1032,7 +1032,7 @@ export default function AdminPage() {
         </section>
       </div>
 
-      {/* FOOTER */}
+
       <footer className="mt-12 border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:px-8">
           <p>© 2026 eBarangay Connect</p>

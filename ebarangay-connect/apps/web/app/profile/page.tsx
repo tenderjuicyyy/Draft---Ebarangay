@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import {
@@ -85,7 +85,7 @@ export default function ProfilePage() {
 
   const photoBusy = uploading || removing;
 
-  // LOAD PROFILE AND AUTHENTICATION EMAIL
+
   useEffect(() => {
     let cancelled = false;
 
@@ -169,7 +169,7 @@ export default function ProfilePage() {
     };
   }, [router]);
 
-  // CLEAN UP IMAGE PREVIEW
+
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -178,7 +178,7 @@ export default function ProfilePage() {
     };
   }, [previewUrl]);
 
-  // CLOSE PHOTO MENU WHEN CLICKING OUTSIDE
+
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
       if (
@@ -204,7 +204,7 @@ export default function ProfilePage() {
     setSuccessMessage("");
   }
 
-  // EDIT PROFILE
+
   function handleEditProfile() {
     clearMessages();
     setIsEditing(true);
@@ -233,7 +233,7 @@ export default function ProfilePage() {
     clearMessages();
   }
 
-  // SELECT PROFILE PICTURE
+
   function handleFileChange(
     event: ChangeEvent<HTMLInputElement>
   ) {
@@ -270,7 +270,7 @@ export default function ProfilePage() {
     fileInputRef.current?.click();
   }
 
-  // UPLOAD PROFILE PICTURE
+
   async function uploadProfilePicture() {
     if (
       !selectedFile ||
@@ -361,7 +361,7 @@ export default function ProfilePage() {
         "Profile picture updated successfully."
       );
 
-      // REMOVE OLD FILE AFTER SUCCESSFUL UPDATE
+
       if (
         previousPath &&
         previousPath !== filePath &&
@@ -404,7 +404,7 @@ export default function ProfilePage() {
     }
   }
 
-  // REMOVE PROFILE PICTURE
+
   async function removeProfilePicture() {
     if (!profile || !isEditing || photoBusy) return;
 
@@ -430,7 +430,7 @@ export default function ProfilePage() {
 
       const previousPath = profile.avatar_url;
 
-      // FIRST UPDATE DATABASE
+
       const {
         data: updatedProfile,
         error: updateError,
@@ -454,7 +454,7 @@ export default function ProfilePage() {
         "Profile picture removed successfully."
       );
 
-      // THEN CLEAN UP OWNED STORAGE FILE
+
       if (
         previousPath &&
         previousPath.startsWith(`${user.id}/`)
@@ -482,7 +482,7 @@ export default function ProfilePage() {
     }
   }
 
-  // SAVE PERSONAL INFORMATION
+
   async function handleSave(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -554,7 +554,7 @@ export default function ProfilePage() {
     }
   }
 
-  // REQUEST EMAIL CHANGE
+
   async function handleEmailChange(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -621,7 +621,7 @@ export default function ProfilePage() {
     }
   }
 
-  // REFRESH EMAIL AFTER VERIFICATION
+
   async function refreshEmail() {
     clearMessages();
 
@@ -672,7 +672,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#c7d7e3]">
@@ -685,7 +685,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
@@ -717,7 +717,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -757,9 +757,9 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
+
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
-        {/* ERROR MESSAGE */}
+
         {errorMessage && (
           <div
             role="alert"
@@ -775,7 +775,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* SUCCESS MESSAGE */}
+
         {successMessage && (
           <div
             role="status"
@@ -800,11 +800,11 @@ export default function ProfilePage() {
 
         {profile && (
           <div className="grid items-start gap-7 lg:grid-cols-[0.68fr_1.32fr]">
-            {/* LEFT COLUMN */}
+
             <aside className="min-w-0 space-y-6">
-              {/* ACCOUNT SUMMARY */}
+
               <section className="bg-[#0b304b] p-7 text-white sm:p-8">
-                {/* PROFILE PICTURE */}
+
                 <div
                   ref={photoMenuRef}
                   className="relative inline-block"
@@ -826,7 +826,7 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  {/* PENCIL ICON - EDIT MODE ONLY */}
+
                   {isEditing && (
                     <>
                       <button
@@ -852,7 +852,7 @@ export default function ProfilePage() {
                         )}
                       </button>
 
-                      {/* PHOTO ACTION MENU */}
+
                       {photoMenuOpen && (
                         <div className="absolute left-0 top-full z-30 mt-3 w-60 max-w-[calc(100vw-4rem)] overflow-hidden border border-[#dce3e8] bg-white py-2 text-[#0b304b] shadow-xl">
                           <p className="border-b border-[#e3e9ee] px-4 pb-3 pt-2 text-xs font-black uppercase tracking-wider text-[#9b7b40]">
@@ -889,7 +889,7 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* HIDDEN FILE INPUT */}
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -900,7 +900,7 @@ export default function ProfilePage() {
                   aria-label="Choose profile picture"
                 />
 
-                {/* SELECTED PHOTO PREVIEW ACTIONS */}
+
                 {isEditing && selectedFile && (
                   <div className="mt-5 border border-white/20 bg-white/10 p-4">
                     <div className="flex items-center gap-2 text-[#e2c991]">
@@ -988,7 +988,7 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-              {/* CHANGE EMAIL - MOVED TO LEFT COLUMN */}
+
               <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-7">
                 <div className="flex items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
@@ -1012,7 +1012,7 @@ export default function ProfilePage() {
                   new address becomes active.
                 </p>
 
-                {/* CURRENT EMAIL */}
+
                 <div className="mt-5 border border-[#dce3e8] bg-[#f8fafc] p-4">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-[#8193a2]">
                     Current Email
@@ -1023,7 +1023,7 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                {/* PENDING EMAIL */}
+
                 {pendingEmail && (
                   <div className="mt-4 border border-[#e6d5ac] bg-[#fffaf0] p-4">
                     <p className="text-xs font-bold uppercase text-[#8e6b25]">
@@ -1041,7 +1041,7 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* CHANGE EMAIL BUTTON */}
+
                 {!isChangingEmail ? (
                   <button
                     type="button"
@@ -1127,7 +1127,7 @@ export default function ProfilePage() {
                 </button>
               </section>
 
-              {/* ACCOUNT SECURITY */}
+
               <section className="border border-[#dce3e8] bg-white p-7">
                 <div className="flex items-start gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
@@ -1150,9 +1150,9 @@ export default function ProfilePage() {
               </section>
             </aside>
 
-            {/* RIGHT COLUMN */}
+
             <div className="min-w-0 space-y-7">
-              {/* PROFILE FORM */}
+
               <form
                 onSubmit={handleSave}
                 className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-9"
@@ -1174,7 +1174,7 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-                  {/* EDIT PROFILE BUTTON - ORIGINAL LOCATION */}
+
                   {!isEditing ? (
                     <button
                       type="button"
@@ -1194,7 +1194,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="mt-8 space-y-7">
-                  {/* FULL NAME */}
+
                   <div>
                     <label
                       htmlFor="fullName"
@@ -1224,7 +1224,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  {/* REGISTERED EMAIL */}
+
                   <div>
                     <label
                       htmlFor="email"
@@ -1252,7 +1252,7 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-                  {/* PHONE NUMBER */}
+
                   <div>
                     <label
                       htmlFor="phoneNumber"
@@ -1281,7 +1281,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  {/* ADDRESS */}
+
                   <div>
                     <label
                       htmlFor="address"
@@ -1310,7 +1310,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  {/* ACCOUNT ROLE */}
+
                   <div>
                     <label className="flex items-center gap-2 text-sm font-black text-[#173149]">
                       <ShieldCheck
@@ -1338,7 +1338,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* SAVE AND CANCEL BUTTONS */}
+
                 {isEditing ? (
                   <div className="mt-9 flex flex-col-reverse gap-3 border-t border-[#e3e9ee] pt-7 sm:flex-row sm:items-center sm:justify-between">
                     <button
@@ -1388,7 +1388,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* REMOVE PROFILE PICTURE CONFIRMATION */}
+
       {showRemoveConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/70 px-4 py-6">
           <div
@@ -1463,7 +1463,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* FOOTER */}
+
       <footer className="border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>© 2026 eBarangay Connect</p>

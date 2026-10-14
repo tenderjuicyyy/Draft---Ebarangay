@@ -185,7 +185,7 @@ export default function AdminRequestDetailsPage() {
     useState("Pending");
   const [remarks, setRemarks] = useState("");
 
-  // SUBMITTED ID IMAGE
+
   const [idImageUrl, setIdImageUrl] =
     useState<string | null>(null);
   const [idImageLoading, setIdImageLoading] =
@@ -193,12 +193,12 @@ export default function AdminRequestDetailsPage() {
   const [idImageError, setIdImageError] = useState("");
   const [idPreviewOpen, setIdPreviewOpen] = useState(false);
 
-  // DOCUMENT DRAFT
+
   const [draftOpen, setDraftOpen] = useState(false);
   const [draftFields, setDraftFields] =
     useState<DraftFields>(EMPTY_DRAFT);
 
-  // CREATE A TEMPORARY URL FOR A PRIVATE ID
+
   async function loadIdImage(path: string) {
     setIdImageLoading(true);
     setIdImageError("");
@@ -250,7 +250,7 @@ export default function AdminRequestDetailsPage() {
     }
   }
 
-  // LOAD REQUEST DETAILS
+
   useEffect(() => {
     let cancelled = false;
 
@@ -380,7 +380,7 @@ export default function AdminRequestDetailsPage() {
           preparedBy: "",
         });
 
-        // LOAD SUBMITTED ID
+
         if (loadedRequest.id_image_path) {
           void loadIdImage(loadedRequest.id_image_path);
         } else {
@@ -409,7 +409,7 @@ export default function AdminRequestDetailsPage() {
     return () => {
       cancelled = true;
     };
-    
+
   }, [requestId, router]);
 
   async function handleLogout() {
@@ -417,7 +417,7 @@ export default function AdminRequestDetailsPage() {
     router.replace("/login");
   }
 
-  // UPDATE REQUEST STATUS
+
   async function handleStatusUpdate(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -710,7 +710,7 @@ export default function AdminRequestDetailsPage() {
   return (
     <>
       <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d] print:hidden">
-        {/* TOP BAR */}
+
         <div className="bg-[#061b2b] text-white">
           <div className="mx-auto flex max-w-7xl justify-between gap-3 px-5 py-3 text-xs sm:px-8">
             <span className="font-bold uppercase tracking-widest">
@@ -722,7 +722,7 @@ export default function AdminRequestDetailsPage() {
           </div>
         </div>
 
-        {/* HEADER */}
+
         <header className="bg-[#0b304b] text-white">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
             <Link
@@ -763,7 +763,7 @@ export default function AdminRequestDetailsPage() {
           </div>
         </header>
 
-        {/* HERO */}
+
         <section className="relative overflow-hidden bg-[#0b304b] text-white">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-20"
@@ -795,7 +795,7 @@ export default function AdminRequestDetailsPage() {
         </section>
 
         <div className="mx-auto max-w-7xl space-y-7 px-5 py-9 sm:px-8">
-          {/* CLAIMING INFORMATION */}
+
           {currentStatus === "Claimed" && (
             <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
               <div className="flex items-start gap-3">
@@ -823,7 +823,7 @@ export default function AdminRequestDetailsPage() {
             </section>
           )}
 
-          {/* RESIDENT INFORMATION */}
+
           <section className={cardClass}>
             <div className="flex items-center gap-3 border-b pb-5">
               <UserRound
@@ -874,7 +874,7 @@ export default function AdminRequestDetailsPage() {
             </div>
           </section>
 
-          {/* SUBMITTED VALID ID */}
+
           <section className={cardClass}>
             <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5">
               <div className="flex items-center gap-3">
@@ -958,7 +958,7 @@ export default function AdminRequestDetailsPage() {
             ) : idImageUrl ? (
               <div className="mt-6 space-y-5">
                 <div className="flex justify-center rounded-lg border border-[#dce3e8] bg-[#f8fafc] p-5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+
                   <img
                     src={idImageUrl}
                     alt="Valid ID submitted by resident"
@@ -1008,7 +1008,7 @@ export default function AdminRequestDetailsPage() {
             )}
           </section>
 
-          {/* DOCUMENT DRAFT PREPARATION */}
+
           <section className={cardClass}>
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
               <div>
@@ -1173,7 +1173,7 @@ export default function AdminRequestDetailsPage() {
             )}
           </section>
 
-          {/* STATUS MANAGEMENT */}
+
           <section className={cardClass}>
             <div className="flex items-center gap-3 border-b pb-5">
               <ShieldCheck
@@ -1313,7 +1313,7 @@ export default function AdminRequestDetailsPage() {
             )}
           </section>
 
-          {/* DETAILS AND HISTORY */}
+
           <div className="grid gap-7 lg:grid-cols-[1.2fr_0.8fr]">
             <section className={cardClass}>
               <div className="flex items-center gap-3 border-b pb-5">
@@ -1445,7 +1445,7 @@ export default function AdminRequestDetailsPage() {
         </footer>
       </main>
 
-      {/* FULLSCREEN ID PREVIEW */}
+
       {idPreviewOpen && idImageUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 print:hidden"
@@ -1480,7 +1480,7 @@ export default function AdminRequestDetailsPage() {
             </div>
 
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#eef2f5] p-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+
               <img
                 src={idImageUrl}
                 alt="Full-size submitted valid ID"
@@ -1491,7 +1491,7 @@ export default function AdminRequestDetailsPage() {
         </div>
       )}
 
-      {/* PRINTABLE DOCUMENT */}
+
       {draftOpen && isSupportedDocument && (
         <article className="hidden bg-white text-black print:block">
           <style>{`
@@ -1518,7 +1518,7 @@ export default function AdminRequestDetailsPage() {
           `}</style>
 
           <div className="draft-paper mx-auto max-w-[175mm]">
-            {/* DOCUMENT HEADER */}
+
             <div className="border-b-2 border-black pb-5 text-center">
               <p>Republic of the Philippines</p>
               <p>
@@ -1538,7 +1538,7 @@ export default function AdminRequestDetailsPage() {
               </p>
             </div>
 
-            {/* DOCUMENT TITLE */}
+
             <div className="mt-6 text-center">
               <p className="text-lg font-bold uppercase underline">
                 {documentName}
@@ -1548,7 +1548,7 @@ export default function AdminRequestDetailsPage() {
               </p>
             </div>
 
-            {/* DOCUMENT BODY */}
+
             <div className="mt-10">
               <p>TO WHOM IT MAY CONCERN:</p>
 
@@ -1667,7 +1667,7 @@ export default function AdminRequestDetailsPage() {
               </p>
             </div>
 
-            {/* SIGNATURE AREA */}
+
             <div className="mt-16">
               <p>
                 Prepared by:{" "}
@@ -1694,7 +1694,7 @@ export default function AdminRequestDetailsPage() {
               </div>
             </div>
 
-            {/* DRAFT NOTICE */}
+
             <div className="mt-12 border-t pt-3 text-center text-xs">
               DRAFT ONLY — NOT AN OFFICIALLY
               ISSUED DOCUMENT

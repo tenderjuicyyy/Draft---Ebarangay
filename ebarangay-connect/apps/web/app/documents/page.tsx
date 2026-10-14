@@ -45,7 +45,7 @@ export default async function DocumentsPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
@@ -57,7 +57,7 @@ export default async function DocumentsPage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link href="/" className="flex items-center gap-4">
@@ -85,7 +85,7 @@ export default async function DocumentsPage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -129,7 +129,7 @@ export default async function DocumentsPage() {
         </div>
       </section>
 
-      {/* DOCUMENT LIST */}
+
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:py-16">
         <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
@@ -191,7 +191,7 @@ export default async function DocumentsPage() {
                     {document.description}
                   </p>
 
-                  {/* GUIDED REQUIREMENTS */}
+
                   {requirements.length > 0 && (
                     <div className="mt-7 border border-[#dce3e8] bg-[#f8fafc] p-5">
                       <div className="flex items-center gap-2">
@@ -224,7 +224,7 @@ export default async function DocumentsPage() {
                     </div>
                   )}
 
-                  {/* DOCUMENT INFORMATION */}
+
                   <div className="mt-8 border-t border-[#e3e9ee] pt-6">
                     <div className="flex items-center gap-2">
                       <Info size={17} className="text-[#9b7b40]" />
@@ -297,7 +297,7 @@ export default async function DocumentsPage() {
         )}
       </section>
 
-      {/* INFORMATION BANNER */}
+
       <section className="bg-[#0b304b] text-white">
         <div className="mx-auto max-w-7xl flex-col justify-between gap-6 px-5 py-10 sm:flex sm:px-8 lg:flex-row lg:items-center">
           <div>
@@ -323,7 +323,7 @@ export default async function DocumentsPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
+
       <footer className="border-t border-[#e3e9ee] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:px-8">
           <p>© 2026 eBarangay Connect</p>

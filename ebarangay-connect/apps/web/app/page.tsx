@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import Link from "next/link";
@@ -90,19 +90,19 @@ const steps = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-[#172b3d]">
-      {/* TOP GOVERNMENT-STYLE BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
             Digital Citizen Services Portal
           </span>
           <span className="hidden text-xs text-[#c7d7e3] sm:block">
-            Mines View, Baguio City, Philippines
+            Biñang 2nd, Bocaue, Bulacan, Philippines
           </span>
         </div>
       </div>
 
-      {/* MAIN HEADER */}
+
       <header className="relative z-10 bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-6 sm:px-8 lg:py-7">
           <Link href="/" className="flex items-center gap-4">
@@ -152,7 +152,7 @@ export default function HomePage() {
             </Link>
           </nav>
 
-          {/* Mobile navigation */}
+
           <details className="relative lg:hidden">
             <summary
               aria-label="Open navigation menu"
@@ -193,7 +193,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative isolate overflow-hidden bg-[#102c43] text-white">
         <div
           className="absolute inset-0 -z-20 bg-cover bg-center"
@@ -234,12 +234,12 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Hero photo */}
+
           <div className="relative">
             <div className="border border-white/30 bg-white/10 p-2 shadow-2xl backdrop-blur-sm">
               <div
                 role="img"
-                aria-label="Mines View, Baguio City"
+                aria-label="Biñang 2nd, Bocaue, Bulacan"
                 className="h-67.5 bg-[#183e58] bg-cover bg-center sm:h-87.5"
                 style={{
                   backgroundImage: "url('/barangay-hall.jpg')",
@@ -251,18 +251,18 @@ export default function HomePage() {
                 Community Portal
               </p>
               <p className="mt-1 font-serif text-xl font-bold">
-                Mines View
+                Biñang 2nd
               </p>
               <p className="mt-2 flex items-center gap-2 text-xs text-[#68798b]">
                 <MapPin size={14} />
-                Baguio City, Philippines
+                Bocaue, Bulacan, Philippines
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* QUICK ACTIONS: EXISTING ROUTES PRESERVED */}
+
       <section className="relative z-10 mx-auto -mt-10 max-w-7xl px-5 sm:px-8">
         <div className="grid bg-white shadow-xl md:grid-cols-3">
           {quickActions.map((action, index) => {
@@ -299,7 +299,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SERVICES */}
+
       <section
         id="services"
         className="scroll-mt-6 bg-white px-5 pb-20 pt-24 sm:px-8 lg:pb-28"
@@ -364,7 +364,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+
       <section
         id="how-it-works"
         className="scroll-mt-6 bg-[#edf2f5] px-5 py-20 sm:px-8 lg:py-28"
@@ -404,7 +404,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FOOTER */}
+
       <footer className="bg-[#061b2b] px-5 py-14 text-white sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-10 md:flex-row">
@@ -432,11 +432,11 @@ export default function HomePage() {
 
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#e2c991]">
-                Mines View
+                Biñang 2nd
               </p>
               <p className="mt-4 flex items-center gap-2 text-sm text-[#aebfcd]">
                 <MapPin size={16} />
-                Baguio City, Philippines
+                Bocaue, Bulacan, Philippines
               </p>
             </div>
           </div>
@@ -452,4 +452,3 @@ export default function HomePage() {
     </main>
   );
 }
-

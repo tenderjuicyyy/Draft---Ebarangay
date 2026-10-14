@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import Link from "next/link";
@@ -122,10 +122,10 @@ export default function RegisterPage() {
         return;
       }
 
-      // Supabase can return an obscured user object for
-      // an email that is already registered.
-      // Do not claim a new account was created based
-      // solely on data.user.
+
+
+
+
       if (data.session) {
         setSuccessMessage(
           "Your registration request was processed. If you are signed in, you can continue to your dashboard. Otherwise, check your email or sign in."
@@ -152,19 +152,19 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#c7d7e3]">
             Digital Citizen Services Portal
           </span>
           <span className="hidden text-xs text-[#c7d7e3] sm:block">
-            Mines View, Baguio City, Philippines
+            Biñang 2nd, Bocaue, Bulacan, Philippines
           </span>
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link href="/" className="flex items-center gap-4">
@@ -191,9 +191,9 @@ export default function RegisterPage() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
+
       <div className="mx-auto grid min-h-[calc(100vh-132px)] max-w-7xl lg:grid-cols-[0.95fr_1.05fr]">
-        {/* LEFT PANEL */}
+
         <section className="relative hidden overflow-hidden bg-[#102f48] px-10 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -275,7 +275,7 @@ export default function RegisterPage() {
           </div>
         </section>
 
-        {/* RIGHT PANEL */}
+
         <section className="flex min-w-0 flex-col bg-white">
           <div className="px-6 pt-7 sm:px-10 lg:hidden">
             <Link
@@ -308,7 +308,7 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              {/* ERROR */}
+
               {errorMessage && (
                 <div
                   role="alert"
@@ -323,7 +323,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* SUCCESS / NEUTRAL RESULT */}
+
               {successMessage && (
                 <div
                   role="status"
@@ -355,7 +355,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* FORM */}
+
               <form
                 onSubmit={handleRegister}
                 className="space-y-6"
@@ -534,7 +534,7 @@ export default function RegisterPage() {
                   </p>
                 </div>
 
-                {/* TERMS */}
+
                 <div className="border border-[#dce3e8] bg-[#f8fafc] p-4">
                   <div className="flex items-start gap-3">
                     <input
@@ -609,7 +609,7 @@ export default function RegisterPage() {
         </section>
       </div>
 
-      {/* TERMS AND CONDITIONS MODAL */}
+
       {showTerms && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/75 p-4"

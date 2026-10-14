@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -74,7 +74,7 @@ export default function NewRequestPage() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  // LOAD AUTHENTICATED USER AND DOCUMENT TYPES
+
   useEffect(() => {
     let cancelled = false;
 
@@ -130,7 +130,7 @@ export default function NewRequestPage() {
     };
   }, [router]);
 
-  // CLEAN UP IMAGE PREVIEW
+
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) {
@@ -180,7 +180,7 @@ export default function NewRequestPage() {
     setErrorMessage("");
   }
 
-  // HANDLE FILE UPLOAD
+
   function handleFileChange(
     event: ChangeEvent<HTMLInputElement>
   ) {
@@ -265,7 +265,7 @@ export default function NewRequestPage() {
     return null;
   }
 
-  // REVIEW BEFORE FINAL SUBMISSION
+
   function handleReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
@@ -281,7 +281,7 @@ export default function NewRequestPage() {
     setReviewOpen(true);
   }
 
-  // FINAL REQUEST SUBMISSION
+
   async function submitRequest() {
     if (submissionLock.current || success) return;
 
@@ -314,7 +314,7 @@ export default function NewRequestPage() {
         );
       }
 
-      // RECHECK DOCUMENT AVAILABILITY
+
       const { data: currentDocument, error: documentError } =
         await supabase
           .from("document_types")
@@ -330,7 +330,7 @@ export default function NewRequestPage() {
         );
       }
 
-      // UPLOAD ID
+
       const extension = ALLOWED_TYPES[idFile.type];
 
       const filePath =
@@ -351,7 +351,7 @@ export default function NewRequestPage() {
 
       uploadedPath = filePath;
 
-      // CREATE DOCUMENT REQUEST
+
       const { data: request, error: requestError } =
         await supabase
           .from("document_requests")
@@ -376,13 +376,13 @@ export default function NewRequestPage() {
       setSuccess(true);
       setReviewOpen(false);
 
-      // Initial status history should be handled by
-      // a database trigger or trusted backend.
+
+
       router.push("/requests");
     } catch (error) {
       console.error("Request submission error:", error);
 
-      // CLEAN UP ID IF REQUEST WAS NOT CREATED
+
       if (uploadedPath && !requestCreated) {
         const { error: cleanupError } =
           await supabase.storage
@@ -428,7 +428,7 @@ export default function NewRequestPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl justify-between gap-3 px-5 py-3 text-xs sm:px-8">
           <span className="font-bold uppercase tracking-widest text-[#c7d7e3]">
@@ -440,7 +440,7 @@ export default function NewRequestPage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-5 sm:px-8">
           <Link
@@ -474,7 +474,7 @@ export default function NewRequestPage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
@@ -502,13 +502,13 @@ export default function NewRequestPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
+
       <div className="mx-auto max-w-7xl px-5 py-9 sm:px-8">
         <Link
           href="/dashboard"
           className="mb-7 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b]"
         >
-          
+
         </Link>
 
         {errorMessage && (
@@ -533,7 +533,7 @@ export default function NewRequestPage() {
         )}
 
         <div className="grid gap-7 lg:grid-cols-[1.35fr_0.65fr]">
-          {/* REQUEST FORM */}
+
           <section className="rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-9">
             <div className="border-b pb-6">
               <p className="text-xs font-bold uppercase tracking-widest text-[#9b7b40]">
@@ -555,7 +555,7 @@ export default function NewRequestPage() {
               onSubmit={handleReview}
               className="mt-7 space-y-8"
             >
-              {/* DOCUMENT SELECTION */}
+
               <div>
                 <label
                   htmlFor="document"
@@ -602,7 +602,7 @@ export default function NewRequestPage() {
                 )}
               </div>
 
-              {/* GUIDED REQUIREMENTS */}
+
               {selectedDetails && (
                 <div className="space-y-5">
                   <section className="rounded-xl border border-[#d5bd81] bg-[#fcf9f1] p-6">
@@ -684,7 +684,7 @@ export default function NewRequestPage() {
                     </label>
                   </section>
 
-                  {/* DOCUMENT DETAILS */}
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="rounded-lg bg-[#edf2f5] p-5">
                       <div className="flex items-center gap-2 text-[#0b304b]">
@@ -742,7 +742,7 @@ export default function NewRequestPage() {
                 </div>
               )}
 
-              {/* ID UPLOAD */}
+
               {selectedDetails && (
                 <section>
                   <div className="flex items-center gap-3">
@@ -791,7 +791,7 @@ export default function NewRequestPage() {
                     ) : (
                       <div className="space-y-4">
                         {previewUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
+
                           <img
                             src={previewUrl}
                             alt="Selected ID preview"
@@ -843,7 +843,7 @@ export default function NewRequestPage() {
                 </section>
               )}
 
-              {/* PURPOSE */}
+
               <div>
                 <label
                   htmlFor="purpose"
@@ -887,7 +887,7 @@ export default function NewRequestPage() {
                 </div>
               </div>
 
-              {/* ACTIONS */}
+
               <div className="flex flex-col-reverse gap-3 border-t pt-7 sm:flex-row sm:justify-between">
                 <Link
                   href="/requests"
@@ -909,7 +909,7 @@ export default function NewRequestPage() {
             </form>
           </section>
 
-          {/* SIDE PANEL */}
+
           <aside className="space-y-6">
             <section className="rounded-xl bg-[#0b304b] p-7 text-white">
               <FileCheck2
@@ -1012,7 +1012,7 @@ export default function NewRequestPage() {
         </div>
       </div>
 
-      {/* REVIEW MODAL */}
+
       {reviewOpen && selectedDetails && (
         <div
           role="presentation"
@@ -1144,7 +1144,7 @@ export default function NewRequestPage() {
         </div>
       )}
 
-      {/* FOOTER */}
+
       <footer className="mt-10 border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-3 px-5 py-7 text-xs text-[#8193a2] sm:px-8">
           <p>© 2026 eBarangay Connect</p>

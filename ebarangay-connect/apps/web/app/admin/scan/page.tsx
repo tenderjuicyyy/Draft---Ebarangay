@@ -56,8 +56,8 @@ function extractToken(value: string) {
     return trimmed;
   }
 
-  // The existing resident QR is expected to contain
-  // the raw UUID claim token.
+
+
   return "";
 }
 
@@ -114,7 +114,7 @@ export default function AdminScanPage() {
   const verificationCounterRef = useRef(0);
   const confirmingRef = useRef(false);
 
-  // CHECK ADMINISTRATOR ACCESS
+
   useEffect(() => {
     let cancelled = false;
 
@@ -172,7 +172,7 @@ export default function AdminScanPage() {
     };
   }, [router]);
 
-  // START / STOP CAMERA
+
   useEffect(() => {
     if (!scanning || !authorized) return;
 
@@ -245,11 +245,11 @@ export default function AdminScanPage() {
               setErrorMessage("");
             }
 
-            // Unmount the camera after reading one QR code.
+
             setScanning(false);
           },
           () => {
-            // A frame without a QR code is normal.
+
           }
         );
 
@@ -332,7 +332,7 @@ export default function AdminScanPage() {
     setSuccessMessage("");
   }
 
-  // VERIFY DOCUMENT CLAIM
+
   async function verifyToken() {
     if (!authorized || verifying || confirming) return;
 
@@ -433,7 +433,7 @@ export default function AdminScanPage() {
     }
   }
 
-  // CONFIRM DOCUMENT RELEASE
+
   async function confirmClaim() {
     if (
       !authorized ||
@@ -572,7 +572,7 @@ export default function AdminScanPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
@@ -585,7 +585,7 @@ export default function AdminScanPage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
@@ -620,7 +620,7 @@ export default function AdminScanPage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-60"
@@ -651,14 +651,14 @@ export default function AdminScanPage() {
         </div>
       </section>
 
-      {/* CONTENT */}
+
       <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
         <Link
           href="/admin"
           className="inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] hover:text-[#9b7b40]"
         >
-          
-          
+
+
         </Link>
 
         {errorMessage && (
@@ -689,7 +689,7 @@ export default function AdminScanPage() {
         )}
 
         <div className="mt-8 grid gap-7 lg:grid-cols-2">
-          {/* CAMERA SCANNER */}
+
           <section className="h-fit rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e8eef3] text-[#0b304b]">
@@ -763,7 +763,7 @@ export default function AdminScanPage() {
             </p>
           </section>
 
-          {/* MANUAL VERIFICATION */}
+
           <section className="h-fit rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e8eef3] text-[#0b304b]">
@@ -835,7 +835,7 @@ export default function AdminScanPage() {
           </section>
         </div>
 
-        {/* VERIFICATION RESULT */}
+
         {result && (
           <section className="mt-8 rounded-xl border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
@@ -954,7 +954,7 @@ export default function AdminScanPage() {
         )}
       </div>
 
-      {/* FOOTER */}
+
       <footer className="mt-12 border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>© 2026 eBarangay Connect</p>

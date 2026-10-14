@@ -444,7 +444,7 @@ export default function RequestDetailsPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP GOVERNMENT BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
@@ -457,7 +457,7 @@ export default function RequestDetailsPage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link href="/dashboard" className="flex items-center gap-4">
@@ -476,7 +476,7 @@ export default function RequestDetailsPage() {
             </div>
           </Link>
 
-          {/* KEEP THE RIGHT-SIDE MY REQUESTS BUTTON */}
+
           <Link
             href="/requests"
             className="inline-flex items-center gap-2 border border-white/30 px-4 py-3 text-xs font-bold uppercase tracking-wide transition hover:bg-white hover:text-[#0b304b]"
@@ -488,7 +488,7 @@ export default function RequestDetailsPage() {
         </div>
       </header>
 
-      {/* PAGE HERO */}
+
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -519,9 +519,9 @@ export default function RequestDetailsPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT — REDUNDANT LEFT-SIDE BACK LINK REMOVED */}
+
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
-        {/* ERROR */}
+
         {errorMessage && (
           <div
             role="alert"
@@ -536,7 +536,7 @@ export default function RequestDetailsPage() {
           </div>
         )}
 
-        {/* SUCCESS */}
+
         {successMessage && (
           <div
             role="status"
@@ -583,7 +583,7 @@ export default function RequestDetailsPage() {
           </section>
         ) : (
           <>
-            {/* REQUEST SUMMARY */}
+
             <section className="mt-7 bg-[#0b304b] p-7 text-white sm:p-9">
               <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
                 <div>
@@ -613,9 +613,9 @@ export default function RequestDetailsPage() {
             </section>
 
             <div className="mt-7 grid gap-7 lg:grid-cols-[1.25fr_0.75fr]">
-              {/* LEFT COLUMN */}
+
               <div className="space-y-7">
-                {/* DOCUMENT INFORMATION */}
+
                 <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
                     Request Information
@@ -682,7 +682,7 @@ export default function RequestDetailsPage() {
                   </div>
                 </section>
 
-                {/* STATUS TRACKER */}
+
                 <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
                     Progress
@@ -695,7 +695,7 @@ export default function RequestDetailsPage() {
                   <StatusTracker status={request.status} />
                 </section>
 
-                {/* QR DOCUMENT CLAIMING */}
+
                 {isCompleted && (
                   <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
                     <div className="flex items-center gap-3">
@@ -792,7 +792,7 @@ export default function RequestDetailsPage() {
                   </section>
                 )}
 
-                {/* CANCEL REQUEST */}
+
                 {canCancel && (
                   <section className="border border-[#e7c8bf] bg-white p-6 shadow-sm sm:p-8">
                     <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
@@ -829,7 +829,7 @@ export default function RequestDetailsPage() {
                 )}
               </div>
 
-              {/* STATUS HISTORY */}
+
               <section className="h-fit border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
                   Activity
@@ -894,7 +894,7 @@ export default function RequestDetailsPage() {
         )}
       </div>
 
-      {/* FOOTER */}
+
       <footer className="border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>© 2026 eBarangay Connect</p>
@@ -902,7 +902,7 @@ export default function RequestDetailsPage() {
         </div>
       </footer>
 
-      {/* CANCELLATION CONFIRMATION MODAL */}
+
       {showCancelModal && request && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/75 px-4">
           <div

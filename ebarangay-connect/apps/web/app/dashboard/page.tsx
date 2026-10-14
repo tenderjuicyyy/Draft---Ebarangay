@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -273,7 +273,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
@@ -286,7 +286,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* NAVIGATION */}
+
       <header className="relative z-20 bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
@@ -308,7 +308,7 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* DESKTOP NAVIGATION */}
+
           <nav className="hidden items-center gap-7 lg:flex">
             <Link
               href="/dashboard"
@@ -339,7 +339,7 @@ export default function DashboardPage() {
             </Link>
           </nav>
 
-          {/* DESKTOP LOGOUT BUTTON */}
+
           <div className="hidden items-center lg:flex">
             <DashboardSwitcher current="resident" />
 
@@ -364,7 +364,7 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* MOBILE MENU BUTTON */}
+
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -380,7 +380,7 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* MOBILE NAVIGATION */}
+
         {mobileMenuOpen && (
           <nav className="border-t border-white/20 bg-[#09283e] px-5 py-5 lg:hidden">
             <div className="mx-auto flex max-w-7xl flex-col gap-2">
@@ -414,7 +414,7 @@ export default function DashboardPage() {
 
               <DashboardSwitcher current="resident" />
 
-              {/* MOBILE LOGOUT BUTTON */}
+
               <button
                 type="button"
                 onClick={handleLogout}
@@ -438,7 +438,7 @@ export default function DashboardPage() {
         )}
       </header>
 
-      {/* ERROR MESSAGE */}
+
       {errorMessage && (
         <div className="mx-auto max-w-7xl px-5 pt-7 sm:px-8">
           <div
@@ -456,7 +456,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* FULL-WIDTH HERO */}
+
       <section className="relative w-full overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -468,7 +468,7 @@ export default function DashboardPage() {
         <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/85 via-[#0b304b]/55 to-[#0b304b]/25" />
 
         <div className="relative mx-auto flex min-h-97.5 max-w-7xl items-center px-5 py-12 sm:px-8 lg:px-12">
-          {/* LEFT CONTENT */}
+
           <div className="w-full max-w-3xl">
             <div className="mb-6 flex items-center gap-3">
               <span className="h-px w-10 bg-[#d5bd81]" />
@@ -526,9 +526,9 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* MAIN DASHBOARD CONTENT */}
+
       <div className="mx-auto max-w-7xl px-5 py-9 sm:px-8">
-        {/* REQUEST STATISTICS */}
+
         <section className="pb-9">
           <div className="mb-6">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
@@ -568,7 +568,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* AVAILABLE DOCUMENTS */}
+
         <section className="py-12">
           <div className="mb-7">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
@@ -606,7 +606,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* RECENT REQUESTS */}
+
         <section className="border border-[#dce3e8] bg-white p-6 sm:p-8">
           <div className="flex flex-col justify-between gap-4 border-b border-[#dce3e8] pb-6 sm:flex-row sm:items-end">
             <div>
@@ -691,7 +691,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        {/* FOOTER */}
+
         <footer className="mt-9 flex flex-col gap-3 border-t border-[#d4dfe7] py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between">
           <p>2026 eBarangay Connect</p>
           <p>Digital barangay services for residents.</p>

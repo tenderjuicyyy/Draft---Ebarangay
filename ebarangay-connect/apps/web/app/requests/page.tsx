@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -283,7 +283,7 @@ function StatusTracker({
   );
 }
 
-// STATISTICS CARD - SAME STYLE AS RESIDENT DASHBOARD
+
 function StatCard({
   title,
   count,
@@ -325,7 +325,7 @@ export default function RequestsPage() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // AUTHENTICATION AND REQUEST FETCHING
+
   useEffect(() => {
     let cancelled = false;
 
@@ -433,7 +433,7 @@ export default function RequestsPage() {
     );
   }
 
-  // ALL SIX STATISTICS
+
   const pendingCount = requests.filter(
     (request) =>
       normalizedStatus(request.status) === "pending"
@@ -484,7 +484,7 @@ export default function RequestsPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP GOVERNMENT BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
@@ -497,7 +497,7 @@ export default function RequestsPage() {
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link
@@ -531,7 +531,7 @@ export default function RequestsPage() {
         </div>
       </header>
 
-      {/* HERO */}
+
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -563,16 +563,16 @@ export default function RequestsPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
+
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
         <Link
           href="/dashboard"
           className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#0b304b] transition hover:text-[#9b7b40]"
         >
-          
+
         </Link>
 
-        {/* SIX STATISTICS - THREE TOP, THREE BOTTOM */}
+
         <section className="mb-9 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <StatCard
             title="Total Requests"
@@ -623,7 +623,7 @@ export default function RequestsPage() {
           />
         </section>
 
-        {/* ERROR MESSAGE */}
+
         {errorMessage && (
           <div
             role="alert"
@@ -639,7 +639,7 @@ export default function RequestsPage() {
           </div>
         )}
 
-        {/* REQUEST LIST */}
+
         {requests.length === 0 ? (
           <section className="border border-[#dce3e8] bg-white px-6 py-16 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
@@ -686,7 +686,7 @@ export default function RequestsPage() {
                   key={request.id}
                   className="overflow-hidden border border-[#dce3e8] bg-white shadow-sm"
                 >
-                  {/* REQUEST INFORMATION */}
+
                   <div className="p-6 sm:p-8">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
                       <div className="flex min-w-0 gap-4">
@@ -723,10 +723,10 @@ export default function RequestsPage() {
                       </span>
                     </div>
 
-                    {/* STATUS TRACKER */}
+
                     <StatusTracker status={request.status} />
 
-                    {/* REQUEST DETAILS LINK */}
+
                     <div className="mt-8 border-t border-[#e3e9ee] pt-6">
                       <Link
                         href={`/requests/${request.id}`}
@@ -738,7 +738,7 @@ export default function RequestsPage() {
                     </div>
                   </div>
 
-                  {/* STATUS HISTORY */}
+
                   <div className="border-t border-[#e3e9ee] bg-[#f8fafc] p-6 sm:p-8">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9b7b40]">
                       Activity
@@ -819,7 +819,7 @@ export default function RequestsPage() {
         )}
       </div>
 
-      {/* FOOTER */}
+
       <footer className="border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>© 2026 eBarangay Connect</p>

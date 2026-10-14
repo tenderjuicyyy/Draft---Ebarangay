@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -27,13 +27,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Forgot-password state
+
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const [resetError, setResetError] = useState("");
 
-  // LOGIN WITH ROLE-BASED REDIRECTION
+
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      // 1. Authenticate the user
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -59,7 +59,7 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. Retrieve the user's role from the profiles table
+
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
@@ -77,7 +77,7 @@ export default function LoginPage() {
         return;
       }
 
-      // 3. Handle accounts without a profile
+
       if (!profile) {
         await supabase.auth.signOut();
 
@@ -87,7 +87,7 @@ export default function LoginPage() {
         return;
       }
 
-      // 4. Redirect according to the verified role
+
       if (profile.role === "admin") {
         router.replace("/admin");
       } else if (profile.role === "resident") {
@@ -110,7 +110,7 @@ export default function LoginPage() {
     }
   }
 
-  // FORGOT PASSWORD
+
   async function handleForgotPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -169,7 +169,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-      {/* TOP GOVERNMENT BAR */}
+
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
@@ -177,12 +177,12 @@ export default function LoginPage() {
           </span>
 
           <span className="hidden text-xs text-[#c7d7e3] sm:block">
-            Mines View, Baguio City, Philippines
+            Biñang 2nd, Bocaue, Bulacan, Philippines
           </span>
         </div>
       </div>
 
-      {/* HEADER */}
+
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <Link href="/" className="flex items-center gap-4">
@@ -211,9 +211,9 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
+
       <div className="mx-auto grid min-h-[calc(100vh-132px)] max-w-7xl lg:grid-cols-[0.95fr_1.05fr]">
-        {/* LEFT INFORMATION PANEL */}
+
         <section className="relative hidden overflow-hidden bg-[#102f48] px-10 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -291,9 +291,9 @@ export default function LoginPage() {
           </div>
         </section>
 
-        {/* RIGHT LOGIN PANEL */}
+
         <section className="flex flex-col bg-white">
-          {/* MOBILE BACK LINK */}
+
           <div className="px-6 pt-7 sm:px-10 lg:hidden">
             <Link
               href="/"
@@ -306,7 +306,7 @@ export default function LoginPage() {
 
           <div className="flex flex-1 items-center justify-center px-6 py-12 sm:px-10 sm:py-14 lg:px-14">
             <div className="w-full max-w-md">
-              {/* HEADING */}
+
               <div className="mb-9">
                 <div className="mb-6 flex h-14 w-14 items-center justify-center bg-[#0b304b] text-white">
                   <LockKeyhole size={24} />
@@ -329,7 +329,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* LOGIN ERROR */}
+
               {errorMessage && !showForgotPassword && (
                 <div
                   role="alert"
@@ -343,7 +343,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* FORGOT PASSWORD FORM */}
+
               {showForgotPassword ? (
                 <section aria-labelledby="forgot-password-heading">
                   <div className="mb-6">
@@ -438,7 +438,7 @@ export default function LoginPage() {
                   </button>
                 </section>
               ) : (
-                /* LOGIN FORM */
+
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div>
                     <label
@@ -539,7 +539,7 @@ export default function LoginPage() {
                 </form>
               )}
 
-              {/* CREATE ACCOUNT */}
+
               <div className="mt-9 border border-[#dce3e8] bg-[#f5f8fa] p-6 text-center">
                 <p className="text-sm text-[#697d8c]">
                   Don&apos;t have a resident account?
@@ -554,7 +554,7 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              {/* SECURITY NOTE */}
+
               <div className="mt-7 flex items-start gap-3">
                 <ShieldCheck
                   size={18}

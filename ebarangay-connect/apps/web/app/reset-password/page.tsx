@@ -53,8 +53,8 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Supabase must have established a valid recovery session
-      // when the user opens the password-reset email link.
+
+
       const { error } = await supabase.auth.updateUser({
         password,
       });
@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
         "Your password has been updated successfully. You can now sign in with your new password."
       );
 
-      // Return to login after the success message is shown.
+
       window.setTimeout(() => {
         router.replace("/login");
       }, 2000);
@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-4 py-10 font-sans text-[#172b3d]">
       <section className="w-full max-w-lg border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-10">
-        {/* BACK TO LOGIN */}
+
         <Link
           href="/login"
           className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#0b304b] transition hover:text-[#9b7b40]"
@@ -109,12 +109,12 @@ export default function ResetPasswordPage() {
           Back to login
         </Link>
 
-        {/* ICON */}
+
         <div className="mt-8 flex h-14 w-14 items-center justify-center bg-[#0b304b] text-white">
           <KeyRound size={25} />
         </div>
 
-        {/* HEADING */}
+
         <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-[#9b7b40]">
           Account recovery
         </p>
@@ -129,7 +129,7 @@ export default function ResetPasswordPage() {
           8 characters.
         </p>
 
-        {/* ERROR MESSAGE */}
+
         {errorMessage && (
           <div
             role="alert"
@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* SUCCESS MESSAGE */}
+
         {successMessage && (
           <div
             role="status"
@@ -154,12 +154,12 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* RESET PASSWORD FORM */}
+
         <form
           onSubmit={handleUpdatePassword}
           className="mt-7 space-y-5"
         >
-          {/* NEW PASSWORD */}
+
           <div>
             <label
               htmlFor="new-password"
@@ -209,7 +209,7 @@ export default function ResetPasswordPage() {
             </div>
           </div>
 
-          {/* CONFIRM PASSWORD */}
+
           <div>
             <label
               htmlFor="confirm-password"
@@ -261,7 +261,7 @@ export default function ResetPasswordPage() {
             </div>
           </div>
 
-          {/* SUBMIT BUTTON */}
+
           <button
             type="submit"
             disabled={loading || Boolean(successMessage)}
@@ -284,7 +284,7 @@ export default function ResetPasswordPage() {
           </button>
         </form>
 
-        {/* SECURITY NOTE */}
+
         <div className="mt-7 flex items-start gap-3 border-t border-[#e3e9ee] pt-5">
           <LockKeyhole
             size={18}
