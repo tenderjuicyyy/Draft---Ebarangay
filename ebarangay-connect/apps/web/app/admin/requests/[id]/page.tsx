@@ -9,14 +9,12 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock3,
-  ExternalLink,
   FileText,
   ImageIcon,
   Landmark,
   Loader2,
   LogOut,
   Printer,
-  RefreshCw,
   Save,
   ShieldCheck,
   UserRound,
@@ -892,28 +890,6 @@ export default function AdminRequestDetailsPage() {
                 </div>
               </div>
 
-              {request.id_image_path && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    void loadIdImage(
-                      request.id_image_path!
-                    )
-                  }
-                  disabled={idImageLoading}
-                  className="inline-flex items-center gap-2 rounded-lg border border-[#cdd9e2] px-4 py-2 text-sm font-bold text-[#0b304b] disabled:opacity-50"
-                >
-                  <RefreshCw
-                    size={16}
-                    className={
-                      idImageLoading
-                        ? "animate-spin"
-                        : ""
-                    }
-                  />
-                  Refresh ID
-                </button>
-              )}
             </div>
 
             <p className="mt-5 text-sm leading-7 text-[#697d8c]">
@@ -965,7 +941,7 @@ export default function AdminRequestDetailsPage() {
                     className="max-h-110 max-w-full rounded-lg object-contain"
                     onError={() =>
                       setIdImageError(
-                        "The ID image could not be displayed. Try refreshing the temporary link."
+                        "The ID image could not be displayed. Reload the request details to generate a new temporary link."
                       )
                     }
                   />
@@ -983,22 +959,12 @@ export default function AdminRequestDetailsPage() {
                     View Submitted ID
                   </button>
 
-                  <a
-                    href={idImageUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#cdd9e2] px-5 py-3 text-sm font-bold text-[#0b304b]"
-                  >
-                    <ExternalLink size={18} />
-                    Open Full Image
-                  </a>
                 </div>
 
                 <p className="text-xs leading-6 text-[#697d8c]">
-                  This image link expires after five
-                  minutes. Click Refresh ID to generate
-                  a new temporary link.
+                  This secure image link expires after
+                  five minutes. Reload the request details
+                  to generate a new link.
                 </p>
               </div>
             ) : (
@@ -1448,14 +1414,14 @@ export default function AdminRequestDetailsPage() {
 
       {idPreviewOpen && idImageUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 print:hidden"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 print:hidden"
           role="presentation"
         >
           <section
             role="dialog"
             aria-modal="true"
             aria-label="Submitted valid ID preview"
-            className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+            className="flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between gap-4 border-b px-5 py-4">
               <div>
@@ -1479,12 +1445,12 @@ export default function AdminRequestDetailsPage() {
               </button>
             </div>
 
-            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#eef2f5] p-5">
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#eef2f5] p-4 sm:p-6">
 
               <img
                 src={idImageUrl}
                 alt="Full-size submitted valid ID"
-                className="max-h-[75vh] max-w-full object-contain"
+                className="max-h-full max-w-full object-contain"
               />
             </div>
           </section>

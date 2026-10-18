@@ -170,11 +170,6 @@ function StatCard({
       iconColor: "text-[#2563a6]",
     },
 
-    Approved: {
-      background: "bg-[#e7f4ec]",
-      iconColor: "text-[#267553]",
-    },
-
     "Ready for Claiming": {
       background: "bg-[#e7f4ec]",
       iconColor: "text-[#267553]",
@@ -500,7 +495,6 @@ export default function AdminPage() {
 
   const pending = countStatus("Pending");
   const processing = countStatus("Processing");
-  const approved = countStatus("Approved");
   const ready = countStatus("Ready for Claiming");
   const claimed = countStatus("Claimed");
   const rejected = countStatus("Rejected");
@@ -669,7 +663,7 @@ export default function AdminPage() {
         )}
 
 
-        <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-8 md:[&>*]:col-span-2 md:[&>*:nth-child(5)]:col-start-2 [&>*:last-child]:col-span-2 [&>*:last-child]:w-1/2 [&>*:last-child]:justify-self-center md:[&>*:last-child]:w-full md:[&>*:last-child]:justify-self-stretch">
           <StatCard
             title="Total Requests"
             count={requests.length}
@@ -686,12 +680,6 @@ export default function AdminPage() {
             title="Processing"
             count={processing}
             icon={Loader2}
-          />
-
-          <StatCard
-            title="Approved"
-            count={approved}
-            icon={ShieldCheck}
           />
 
           <StatCard
