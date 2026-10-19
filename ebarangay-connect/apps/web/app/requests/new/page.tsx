@@ -978,8 +978,7 @@ export default function NewRequestPage() {
                 href="/requests"
                 className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-[#d5bd81]"
               >
-                View My Requests
-                <ArrowRight size={16} />
+                
               </Link>
             </section>
 

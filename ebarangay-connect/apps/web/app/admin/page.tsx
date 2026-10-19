@@ -663,7 +663,7 @@ export default function AdminPage() {
         )}
 
 
-        <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-8 md:[&>*]:col-span-2 md:[&>*:nth-child(5)]:col-start-2 [&>*:last-child]:col-span-2 [&>*:last-child]:w-1/2 [&>*:last-child]:justify-self-center md:[&>*:last-child]:w-full md:[&>*:last-child]:justify-self-stretch">
+        <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-8 md:*:col-span-2 md:[&>*:nth-child(5)]:col-start-2 [&>*:last-child]:col-span-2 [&>*:last-child]:w-1/2 [&>*:last-child]:justify-self-center md:[&>*:last-child]:w-full md:[&>*:last-child]:justify-self-stretch">
           <StatCard
             title="Total Requests"
             count={requests.length}

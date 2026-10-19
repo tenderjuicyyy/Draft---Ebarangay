@@ -96,7 +96,11 @@ function StatusIcon({
   }
 }
 
-function StatusTracker({ status }: { status: string | null }) {
+function StatusTracker({
+  status,
+}: {
+  status: string | null;
+}) {
   const currentStatus = status?.toLowerCase() || "pending";
 
   if (currentStatus === "rejected") {
@@ -112,7 +116,7 @@ function StatusTracker({ status }: { status: string | null }) {
             </p>
             <p className="mt-2 text-sm leading-7 text-[#943d31]">
               This request has been rejected by the barangay.
-              Review the status history below for any remarks provided.
+              Review the status history for any remarks provided.
             </p>
           </div>
         </div>
@@ -152,25 +156,25 @@ function StatusTracker({ status }: { status: string | null }) {
   );
 
   return (
-    <div className="mt-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
+    <div className="mt-8 w-full">
+      <div className="mb-6">
         <p className="text-sm font-black text-[#0b304b]">
           Request Progress
         </p>
-        <span className="text-xs font-bold text-[#718391]">
-          {status || "Pending"}
-        </span>
       </div>
 
-      <div className="flex items-start">
+      <div className="flex w-full items-start">
         {steps.map((step, index) => {
           const Icon = step.icon;
           const isCompleted = currentIndex >= index;
           const isCurrent = currentIndex === index;
 
           return (
-            <div key={step.value} className="flex flex-1 items-start">
-              <div className="flex min-w-16 flex-col items-center text-center">
+            <div
+              key={step.value}
+              className="flex min-w-0 flex-1 items-start"
+            >
+              <div className="flex min-w-0 flex-col items-center text-center">
                 <div
                   className={`flex h-11 w-11 items-center justify-center border ${
                     isCompleted
@@ -202,7 +206,7 @@ function StatusTracker({ status }: { status: string | null }) {
 
               {index < steps.length - 1 && (
                 <div
-                  className={`mx-2 mt-5 h-1 flex-1 ${
+                  className={`mx-2 mt-5 h-1 min-w-2 flex-1 ${
                     currentIndex > index
                       ? "bg-[#d5bd81]"
                       : "bg-[#e3e9ee]"
@@ -296,7 +300,9 @@ export default function RequestDetailsPage() {
 
       if (historyError) {
         console.error("HISTORY ERROR:", historyError);
-        setErrorMessage(`HISTORY ERROR: ${historyError.message}`);
+        setErrorMessage(
+          `HISTORY ERROR: ${historyError.message}`
+        );
         setHistory([]);
       } else {
         setHistory((historyData as HistoryItem[]) || []);
@@ -429,11 +435,9 @@ export default function RequestDetailsPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#0b304b] text-white">
             <Loader2 size={28} className="animate-spin" />
           </div>
-
           <p className="mt-5 text-lg font-black text-[#0b304b]">
             Loading request details
           </p>
-
           <p className="mt-2 text-sm text-[#697d8c]">
             Getting your document request information.
           </p>
@@ -444,19 +448,16 @@ export default function RequestDetailsPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c7d7e3] sm:text-xs">
             Digital Citizen Services Portal
           </span>
-
           <span className="hidden text-xs text-[#c7d7e3] sm:block">
             eBarangay Connect
           </span>
         </div>
       </div>
-
 
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
@@ -464,18 +465,15 @@ export default function RequestDetailsPage() {
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
               <Landmark size={23} strokeWidth={1.7} />
             </div>
-
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d5bd81]">
                 Digital Barangay Portal
               </p>
-
               <p className="mt-1 text-lg font-black tracking-tight sm:text-xl">
                 eBarangay Connect
               </p>
             </div>
           </Link>
-
 
           <Link
             href="/requests"
@@ -488,7 +486,6 @@ export default function RequestDetailsPage() {
         </div>
       </header>
 
-
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -496,13 +493,11 @@ export default function RequestDetailsPage() {
             backgroundImage: "url('/barangay-hall.jpg')",
           }}
         />
-
         <div className="absolute inset-0 bg-linear-to-r from-[#061b2b]/95 via-[#0b304b]/90 to-[#0b304b]/75" />
 
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16">
           <div className="flex items-center gap-3">
             <span className="h-px w-10 bg-[#d5bd81]" />
-
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2c991]">
               Resident Portal
             </p>
@@ -519,9 +514,7 @@ export default function RequestDetailsPage() {
         </div>
       </section>
 
-
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
-
         {errorMessage && (
           <div
             role="alert"
@@ -530,12 +523,11 @@ export default function RequestDetailsPage() {
             <p className="font-black text-[#943d31]">
               Something went wrong
             </p>
-            <p className="mt-2 wrap-wrap-break-word text-sm leading-7 text-[#943d31]">
+            <p className="mt-2 wrap-break-word text-sm leading-7 text-[#943d31]">
               {errorMessage}
             </p>
           </div>
         )}
-
 
         {successMessage && (
           <div
@@ -546,7 +538,6 @@ export default function RequestDetailsPage() {
               size={22}
               className="mt-0.5 shrink-0 text-[#357c60]"
             />
-
             <div>
               <p className="font-black text-[#245e48]">
                 Request Updated
@@ -563,16 +554,13 @@ export default function RequestDetailsPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
               <FileText size={27} />
             </div>
-
             <h2 className="mt-6 text-2xl font-black text-[#0b304b]">
               Request not found
             </h2>
-
             <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[#697d8c]">
               This request does not exist or it does not
               belong to your account.
             </p>
-
             <Link
               href="/requests"
               className="mt-7 inline-flex items-center gap-2 bg-[#0b304b] px-6 py-3.5 text-sm font-black text-white transition hover:bg-[#174b70]"
@@ -583,24 +571,20 @@ export default function RequestDetailsPage() {
           </section>
         ) : (
           <>
-
             <section className="mt-7 bg-[#0b304b] p-7 text-white sm:p-9">
               <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e2c991]">
                     Request #{request.id}
                   </p>
-
                   <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
                     {documentType?.name || "Unknown Document"}
                   </h2>
-
                   <p className="mt-4 max-w-2xl text-sm leading-7 text-[#c7d7e3]">
                     Review your request information, current
                     processing status, and barangay updates.
                   </p>
                 </div>
-
                 <span
                   className={`inline-flex w-fit shrink-0 items-center gap-2 px-4 py-2 text-sm font-black ${statusStyle(
                     request.status
@@ -612,233 +596,103 @@ export default function RequestDetailsPage() {
               </div>
             </section>
 
-            <div className="mt-7 grid gap-7 lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-[1.25fr_0.75fr] lg:grid-rows-[auto_auto]">
+              <section className="min-w-0 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8 lg:col-start-1 lg:row-start-1">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                  Request Information
+                </p>
+                <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+                  Document Details
+                </h2>
 
-              <div className="space-y-7">
-
-                <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
-                    Request Information
-                  </p>
-
-                  <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
-                    Document Details
-                  </h2>
-
-                  <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                    <div className="bg-[#edf2f5] p-5">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
-                        Request ID
-                      </p>
-                      <p className="mt-3 text-lg font-black text-[#0b304b]">
-                        #{request.id}
-                      </p>
-                    </div>
-
-                    <div className="bg-[#edf2f5] p-5">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
-                        Document
-                      </p>
-                      <p className="mt-3 font-black text-[#0b304b]">
-                        {documentType?.name || "Unknown Document"}
-                      </p>
-                    </div>
-
-                    <div className="bg-[#edf2f5] p-5">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
-                        Processing Time
-                      </p>
-                      <p className="mt-3 font-black text-[#0b304b]">
-                        {documentType?.processing_days != null
-                          ? `${documentType.processing_days} day${
-                              documentType.processing_days === 1 ? "" : "s"
-                            }`
-                          : "Not specified"}
-                      </p>
-                    </div>
-
-                    <div className="bg-[#f8f0df] p-5">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#9b7b40]">
-                        Document Fee
-                      </p>
-                      <p className="mt-3 font-black text-[#0b304b]">
-                        {documentType?.fee != null
-                          ? `₱${documentType.fee}`
-                          : "Not specified"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-7 border-t border-[#e3e9ee] pt-7">
-                    <p className="text-xs font-bold uppercase tracking-wide text-[#9b7b40]">
-                      Purpose of Request
+                <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                  <div className="bg-[#edf2f5] p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
+                      Request ID
                     </p>
-
-                    <div className="mt-4 bg-[#edf2f5] p-5">
-                      <p className="wrap-break-word text-sm leading-7 text-[#697d8c]">
-                        {request.purpose || "No purpose provided."}
-                      </p>
-                    </div>
+                    <p className="mt-3 text-lg font-black text-[#0b304b]">
+                      #{request.id}
+                    </p>
                   </div>
-                </section>
 
+                  <div className="bg-[#edf2f5] p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
+                      Document
+                    </p>
+                    <p className="mt-3 font-black text-[#0b304b]">
+                      {documentType?.name || "Unknown Document"}
+                    </p>
+                  </div>
 
-                <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
-                    Progress
+                  <div className="bg-[#edf2f5] p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[#718391]">
+                      Processing Time
+                    </p>
+                    <p className="mt-3 font-black text-[#0b304b]">
+                      {documentType?.processing_days != null
+                        ? `${documentType.processing_days} day${
+                            documentType.processing_days === 1
+                              ? ""
+                              : "s"
+                          }`
+                        : "Not specified"}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#f8f0df] p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[#9b7b40]">
+                      Document Fee
+                    </p>
+                    <p className="mt-3 font-black text-[#0b304b]">
+                      {documentType?.fee != null
+                        ? `₱${documentType.fee}`
+                        : "Not specified"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-7 border-t border-[#e3e9ee] pt-7">
+                  <p className="text-xs font-bold uppercase tracking-wide text-[#9b7b40]">
+                    Purpose of Request
                   </p>
+                  <div className="mt-4 bg-[#edf2f5] p-5">
+                    <p className="wrap-break-word text-sm leading-7 text-[#697d8c]">
+                      {request.purpose || "No purpose provided."}
+                    </p>
+                  </div>
+                </div>
+              </section>
 
-                  <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
+              <section className="min-w-0 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8 lg:col-start-1 lg:row-start-2">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                  Progress
+                </p>
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-2xl font-black text-[#0b304b]">
                     Current Status
                   </h2>
 
-                  <StatusTracker status={request.status} />
-                </section>
+                  <span
+                    className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-black ${statusStyle(
+                      request.status
+                    )}`}
+                  >
+                    <StatusIcon status={request.status} size={14} />
+                    {request.status || "Pending"}
+                  </span>
+                </div>
 
+                <StatusTracker status={request.status} />
+              </section>
 
-                {isCompleted && (
-                  <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
-                        <QrCode size={24} />
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
-                          Document Pickup
-                        </p>
-
-                        <h2 className="mt-1 text-xl font-black text-[#0b304b]">
-                          {isClaimed
-                            ? "Document Already Claimed"
-                            : "Document Claim QR"}
-                        </h2>
-                      </div>
-                    </div>
-
-                    {isClaimed ? (
-                      <div className="mt-7 flex items-start gap-4 border-l-4 border-[#357c60] bg-[#edf7f1] p-5 text-[#245e48]">
-                        <CheckCircle2 size={23} className="shrink-0" />
-
-                        <div>
-                          <p className="font-black">
-                            Your document has been claimed.
-                          </p>
-
-                          <p className="mt-2 text-sm leading-7">
-                            Claimed on{" "}
-                            {new Date(request.claimed_at!).toLocaleString(
-                              "en-PH",
-                              {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              }
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ) : request.claim_token ? (
-                      <>
-                        <div className="mt-7 border border-[#dce3e8] bg-[#f8fafb] p-6 text-center">
-                          <div className="mx-auto inline-flex max-w-full items-center justify-center bg-white p-5 shadow-sm">
-                            <QRCodeSVG
-                              value={request.claim_token}
-                              size={210}
-                              level="H"
-                              marginSize={1}
-                              bgColor="#ffffff"
-                              fgColor="#0b304b"
-                              title={`Claim QR for request ${request.id}`}
-                            />
-                          </div>
-
-                          <p className="mt-6 text-lg font-black text-[#0b304b]">
-                            Ready for Pickup
-                          </p>
-
-                          <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-[#697d8c]">
-                            Present this QR code to the barangay staff
-                            when claiming your document.
-                          </p>
-
-                          <p className="mt-4 text-xs font-bold text-[#718391]">
-                            Request #{request.id}
-                          </p>
-                        </div>
-
-                        <div className="mt-5 flex items-start gap-3 border-l-4 border-[#d5bd81] bg-[#f8f0df] p-5">
-                          <QrCode
-                            size={18}
-                            className="mt-0.5 shrink-0 text-[#9b7b40]"
-                          />
-
-                          <p className="text-sm leading-7 text-[#6c592f]">
-                            Keep your QR code private. Barangay staff
-                            must verify your identity and request
-                            before releasing the document. A QR scan
-                            alone does not authorize release.
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="mt-7 bg-[#f8f0df] p-5">
-                        <p className="text-sm leading-7 text-[#8e6b25]">
-                          Your document is completed, but its claim
-                          QR is not available yet. Please contact
-                          the barangay office.
-                        </p>
-                      </div>
-                    )}
-                  </section>
-                )}
-
-
-                {canCancel && (
-                  <section className="border border-[#e7c8bf] bg-white p-6 shadow-sm sm:p-8">
-                    <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a9473c]">
-                          Request Options
-                        </p>
-
-                        <h2 className="mt-3 text-xl font-black text-[#0b304b]">
-                          Need to cancel this request?
-                        </h2>
-
-                        <p className="mt-3 max-w-xl text-sm leading-7 text-[#697d8c]">
-                          You can cancel this request while it is
-                          still pending. Once barangay processing
-                          begins, cancellation is no longer available.
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setErrorMessage("");
-                          setSuccessMessage("");
-                          setShowCancelModal(true);
-                        }}
-                        className="inline-flex shrink-0 items-center justify-center gap-2 border border-[#a9473c] px-5 py-3.5 text-sm font-black text-[#a9473c] transition hover:bg-[#a9473c] hover:text-white"
-                      >
-                        <Ban size={17} />
-                        Cancel Request
-                      </button>
-                    </div>
-                  </section>
-                )}
-              </div>
-
-
-              <section className="h-fit border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8">
+              <section className="min-w-0 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8 lg:col-start-2 lg:row-span-2 lg:row-start-1">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
                   Activity
                 </p>
-
                 <h2 className="mt-3 text-2xl font-black text-[#0b304b]">
                   Status History
                 </h2>
-
                 <p className="mt-3 text-sm leading-7 text-[#697d8c]">
                   Updates and remarks provided for this request.
                 </p>
@@ -872,7 +726,6 @@ export default function RequestDetailsPage() {
                             <p className="font-black text-[#0b304b]">
                               {item.status}
                             </p>
-
                             {index === history.length - 1 && (
                               <span className="bg-[#e8eef3] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-[#0b304b]">
                                 Latest
@@ -889,11 +742,135 @@ export default function RequestDetailsPage() {
                   </div>
                 )}
               </section>
+
+              {isCompleted && (
+                <section className="min-w-0 border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-8 lg:col-span-2">
+                  <div className="mx-auto w-full max-w-2xl">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
+                        <QrCode size={24} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9b7b40]">
+                          Document Pickup
+                        </p>
+                        <h2 className="mt-1 text-xl font-black text-[#0b304b]">
+                          {isClaimed
+                            ? "Document Already Claimed"
+                            : "Document Claim QR"}
+                        </h2>
+                      </div>
+                    </div>
+
+                    {isClaimed ? (
+                      <div className="mt-7 flex items-start gap-4 border-l-4 border-[#357c60] bg-[#edf7f1] p-5 text-[#245e48]">
+                        <CheckCircle2 size={23} className="shrink-0" />
+                        <div>
+                          <p className="font-black">
+                            Your document has been claimed.
+                          </p>
+                          <p className="mt-2 text-sm leading-7">
+                            Claimed on{" "}
+                            {new Date(request.claimed_at!).toLocaleString(
+                              "en-PH",
+                              {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    ) : request.claim_token ? (
+                      <>
+                        <div className="mt-7 border border-[#dce3e8] bg-[#f8fafb] p-6 text-center">
+                          <div className="mx-auto inline-flex max-w-full items-center justify-center bg-white p-5 shadow-sm">
+                            <QRCodeSVG
+                              value={request.claim_token}
+                              size={210}
+                              level="H"
+                              marginSize={1}
+                              bgColor="#ffffff"
+                              fgColor="#0b304b"
+                              title={`Claim QR for request ${request.id}`}
+                              className="h-auto max-w-full"
+                            />
+                          </div>
+
+                          <p className="mt-6 text-lg font-black text-[#0b304b]">
+                            Ready for Pickup
+                          </p>
+                          <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-[#697d8c]">
+                            Present this QR code to the barangay
+                            staff when claiming your document.
+                          </p>
+                          <p className="mt-4 text-xs font-bold text-[#718391]">
+                            Request #{request.id}
+                          </p>
+                        </div>
+
+                        <div className="mt-5 flex items-start gap-3 border-l-4 border-[#d5bd81] bg-[#f8f0df] p-5">
+                          <QrCode
+                            size={18}
+                            className="mt-0.5 shrink-0 text-[#9b7b40]"
+                          />
+                          <p className="text-sm leading-7 text-[#6c592f]">
+                            Keep your QR code private. Barangay staff
+                            must verify your identity and request
+                            before releasing the document. A QR scan
+                            alone does not authorize release.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mt-7 bg-[#f8f0df] p-5">
+                        <p className="text-sm leading-7 text-[#8e6b25]">
+                          Your document is completed, but its claim
+                          QR is not available yet. Please contact
+                          the barangay office.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {canCancel && (
+                <section className="min-w-0 border border-[#e7c8bf] bg-white p-6 shadow-sm sm:p-8 lg:col-span-2">
+                  <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a9473c]">
+                        Request Options
+                      </p>
+                      <h2 className="mt-3 text-xl font-black text-[#0b304b]">
+                        Need to cancel this request?
+                      </h2>
+                      <p className="mt-3 max-w-xl text-sm leading-7 text-[#697d8c]">
+                        You can cancel this request while it is
+                        still pending. Once barangay processing
+                        begins, cancellation is no longer available.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setErrorMessage("");
+                        setSuccessMessage("");
+                        setShowCancelModal(true);
+                      }}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 border border-[#a9473c] px-5 py-3.5 text-sm font-black text-[#a9473c] transition hover:bg-[#a9473c] hover:text-white"
+                    >
+                      <Ban size={17} />
+                      Cancel Request
+                    </button>
+                  </div>
+                </section>
+              )}
             </div>
           </>
         )}
       </div>
-
 
       <footer className="border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
@@ -901,7 +878,6 @@ export default function RequestDetailsPage() {
           <p>Digital barangay services for residents.</p>
         </div>
       </footer>
-
 
       {showCancelModal && request && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/75 px-4">
