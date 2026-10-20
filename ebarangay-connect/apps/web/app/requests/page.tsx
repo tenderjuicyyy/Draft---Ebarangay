@@ -463,12 +463,7 @@ export default function RequestsPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#eef2f5] px-6 font-sans">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center bg-[#0b304b] text-white">
-            <Loader2
-              size={28}
-              className="animate-spin"
-            />
-          </div>
+          <Loader2 size={34} className="mx-auto animate-spin text-[#0b304b]" />
 
           <p className="mt-5 text-lg font-black text-[#0b304b]">
             Loading your requests

@@ -659,7 +659,7 @@ export default function ProfilePage() {
       <main className="flex min-h-screen items-center justify-center bg-[#eef2f5]">
         <div className="text-center">
           <Loader2
-            size={32}
+            size={34}
             className="mx-auto animate-spin text-[#0b304b]"
           />
           <p className="mt-5 font-black text-[#0b304b]">

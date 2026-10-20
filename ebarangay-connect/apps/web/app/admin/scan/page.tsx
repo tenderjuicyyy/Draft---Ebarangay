@@ -526,7 +526,7 @@ export default function AdminScanPage() {
       <main className="flex min-h-screen items-center justify-center bg-[#eef2f5]">
         <div className="text-center">
           <Loader2
-            size={32}
+            size={34}
             className="mx-auto animate-spin text-[#0b304b]"
           />
 
