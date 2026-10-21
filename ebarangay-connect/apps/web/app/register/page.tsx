@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -23,11 +22,11 @@ import { supabase } from "@/lib/supabase";
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -39,6 +38,7 @@ export default function RegisterPage() {
     if (loading) return;
 
     setErrorMessage("");
+    setEmailError("");
     setSuccessMessage("");
 
     const cleanedName = fullName.trim();
@@ -55,9 +55,7 @@ export default function RegisterPage() {
     }
 
     if (password.length < 8) {
-      setErrorMessage(
-        "Password must be at least 8 characters."
-      );
+      setErrorMessage("Password must be at least 8 characters.");
       return;
     }
 
@@ -68,7 +66,7 @@ export default function RegisterPage() {
 
     if (!agreedToTerms) {
       setErrorMessage(
-        "Please accept the Terms and Conditions before registering."
+        "Please accept the Terms and Conditions before registering.",
       );
       return;
     }
@@ -95,9 +93,7 @@ export default function RegisterPage() {
           message.includes("already registered") ||
           message.includes("already exists")
         ) {
-          setSuccessMessage(
-            "If this email address is eligible for registration, you will receive a verification email. If you already have an account, please sign in or reset your password."
-          );
+          setEmailError("An account already exist with this email address.");
           return;
         }
 
@@ -106,7 +102,7 @@ export default function RegisterPage() {
           message.includes("too many requests")
         ) {
           setErrorMessage(
-            "Too many registration attempts. Please wait before trying again."
+            "Too many registration attempts. Please wait before trying again.",
           );
           return;
         }
@@ -117,31 +113,33 @@ export default function RegisterPage() {
 
       if (!data.user) {
         setErrorMessage(
-          "Unable to process your registration. Please try again."
+          "Unable to process your registration. Please try again.",
         );
         return;
       }
 
-
-
-
+      if (
+        Array.isArray(data.user.identities) &&
+        data.user.identities.length === 0
+      ) {
+        setEmailError("An account already exist with this email address.");
+        return;
+      }
 
       if (data.session) {
         setSuccessMessage(
-          "Your registration request was processed. If you are signed in, you can continue to your dashboard. Otherwise, check your email or sign in."
+          "Your registration request was processed. If you are signed in, you can continue to your dashboard. Otherwise, check your email or sign in.",
         );
       } else {
         setSuccessMessage(
-          "Registration request received. If this email is eligible for a new account, a verification message will be sent. If you already registered, please sign in or use Forgot Password."
+          "Registration request received. If this email is eligible for a new account, a verification message will be sent. If you already registered, please sign in or use Forgot Password.",
         );
       }
 
       setPassword("");
       setConfirmPassword("");
     } catch {
-      setErrorMessage(
-        "Something went wrong. Please try again later."
-      );
+      setErrorMessage("Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -152,7 +150,6 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#c7d7e3]">
@@ -163,7 +160,6 @@ export default function RegisterPage() {
           </span>
         </div>
       </div>
-
 
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
@@ -191,9 +187,7 @@ export default function RegisterPage() {
         </div>
       </header>
 
-
       <div className="mx-auto grid min-h-[calc(100vh-132px)] max-w-7xl lg:grid-cols-[0.95fr_1.05fr]">
-
         <section className="relative hidden overflow-hidden bg-[#102f48] px-10 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-14">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-75"
@@ -218,9 +212,9 @@ export default function RegisterPage() {
             </h1>
 
             <p className="mt-7 max-w-md text-sm leading-8 text-[#d6e1e9]">
-              Create your resident account to request barangay
-              documents, monitor their progress, and manage
-              your transactions through eBarangay Connect.
+              Create your resident account to request barangay documents,
+              monitor their progress, and manage your transactions through
+              eBarangay Connect.
             </p>
 
             <div className="mt-12 space-y-7">
@@ -228,36 +222,28 @@ export default function RegisterPage() {
                 {
                   icon: FileText,
                   title: "Request documents online",
-                  description:
-                    "Submit barangay requests from your account.",
+                  description: "Submit barangay requests from your account.",
                 },
                 {
                   icon: CheckCircle2,
                   title: "Track your requests",
-                  description:
-                    "Monitor request status from your dashboard.",
+                  description: "Monitor request status from your dashboard.",
                 },
                 {
                   icon: ShieldCheck,
                   title: "Personal resident account",
-                  description:
-                    "Your requests stay connected to your account.",
+                  description: "Your requests stay connected to your account.",
                 },
               ].map((feature) => {
                 const Icon = feature.icon;
 
                 return (
-                  <div
-                    key={feature.title}
-                    className="flex items-start gap-4"
-                  >
+                  <div key={feature.title} className="flex items-start gap-4">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/20 bg-white/10 text-[#e2c991]">
                       <Icon size={20} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold">
-                        {feature.title}
-                      </p>
+                      <p className="text-sm font-bold">{feature.title}</p>
                       <p className="mt-2 text-xs leading-6 text-[#c1d0dc]">
                         {feature.description}
                       </p>
@@ -274,7 +260,6 @@ export default function RegisterPage() {
             </p>
           </div>
         </section>
-
 
         <section className="flex min-w-0 flex-col bg-white">
           <div className="px-6 pt-7 sm:px-10 lg:hidden">
@@ -303,11 +288,10 @@ export default function RegisterPage() {
                 </h2>
 
                 <p className="mt-4 text-sm leading-7 text-[#697d8c]">
-                  Register to submit and track your barangay
-                  document requests online.
+                  Register to submit and track your barangay document requests
+                  online.
                 </p>
               </div>
-
 
               {errorMessage && (
                 <div
@@ -317,12 +301,9 @@ export default function RegisterPage() {
                   <p className="text-xs font-black uppercase text-[#943d31]">
                     Registration issue
                   </p>
-                  <p className="mt-2 text-sm text-[#943d31]">
-                    {errorMessage}
-                  </p>
+                  <p className="mt-2 text-sm text-[#943d31]">{errorMessage}</p>
                 </div>
               )}
-
 
               {successMessage && (
                 <div
@@ -355,11 +336,7 @@ export default function RegisterPage() {
                 </div>
               )}
 
-
-              <form
-                onSubmit={handleRegister}
-                className="space-y-6"
-              >
+              <form onSubmit={handleRegister} className="space-y-6">
                 <div>
                   <label
                     htmlFor="fullName"
@@ -378,9 +355,7 @@ export default function RegisterPage() {
                       autoComplete="name"
                       required
                       value={fullName}
-                      onChange={(event) =>
-                        setFullName(event.target.value)
-                      }
+                      onChange={(event) => setFullName(event.target.value)}
                       placeholder="Juan Dela Cruz"
                       disabled={loading}
                       className={inputClass}
@@ -406,14 +381,30 @@ export default function RegisterPage() {
                       autoComplete="email"
                       required
                       value={email}
-                      onChange={(event) =>
-                        setEmail(event.target.value)
-                      }
+                      onChange={(event) => {
+                        setEmail(event.target.value);
+                        if (emailError) setEmailError("");
+                      }}
                       placeholder="you@example.com"
                       disabled={loading}
-                      className={inputClass}
+                      aria-invalid={Boolean(emailError)}
+                      aria-describedby={emailError ? "email-error" : undefined}
+                      className={`${inputClass} ${
+                        emailError
+                          ? "border-[#b74d3d] focus:border-[#b74d3d] focus:ring-[#b74d3d]/10"
+                          : ""
+                      }`}
                     />
                   </div>
+                  {emailError && (
+                    <p
+                      id="email-error"
+                      role="alert"
+                      className="mt-2 text-xs leading-5 text-[#943d31]"
+                    >
+                      {emailError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -431,29 +422,21 @@ export default function RegisterPage() {
                       />
                       <input
                         id="password"
-                        type={
-                          showPassword ? "text" : "password"
-                        }
+                        type={showPassword ? "text" : "password"}
                         autoComplete="new-password"
                         required
                         minLength={8}
                         value={password}
-                        onChange={(event) =>
-                          setPassword(event.target.value)
-                        }
+                        onChange={(event) => setPassword(event.target.value)}
                         placeholder="At least 8 characters"
                         disabled={loading}
                         className={inputClass}
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowPassword(!showPassword)
-                        }
+                        onClick={() => setShowPassword(!showPassword)}
                         aria-label={
-                          showPassword
-                            ? "Hide password"
-                            : "Show password"
+                          showPassword ? "Hide password" : "Show password"
                         }
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8497a5]"
                       >
@@ -480,19 +463,13 @@ export default function RegisterPage() {
                       />
                       <input
                         id="confirmPassword"
-                        type={
-                          showConfirmPassword
-                            ? "text"
-                            : "password"
-                        }
+                        type={showConfirmPassword ? "text" : "password"}
                         autoComplete="new-password"
                         required
                         minLength={8}
                         value={confirmPassword}
                         onChange={(event) =>
-                          setConfirmPassword(
-                            event.target.value
-                          )
+                          setConfirmPassword(event.target.value)
                         }
                         placeholder="Re-enter password"
                         disabled={loading}
@@ -501,9 +478,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          setShowConfirmPassword(
-                            !showConfirmPassword
-                          )
+                          setShowConfirmPassword(!showConfirmPassword)
                         }
                         aria-label={
                           showConfirmPassword
@@ -528,12 +503,10 @@ export default function RegisterPage() {
                     className="mt-0.5 shrink-0 text-[#9b7b40]"
                   />
                   <p className="text-xs leading-6 text-[#697d8c]">
-                    Your password must contain at least 8
-                    characters. Email verification may be
-                    required before signing in.
+                    Your password must contain at least 8 characters. Email
+                    verification may be required before signing in.
                   </p>
                 </div>
-
 
                 <div className="border border-[#dce3e8] bg-[#f8fafc] p-4">
                   <div className="flex items-start gap-3">
@@ -542,9 +515,7 @@ export default function RegisterPage() {
                       type="checkbox"
                       checked={agreedToTerms}
                       onChange={(event) =>
-                        setAgreedToTerms(
-                          event.target.checked
-                        )
+                        setAgreedToTerms(event.target.checked)
                       }
                       disabled={loading}
                       className="mt-1 h-4 w-4 shrink-0 accent-[#0b304b]"
@@ -573,10 +544,7 @@ export default function RegisterPage() {
                 >
                   {loading ? (
                     <>
-                      <Loader2
-                        size={18}
-                        className="animate-spin"
-                      />
+                      <Loader2 size={18} className="animate-spin" />
                       Processing registration...
                     </>
                   ) : (
@@ -609,7 +577,6 @@ export default function RegisterPage() {
         </section>
       </div>
 
-
       {showTerms && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/75 p-4"
@@ -627,15 +594,9 @@ export default function RegisterPage() {
           >
             <div className="flex items-center justify-between bg-[#0b304b] px-5 py-5 text-white sm:px-7">
               <div className="flex items-center gap-3">
-                <ShieldCheck
-                  size={25}
-                  className="text-[#d5bd81]"
-                />
+                <ShieldCheck size={25} className="text-[#d5bd81]" />
                 <div>
-                  <h2
-                    id="terms-title"
-                    className="text-lg font-black"
-                  >
+                  <h2 id="terms-title" className="text-lg font-black">
                     Terms and Conditions
                   </h2>
                   <p className="text-xs text-[#c7d7e3]">
@@ -656,8 +617,8 @@ export default function RegisterPage() {
 
             <div className="space-y-5 overflow-y-auto px-5 py-6 text-sm leading-7 text-[#526879] sm:px-7">
               <p>
-                By registering for eBarangay Connect, you
-                acknowledge and agree to the following:
+                By registering for eBarangay Connect, you acknowledge and agree
+                to the following:
               </p>
 
               <div>
@@ -665,10 +626,9 @@ export default function RegisterPage() {
                   1. Personal Information
                 </h3>
                 <p>
-                  We collect your name, email address,
-                  contact number, address, identification
-                  documents, and request details when
-                  required to provide barangay services.
+                  We collect your name, email address, contact number, address,
+                  identification documents, and request details when required to
+                  provide barangay services.
                 </p>
               </div>
 
@@ -677,21 +637,17 @@ export default function RegisterPage() {
                   2. Use of Information
                 </h3>
                 <p>
-                  Your information will be used for account
-                  verification, document processing, request
-                  tracking, and communication regarding
-                  barangay services.
+                  Your information will be used for account verification,
+                  document processing, request tracking, and communication
+                  regarding barangay services.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-bold text-[#0b304b]">
-                  3. Data Privacy
-                </h3>
+                <h3 className="font-bold text-[#0b304b]">3. Data Privacy</h3>
                 <p>
-                  In accordance with the Data Privacy Act
-                  of 2012 (RA 10173), we are committed to
-                  protecting your personal information and
+                  In accordance with the Data Privacy Act of 2012 (RA 10173), we
+                  are committed to protecting your personal information and
                   limiting access to authorized personnel.
                 </p>
               </div>
@@ -701,10 +657,9 @@ export default function RegisterPage() {
                   4. Data Storage and Security
                 </h3>
                 <p>
-                  Your information will be stored using
-                  appropriate security measures and retained
-                  only as necessary for legitimate purposes
-                  and legal requirements.
+                  Your information will be stored using appropriate security
+                  measures and retained only as necessary for legitimate
+                  purposes and legal requirements.
                 </p>
               </div>
 
@@ -713,9 +668,8 @@ export default function RegisterPage() {
                   5. User Responsibilities
                 </h3>
                 <p>
-                  You agree to provide accurate information,
-                  protect your account credentials, and use
-                  the platform responsibly.
+                  You agree to provide accurate information, protect your
+                  account credentials, and use the platform responsibly.
                 </p>
               </div>
 
@@ -724,29 +678,25 @@ export default function RegisterPage() {
                   6. Your Privacy Rights
                 </h3>
                 <p>
-                  You may request access to or correction of
-                  your personal information and exercise
-                  other rights under applicable data privacy
-                  laws.
+                  You may request access to or correction of your personal
+                  information and exercise other rights under applicable data
+                  privacy laws.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-bold text-[#0b304b]">
-                  7. Agreement
-                </h3>
+                <h3 className="font-bold text-[#0b304b]">7. Agreement</h3>
                 <p>
-                  By clicking &quot;I Agree,&quot; you confirm
-                  that you have read and understood these
-                  Terms and Conditions and Privacy Policy.
+                  By clicking &quot;I Agree,&quot; you confirm that you have
+                  read and understood these Terms and Conditions and Privacy
+                  Policy.
                 </p>
               </div>
 
               <p className="border-t border-[#dce3e8] pt-4 text-xs text-[#697d8c]">
-                This notice explains the intended handling
-                of resident information. Specific privacy
-                requests should be directed to the barangay
-                administration.
+                This notice explains the intended handling of resident
+                information. Specific privacy requests should be directed to the
+                barangay administration.
               </p>
             </div>
 
@@ -768,8 +718,7 @@ export default function RegisterPage() {
                 }}
                 className="flex items-center justify-center gap-2 bg-[#0b304b] px-6 py-3 text-sm font-bold text-white"
               >
-                <CheckCircle2 size={18} />
-                I Agree
+                <CheckCircle2 size={18} />I Agree
               </button>
             </div>
           </div>
