@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -44,14 +43,25 @@ type Profile = {
 
 const BUCKET = "avatars";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-const ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const PROFILE_COLUMNS =
   "id, full_name, email, phone_number, address, role, avatar_url";
+
+async function syncProfileEmail(
+  userId: string,
+  profileEmail: string | null,
+  authEmail: string,
+) {
+  if (!authEmail || profileEmail === authEmail) return;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ email: authEmail })
+    .eq("id", userId);
+
+  if (error) throw error;
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -64,6 +74,10 @@ export default function ProfilePage() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [emailSaving, setEmailSaving] = useState(false);
+  const [emailFeedback, setEmailFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -84,7 +98,6 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const photoBusy = uploading || removing;
-
 
   useEffect(() => {
     let cancelled = false;
@@ -115,12 +128,25 @@ export default function ProfilePage() {
         if (cancelled) return;
 
         if (error || !data) {
-          throw new Error(
-            error?.message || "Profile not found."
-          );
+          throw new Error(error?.message || "Profile not found.");
         }
 
         const loadedProfile = data as Profile;
+        const currentEmail = user.email || "";
+
+        try {
+          await syncProfileEmail(user.id, loadedProfile.email, currentEmail);
+
+          loadedProfile.email = currentEmail || null;
+        } catch (error) {
+          setErrorMessage(
+            error instanceof Error
+              ? `Unable to synchronize your profile email: ${error.message}`
+              : "Unable to synchronize your profile email.",
+          );
+        }
+
+        if (cancelled) return;
 
         setProfile(loadedProfile);
         setFullName(loadedProfile.full_name || "");
@@ -131,17 +157,11 @@ export default function ProfilePage() {
           const { data: signedData, error: signedError } =
             await supabase.storage
               .from(BUCKET)
-              .createSignedUrl(
-                loadedProfile.avatar_url,
-                3600
-              );
+              .createSignedUrl(loadedProfile.avatar_url, 3600);
 
           if (!cancelled) {
             if (signedError) {
-              console.warn(
-                "Avatar loading error:",
-                signedError
-              );
+              console.warn("Avatar loading error:", signedError);
             } else {
               setAvatarSrc(signedData?.signedUrl || "");
             }
@@ -150,9 +170,7 @@ export default function ProfilePage() {
       } catch (error) {
         if (!cancelled) {
           setErrorMessage(
-            error instanceof Error
-              ? error.message
-              : "Unable to load profile."
+            error instanceof Error ? error.message : "Unable to load profile.",
           );
         }
       } finally {
@@ -169,7 +187,6 @@ export default function ProfilePage() {
     };
   }, [router]);
 
-
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -177,7 +194,6 @@ export default function ProfilePage() {
       }
     };
   }, [previewUrl]);
-
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -192,10 +208,7 @@ export default function ProfilePage() {
     document.addEventListener("mousedown", handleOutsideClick);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleOutsideClick
-      );
+      document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, []);
 
@@ -203,7 +216,6 @@ export default function ProfilePage() {
     setErrorMessage("");
     setSuccessMessage("");
   }
-
 
   function handleEditProfile() {
     clearMessages();
@@ -233,10 +245,7 @@ export default function ProfilePage() {
     clearMessages();
   }
 
-
-  function handleFileChange(
-    event: ChangeEvent<HTMLInputElement>
-  ) {
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -244,17 +253,13 @@ export default function ProfilePage() {
     setPhotoMenuOpen(false);
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setErrorMessage(
-        "Please select a JPG, PNG, or WebP image."
-      );
+      setErrorMessage("Please select a JPG, PNG, or WebP image.");
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setErrorMessage(
-        "The image must be 2 MB or smaller."
-      );
+      setErrorMessage("The image must be 2 MB or smaller.");
       event.target.value = "";
       return;
     }
@@ -270,14 +275,8 @@ export default function ProfilePage() {
     fileInputRef.current?.click();
   }
 
-
   async function uploadProfilePicture() {
-    if (
-      !selectedFile ||
-      !profile ||
-      !isEditing ||
-      photoBusy
-    ) {
+    if (!selectedFile || !profile || !isEditing || photoBusy) {
       return;
     }
 
@@ -298,39 +297,32 @@ export default function ProfilePage() {
       }
 
       if (user.id !== profile.id) {
-        throw new Error(
-          "Account verification failed."
-        );
+        throw new Error("Account verification failed.");
       }
 
       const extension =
         selectedFile.type === "image/png"
           ? "png"
           : selectedFile.type === "image/webp"
-          ? "webp"
-          : "jpg";
+            ? "webp"
+            : "jpg";
 
-      const filePath =
-        `${user.id}/${crypto.randomUUID()}.${extension}`;
+      const filePath = `${user.id}/${crypto.randomUUID()}.${extension}`;
 
-      const { error: uploadError } =
-        await supabase.storage
-          .from(BUCKET)
-          .upload(filePath, selectedFile, {
-            contentType: selectedFile.type,
-            cacheControl: "3600",
-            upsert: false,
-          });
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(filePath, selectedFile, {
+          contentType: selectedFile.type,
+          cacheControl: "3600",
+          upsert: false,
+        });
 
       if (uploadError) throw uploadError;
 
       uploadedPath = filePath;
       const previousPath = profile.avatar_url;
 
-      const {
-        data: updatedProfile,
-        error: updateError,
-      } = await supabase
+      const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: filePath })
         .eq("id", user.id)
@@ -339,51 +331,38 @@ export default function ProfilePage() {
 
       if (updateError) throw updateError;
 
-      const {
-        data: signedData,
-        error: signedError,
-      } = await supabase.storage
+      const { data: signedData, error: signedError } = await supabase.storage
         .from(BUCKET)
         .createSignedUrl(filePath, 3600);
 
       if (signedError) {
-        console.warn(
-          "Avatar signed URL error:",
-          signedError
-        );
+        console.warn("Avatar signed URL error:", signedError);
       }
 
       setProfile(updatedProfile as Profile);
       setAvatarSrc(signedData?.signedUrl || "");
       cancelSelectedPhoto();
 
-      setSuccessMessage(
-        "Profile picture updated successfully."
-      );
-
+      setSuccessMessage("Profile picture updated successfully.");
 
       if (
         previousPath &&
         previousPath !== filePath &&
         previousPath.startsWith(`${user.id}/`)
       ) {
-        const { error: removeError } =
-          await supabase.storage
-            .from(BUCKET)
-            .remove([previousPath]);
+        const { error: removeError } = await supabase.storage
+          .from(BUCKET)
+          .remove([previousPath]);
 
         if (removeError) {
-          console.warn(
-            "Old avatar cleanup failed:",
-            removeError
-          );
+          console.warn("Old avatar cleanup failed:", removeError);
         }
       }
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Unable to upload profile picture."
+          : "Unable to upload profile picture.",
       );
 
       if (uploadedPath) {
@@ -394,16 +373,13 @@ export default function ProfilePage() {
           .maybeSingle();
 
         if (data?.avatar_url !== uploadedPath) {
-          await supabase.storage
-            .from(BUCKET)
-            .remove([uploadedPath]);
+          await supabase.storage.from(BUCKET).remove([uploadedPath]);
         }
       }
     } finally {
       setUploading(false);
     }
   }
-
 
   async function removeProfilePicture() {
     if (!profile || !isEditing || photoBusy) return;
@@ -423,18 +399,12 @@ export default function ProfilePage() {
       }
 
       if (user.id !== profile.id) {
-        throw new Error(
-          "Account verification failed."
-        );
+        throw new Error("Account verification failed.");
       }
 
       const previousPath = profile.avatar_url;
 
-
-      const {
-        data: updatedProfile,
-        error: updateError,
-      } = await supabase
+      const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: null })
         .eq("id", user.id)
@@ -450,42 +420,29 @@ export default function ProfilePage() {
       setPhotoMenuOpen(false);
       setShowRemoveConfirm(false);
 
-      setSuccessMessage(
-        "Profile picture removed successfully."
-      );
+      setSuccessMessage("Profile picture removed successfully.");
 
-
-      if (
-        previousPath &&
-        previousPath.startsWith(`${user.id}/`)
-      ) {
-        const { error: storageError } =
-          await supabase.storage
-            .from(BUCKET)
-            .remove([previousPath]);
+      if (previousPath && previousPath.startsWith(`${user.id}/`)) {
+        const { error: storageError } = await supabase.storage
+          .from(BUCKET)
+          .remove([previousPath]);
 
         if (storageError) {
-          console.warn(
-            "Avatar cleanup failed:",
-            storageError
-          );
+          console.warn("Avatar cleanup failed:", storageError);
         }
       }
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Unable to remove profile picture."
+          : "Unable to remove profile picture.",
       );
     } finally {
       setRemoving(false);
     }
   }
 
-
-  async function handleSave(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!profile || !isEditing || saving || photoBusy) {
@@ -507,15 +464,11 @@ export default function ProfilePage() {
       }
 
       if (user.id !== profile.id) {
-        throw new Error(
-          "Account verification failed."
-        );
+        throw new Error("Account verification failed.");
       }
 
       if (!fullName.trim()) {
-        throw new Error(
-          "Full name is required."
-        );
+        throw new Error("Full name is required.");
       }
 
       const { data, error } = await supabase
@@ -540,46 +493,39 @@ export default function ProfilePage() {
       setPhotoMenuOpen(false);
       cancelSelectedPhoto();
 
-      setSuccessMessage(
-        "Profile information updated successfully."
-      );
+      setSuccessMessage("Profile information updated successfully.");
     } catch (error) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to save profile."
+        error instanceof Error ? error.message : "Unable to save profile.",
       );
     } finally {
       setSaving(false);
     }
   }
 
-
-  async function handleEmailChange(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleEmailChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (emailSaving) return;
 
     clearMessages();
+    setEmailFeedback(null);
 
-    const cleanedEmail =
-      newEmail.trim().toLowerCase();
+    const cleanedEmail = newEmail.trim().toLowerCase();
 
     if (!cleanedEmail) {
-      setErrorMessage(
-        "Please enter a new email address."
-      );
+      setEmailFeedback({
+        type: "error",
+        message: "Please enter a new email address.",
+      });
       return;
     }
 
-    if (
-      cleanedEmail === authEmail.toLowerCase()
-    ) {
-      setErrorMessage(
-        "This is already your registered email address."
-      );
+    if (cleanedEmail === authEmail.toLowerCase()) {
+      setEmailFeedback({
+        type: "error",
+        message: "This is already your registered email address.",
+      });
       return;
     }
 
@@ -596,10 +542,9 @@ export default function ProfilePage() {
         return;
       }
 
-      const { error } =
-        await supabase.auth.updateUser({
-          email: cleanedEmail,
-        });
+      const { error } = await supabase.auth.updateUser({
+        email: cleanedEmail,
+      });
 
       if (error) throw error;
 
@@ -607,44 +552,63 @@ export default function ProfilePage() {
       setNewEmail("");
       setIsChangingEmail(false);
 
-      setSuccessMessage(
-        "Email change requested. Please check the required verification emails. Your current login email remains active until the change is confirmed."
-      );
+      setEmailFeedback({
+        type: "success",
+        message:
+          "Verification requested. Check your inbox (and spam folder) and follow the instructions before the new email becomes active.",
+      });
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to request email change."
-      );
+      setEmailFeedback({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to request email change.",
+      });
     } finally {
       setEmailSaving(false);
     }
   }
 
-
   async function refreshEmail() {
     clearMessages();
 
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    if (error || !user) {
-      setErrorMessage(
-        "Unable to refresh your account email."
+      if (error || !user) {
+        throw new Error(
+          error?.message || "Unable to refresh your account email.",
+        );
+      }
+
+      const currentEmail = user.email || "";
+
+      await syncProfileEmail(user.id, profile?.email || null, currentEmail);
+
+      setAuthEmail(currentEmail);
+      setPendingEmail(user.new_email || "");
+      setProfile((currentProfile) =>
+        currentProfile
+          ? { ...currentProfile, email: currentEmail || null }
+          : currentProfile,
       );
-      return;
+
+      setSuccessMessage(
+        user.new_email
+          ? "Your email change is still awaiting verification."
+          : "Your registered email has been refreshed.",
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to refresh your account email.",
+      );
     }
-
-    setAuthEmail(user.email || "");
-    setPendingEmail(user.new_email || "");
-
-    setSuccessMessage(
-      user.new_email
-        ? "Your email change is still awaiting verification."
-        : "Your registered email has been refreshed."
-    );
   }
 
   const editableInputClass = (enabled: boolean) =>
@@ -658,10 +622,7 @@ export default function ProfilePage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#eef2f5]">
         <div className="text-center">
-          <Loader2
-            size={34}
-            className="mx-auto animate-spin text-[#0b304b]"
-          />
+          <Loader2 size={34} className="mx-auto animate-spin text-[#0b304b]" />
           <p className="mt-5 font-black text-[#0b304b]">
             Loading your profile...
           </p>
@@ -672,7 +633,6 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-[#eef2f5] font-sans text-[#172b3d]">
-
       <div className="bg-[#061b2b] text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#c7d7e3]">
@@ -685,13 +645,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-
       <header className="bg-[#0b304b] text-white shadow-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-4"
-          >
+          <Link href="/dashboard" className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d5bd81] bg-white/10 text-[#f1d9a1]">
               <Landmark size={23} />
             </div>
@@ -717,13 +673,11 @@ export default function ProfilePage() {
         </div>
       </header>
 
-
       <section className="relative overflow-hidden bg-[#102f48] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-75"
           style={{
-            backgroundImage:
-              "url('/barangay-hall.jpg')",
+            backgroundImage: "url('/barangay-hall.jpg')",
           }}
         />
 
@@ -737,37 +691,27 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <h1 className="mt-6 text-4xl font-black sm:text-5xl">
-            My Profile
-          </h1>
+          <h1 className="mt-6 text-4xl font-black sm:text-5xl">My Profile</h1>
 
           <p className="mt-5 max-w-2xl text-sm leading-8 text-[#d6e1e9]">
-            Manage your account information,
-            registered email address, and profile
-            picture for eBarangay Connect.
+            Manage your account information, registered email address, and
+            profile picture for eBarangay Connect.
           </p>
 
           <div className="mt-7 flex items-center gap-2 text-xs font-bold text-[#d6e1e9]">
-            <ShieldCheck
-              size={18}
-              className="text-[#e2c991]"
-            />
+            <ShieldCheck size={18} className="text-[#e2c991]" />
             Resident Account Information
           </div>
         </div>
       </section>
 
-
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-12">
-
         {errorMessage && (
           <div
             role="alert"
             className="mb-7 border-l-4 border-[#b74d3d] bg-[#fdf0ed] px-6 py-5"
           >
-            <p className="font-black text-[#943d31]">
-              Something went wrong
-            </p>
+            <p className="font-black text-[#943d31]">Something went wrong</p>
 
             <p className="mt-2 break-word text-sm text-[#943d31]">
               {errorMessage}
@@ -775,21 +719,15 @@ export default function ProfilePage() {
           </div>
         )}
 
-
         {successMessage && (
           <div
             role="status"
             className="mb-7 flex items-start gap-3 border-l-4 border-[#357c60] bg-[#edf7f1] px-6 py-5"
           >
-            <CheckCircle2
-              size={22}
-              className="shrink-0 text-[#357c60]"
-            />
+            <CheckCircle2 size={22} className="shrink-0 text-[#357c60]" />
 
             <div>
-              <p className="font-black text-[#245e48]">
-                Success
-              </p>
+              <p className="font-black text-[#245e48]">Success</p>
 
               <p className="mt-2 text-sm leading-6 text-[#376a55]">
                 {successMessage}
@@ -800,25 +738,19 @@ export default function ProfilePage() {
 
         {profile && (
           <div className="grid items-start gap-7 lg:grid-cols-[0.68fr_1.32fr]">
-
             <aside className="min-w-0 space-y-6">
-
               <section className="bg-[#0b304b] p-7 text-white sm:p-8">
-
-                <div
-                  ref={photoMenuRef}
-                  className="relative inline-block"
-                >
+                <div ref={photoMenuRef} className="relative inline-block">
                   <div className="h-24 w-24 overflow-hidden rounded-full border-2 border-[#d5bd81] bg-white/10">
                     {previewUrl || avatarSrc ? (
                       <Image
-                            src={previewUrl || avatarSrc}
-                            alt="Your profile picture"
-                            width={96}
-                            height={96}
-                            unoptimized
-                            className="h-full w-full object-cover"
-                        />
+                        src={previewUrl || avatarSrc}
+                        alt="Your profile picture"
+                        width={96}
+                        height={96}
+                        unoptimized
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-[#e2c991]">
                         <UserRound size={39} />
@@ -826,16 +758,11 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-
                   {isEditing && (
                     <>
                       <button
                         type="button"
-                        onClick={() =>
-                          setPhotoMenuOpen(
-                            !photoMenuOpen
-                          )
-                        }
+                        onClick={() => setPhotoMenuOpen(!photoMenuOpen)}
                         disabled={photoBusy}
                         aria-label="Edit profile picture"
                         aria-expanded={photoMenuOpen}
@@ -843,15 +770,11 @@ export default function ProfilePage() {
                         className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#0b304b] bg-[#d5bd81] text-[#0b304b] shadow-lg transition hover:scale-110 hover:bg-white disabled:opacity-50"
                       >
                         {photoBusy ? (
-                          <Loader2
-                            size={16}
-                            className="animate-spin"
-                          />
+                          <Loader2 size={16} className="animate-spin" />
                         ) : (
                           <Pencil size={16} />
                         )}
                       </button>
-
 
                       {photoMenuOpen && (
                         <div className="absolute left-0 top-full z-30 mt-3 w-60 max-w-[calc(100vw-4rem)] overflow-hidden border border-[#dce3e8] bg-white py-2 text-[#0b304b] shadow-xl">
@@ -874,10 +797,7 @@ export default function ProfilePage() {
                               setPhotoMenuOpen(false);
                               setShowRemoveConfirm(true);
                             }}
-                            disabled={
-                              !profile.avatar_url &&
-                              !selectedFile
-                            }
+                            disabled={!profile.avatar_url && !selectedFile}
                             className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold text-[#b74d3d] transition hover:bg-[#fdf0ed] disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Trash2 size={18} />
@@ -889,7 +809,6 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -900,14 +819,11 @@ export default function ProfilePage() {
                   aria-label="Choose profile picture"
                 />
 
-
                 {isEditing && selectedFile && (
                   <div className="mt-5 border border-white/20 bg-white/10 p-4">
                     <div className="flex items-center gap-2 text-[#e2c991]">
                       <Camera size={17} />
-                      <p className="text-xs font-black">
-                        New Picture Selected
-                      </p>
+                      <p className="text-xs font-black">New Picture Selected</p>
                     </div>
 
                     <p className="mt-3 break-all text-xs leading-5 text-[#d6e1e9]">
@@ -920,18 +836,13 @@ export default function ProfilePage() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        void uploadProfilePicture()
-                      }
+                      onClick={() => void uploadProfilePicture()}
                       disabled={photoBusy}
                       className="mt-4 flex w-full items-center justify-center gap-2 bg-[#d5bd81] px-4 py-3 text-xs font-black text-[#0b304b] transition hover:bg-white disabled:opacity-50"
                     >
                       {uploading ? (
                         <>
-                          <Loader2
-                            size={16}
-                            className="animate-spin"
-                          />
+                          <Loader2 size={16} className="animate-spin" />
                           Uploading...
                         </>
                       ) : (
@@ -988,7 +899,6 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-
               <section className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-7">
                 <div className="flex items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#e8eef3] text-[#0b304b]">
@@ -1007,11 +917,9 @@ export default function ProfilePage() {
                 </div>
 
                 <p className="mt-5 text-sm leading-7 text-[#697d8c]">
-                  Update your registered login email.
-                  Verification is required before the
-                  new address becomes active.
+                  Update your registered login email. Verification is required
+                  before the new address becomes active.
                 </p>
-
 
                 <div className="mt-5 border border-[#dce3e8] bg-[#f8fafc] p-4">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-[#8193a2]">
@@ -1022,7 +930,6 @@ export default function ProfilePage() {
                     {authEmail || "Not available"}
                   </p>
                 </div>
-
 
                 {pendingEmail && (
                   <div className="mt-4 border border-[#e6d5ac] bg-[#fffaf0] p-4">
@@ -1035,18 +942,30 @@ export default function ProfilePage() {
                     </p>
 
                     <p className="mt-2 text-xs leading-6 text-[#697d8c]">
-                      Follow the verification
-                      instructions sent to your email.
+                      Follow the verification instructions sent to your email.
                     </p>
                   </div>
                 )}
 
+                {emailFeedback && (
+                  <div
+                    role={emailFeedback.type === "error" ? "alert" : "status"}
+                    className={`mt-4 border-l-4 px-4 py-3 text-sm leading-6 ${
+                      emailFeedback.type === "error"
+                        ? "border-[#b74d3d] bg-[#fdf0ed] text-[#943d31]"
+                        : "border-[#357c60] bg-[#edf7f1] text-[#376a55]"
+                    }`}
+                  >
+                    {emailFeedback.message}
+                  </div>
+                )}
 
                 {!isChangingEmail ? (
                   <button
                     type="button"
                     onClick={() => {
                       setIsChangingEmail(true);
+                      setEmailFeedback(null);
                       clearMessages();
                     }}
                     className="mt-5 inline-flex w-full items-center justify-center gap-2 bg-[#0b304b] px-4 py-3.5 text-sm font-black text-white transition hover:bg-[#164866]"
@@ -1055,10 +974,7 @@ export default function ProfilePage() {
                     Change Email
                   </button>
                 ) : (
-                  <form
-                    onSubmit={handleEmailChange}
-                    className="mt-5 space-y-4"
-                  >
+                  <form onSubmit={handleEmailChange} className="mt-5 space-y-4">
                     <div>
                       <label
                         htmlFor="newEmail"
@@ -1073,11 +989,7 @@ export default function ProfilePage() {
                         required
                         autoComplete="email"
                         value={newEmail}
-                        onChange={(event) =>
-                          setNewEmail(
-                            event.target.value
-                          )
-                        }
+                        onChange={(event) => setNewEmail(event.target.value)}
                         placeholder="Enter your new email"
                         disabled={emailSaving}
                         className="mt-3 w-full min-w-0 border border-[#cdd9e2] bg-[#f8fafc] px-4 py-3.5 text-sm outline-none focus:border-[#0b304b]"
@@ -1091,14 +1003,14 @@ export default function ProfilePage() {
                         className="inline-flex w-full items-center justify-center gap-2 bg-[#0b304b] px-4 py-3.5 text-sm font-bold text-white disabled:opacity-50"
                       >
                         {emailSaving ? (
-                          <Loader2
-                            size={17}
-                            className="animate-spin"
-                          />
+                          <>
+                            <Loader2 size={17} className="animate-spin" />
+                            Sending...
+                          </>
                         ) : (
                           <Mail size={17} />
                         )}
-                        Send Verification
+                        {!emailSaving && "Send Verification"}
                       </button>
 
                       <button
@@ -1106,6 +1018,7 @@ export default function ProfilePage() {
                         onClick={() => {
                           setIsChangingEmail(false);
                           setNewEmail("");
+                          setEmailFeedback(null);
                         }}
                         disabled={emailSaving}
                         className="w-full border border-[#cdd9e2] px-4 py-3 text-sm font-bold text-[#0b304b]"
@@ -1118,15 +1031,12 @@ export default function ProfilePage() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    void refreshEmail()
-                  }
+                  onClick={() => void refreshEmail()}
                   className="mt-5 block text-left text-xs font-bold leading-6 text-[#0b304b] underline underline-offset-4 transition hover:text-[#9b7b40]"
                 >
                   I have verified my new email — Refresh
                 </button>
               </section>
-
 
               <section className="border border-[#dce3e8] bg-white p-7">
                 <div className="flex items-start gap-4">
@@ -1140,19 +1050,16 @@ export default function ProfilePage() {
                     </p>
 
                     <p className="mt-3 text-sm leading-7 text-[#697d8c]">
-                      Email changes require verification
-                      through Supabase Authentication.
-                      Your account role cannot be
-                      changed from this page.
+                      Email changes require verification through Supabase
+                      Authentication. Your account role cannot be changed from
+                      this page.
                     </p>
                   </div>
                 </div>
               </section>
             </aside>
 
-
             <div className="min-w-0 space-y-7">
-
               <form
                 onSubmit={handleSave}
                 className="border border-[#dce3e8] bg-white p-6 shadow-sm sm:p-9"
@@ -1174,7 +1081,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-
                   {!isEditing ? (
                     <button
                       type="button"
@@ -1194,16 +1100,12 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="mt-8 space-y-7">
-
                   <div>
                     <label
                       htmlFor="fullName"
                       className="flex items-center gap-2 text-sm font-black text-[#173149]"
                     >
-                      <UserRound
-                        size={17}
-                        className="text-[#9b7b40]"
-                      />
+                      <UserRound size={17} className="text-[#9b7b40]" />
                       Full Name
                     </label>
 
@@ -1211,29 +1113,19 @@ export default function ProfilePage() {
                       id="fullName"
                       type="text"
                       value={fullName}
-                      onChange={(event) =>
-                        setFullName(
-                          event.target.value
-                        )
-                      }
+                      onChange={(event) => setFullName(event.target.value)}
                       disabled={!isEditing || saving}
                       required
-                      className={editableInputClass(
-                        isEditing
-                      )}
+                      className={editableInputClass(isEditing)}
                     />
                   </div>
-
 
                   <div>
                     <label
                       htmlFor="email"
                       className="flex items-center gap-2 text-sm font-black text-[#173149]"
                     >
-                      <Mail
-                        size={17}
-                        className="text-[#9b7b40]"
-                      />
+                      <Mail size={17} className="text-[#9b7b40]" />
                       Registered Email Address
                     </label>
 
@@ -1247,21 +1139,16 @@ export default function ProfilePage() {
 
                     <p className="mt-2 flex items-center gap-2 text-xs text-[#8193a2]">
                       <LockKeyhole size={13} />
-                      This email is managed by
-                      Supabase Authentication.
+                      This email is managed by Supabase Authentication.
                     </p>
                   </div>
-
 
                   <div>
                     <label
                       htmlFor="phoneNumber"
                       className="flex items-center gap-2 text-sm font-black text-[#173149]"
                     >
-                      <Phone
-                        size={17}
-                        className="text-[#9b7b40]"
-                      />
+                      <Phone size={17} className="text-[#9b7b40]" />
                       Phone Number
                     </label>
 
@@ -1269,54 +1156,36 @@ export default function ProfilePage() {
                       id="phoneNumber"
                       type="tel"
                       value={phoneNumber}
-                      onChange={(event) =>
-                        setPhoneNumber(
-                          event.target.value
-                        )
-                      }
+                      onChange={(event) => setPhoneNumber(event.target.value)}
                       disabled={!isEditing || saving}
-                      className={editableInputClass(
-                        isEditing
-                      )}
+                      className={editableInputClass(isEditing)}
                     />
                   </div>
-
 
                   <div>
                     <label
                       htmlFor="address"
                       className="flex items-center gap-2 text-sm font-black text-[#173149]"
                     >
-                      <MapPin
-                        size={17}
-                        className="text-[#9b7b40]"
-                      />
+                      <MapPin size={17} className="text-[#9b7b40]" />
                       Address
                     </label>
 
                     <textarea
                       id="address"
                       value={address}
-                      onChange={(event) =>
-                        setAddress(
-                          event.target.value
-                        )
-                      }
+                      onChange={(event) => setAddress(event.target.value)}
                       disabled={!isEditing || saving}
                       rows={4}
                       className={`${editableInputClass(
-                        isEditing
+                        isEditing,
                       )} resize-none leading-7`}
                     />
                   </div>
 
-
                   <div>
                     <label className="flex items-center gap-2 text-sm font-black text-[#173149]">
-                      <ShieldCheck
-                        size={17}
-                        className="text-[#9b7b40]"
-                      />
+                      <ShieldCheck size={17} className="text-[#9b7b40]" />
                       Account Role
                     </label>
 
@@ -1325,19 +1194,14 @@ export default function ProfilePage() {
                         {profile.role || "resident"}
                       </span>
 
-                      <LockKeyhole
-                        size={16}
-                        className="text-[#98a9b5]"
-                      />
+                      <LockKeyhole size={16} className="text-[#98a9b5]" />
                     </div>
 
                     <p className="mt-2 text-xs text-[#8193a2]">
-                      Account roles are managed
-                      by the system.
+                      Account roles are managed by the system.
                     </p>
                   </div>
                 </div>
-
 
                 {isEditing ? (
                   <div className="mt-9 flex flex-col-reverse gap-3 border-t border-[#e3e9ee] pt-7 sm:flex-row sm:items-center sm:justify-between">
@@ -1358,10 +1222,7 @@ export default function ProfilePage() {
                     >
                       {saving ? (
                         <>
-                          <Loader2
-                            size={18}
-                            className="animate-spin"
-                          />
+                          <Loader2 size={18} className="animate-spin" />
                           Saving...
                         </>
                       ) : (
@@ -1378,8 +1239,7 @@ export default function ProfilePage() {
                       size={17}
                       className="shrink-0 text-[#9b7b40]"
                     />
-                    Your personal information is
-                    currently in view-only mode.
+                    Your personal information is currently in view-only mode.
                   </div>
                 )}
               </form>
@@ -1387,7 +1247,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
 
       {showRemoveConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#061b2b]/70 px-4 py-6">
@@ -1409,17 +1268,14 @@ export default function ProfilePage() {
             </h2>
 
             <p className="mt-3 text-sm leading-7 text-[#697d8c]">
-              Your current profile picture will be
-              removed and replaced with the default
-              account avatar.
+              Your current profile picture will be removed and replaced with the
+              default account avatar.
             </p>
 
             <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                onClick={() =>
-                  setShowRemoveConfirm(false)
-                }
+                onClick={() => setShowRemoveConfirm(false)}
                 disabled={removing}
                 className="border border-[#cdd9e2] px-5 py-3 text-sm font-bold text-[#0b304b] disabled:opacity-50"
               >
@@ -1429,12 +1285,10 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => {
-                 if (!profile?.avatar_url) {
+                  if (!profile?.avatar_url) {
                     cancelSelectedPhoto();
                     setShowRemoveConfirm(false);
-                    setSuccessMessage(
-                      "Picture selection removed."
-                    );
+                    setSuccessMessage("Picture selection removed.");
                     return;
                   }
 
@@ -1445,10 +1299,7 @@ export default function ProfilePage() {
               >
                 {removing ? (
                   <>
-                    <Loader2
-                      size={16}
-                      className="animate-spin"
-                    />
+                    <Loader2 size={16} className="animate-spin" />
                     Removing...
                   </>
                 ) : (
@@ -1463,13 +1314,10 @@ export default function ProfilePage() {
         </div>
       )}
 
-
       <footer className="border-t border-[#dce3e8] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#8193a2] sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>© 2026 eBarangay Connect</p>
-          <p>
-            Digital barangay services for residents.
-          </p>
+          <p>Digital barangay services for residents.</p>
         </div>
       </footer>
     </main>
